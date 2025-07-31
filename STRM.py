@@ -259,12 +259,12 @@ def show_results(results, total_deposited, n_simulations):
         fig_final.update_yaxes(title="Frequenza")
         st.plotly_chart(fig_final, use_container_width=True)
 
-    if success_rate >= 90:
-        st.success(f"🎉 Ottimo! Con il {success_rate:.1f}% di probabilità di successo, il tuo piano sembra molto solido!")
-    elif success_rate >= 70:
-        st.warning(f"⚠️ Discreto. Con il {success_rate:.1f}% di successo, potresti considerare di aggiustare la strategia.")
+    if success_rate >= 80:
+        st.success(f"🎉 Ottimo! Con il {success_rate:.1f}% di probabilità di successo, Ciao Poveri!!!!!")
+    elif success_rate >= 60:
+        st.warning(f"⚠️ Discreto. Con il {success_rate:.1f}% di successo, potresti dover considerare il tonno in scatola.")
     else:
-        st.error(f"❌ Attenzione! Solo il {success_rate:.1f}% di probabilità di successo. Rivedi i parametri.")
+        st.error(f"❌ Attenzione! Solo il {success_rate:.1f}% di probabilità di successo. LA caritas ti aspetta.")
 
 if __name__ == "__main__":
     main()
