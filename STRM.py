@@ -17,7 +17,7 @@ class CantierSimulatorWeb:
             ],
             "Moderato": [
                 {"name": "Stocks", "return": 7.0, "volatility": 17.0, "allocation": 60.0, "min_return": -40.0, "max_return": 35.0},
-                {"name": "Bond", "return": 3.0, "volatility": 6.0, "allocation": 60.0, "min_return": -12.0, "max_return": 10.0},
+                {"name": "Bond", "return": 3.0, "volatility": 6.0, "allocation": 20.0, "min_return": -12.0, "max_return": 10.0},
                 {"name": "Gold", "return": 5.5, "volatility": 15.0, "allocation": 10.0, "min_return": -30.0, "max_return": 25.0},
                 {"name": "REIT", "return": 4.0, "volatility": 10.0, "allocation": 10.0, "min_return": -17.0, "max_return": 15.0},
                 {"name": "Commodities", "return": 2.5, "volatility": 12.0, "allocation": 0.0, "min_return": -20.0, "max_return": 12.0} ,  
