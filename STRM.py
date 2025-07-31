@@ -8,21 +8,21 @@ class CantierSimulatorWeb:
         # Profili asset predefiniti
         self.asset_profiles = {
             "Conservativo": [
-                {"name": "Stocks", "return": 5.5, "volatility": 17.0, "allocation": 30.0, "min_return": -40, "max_return": 35},
-                {"name": "Bond", "return": 2.0, "volatility": 6.0, "allocation": 50.0, "min_return": -12, "max_return": 10},
-                {"name": "Cash", "return": 0.5, "volatility": 1.0, "allocation": 20.0, "min_return": 0, "max_return": 1}
+                {"name": "Stocks", "return": 5.5, "volatility": 17.0, "allocation": 30.0, "min_return": -40.0, "max_return": 35.0},
+                {"name": "Bond", "return": 2.0, "volatility": 6.0, "allocation": 50.0, "min_return": -12.0, "max_return": 10.0},
+                {"name": "Cash", "return": 0.5, "volatility": 1.0, "allocation": 20.0, "min_return": 0.0, "max_return": 1.0}
             ],
             "Moderato": [
-                {"name": "Stocks", "return": 7.0, "volatility": 17.0, "allocation": 50.0, "min_return": -40, "max_return": 35},
-                {"name": "Bond", "return": 2.5, "volatility": 6.0, "allocation": 30.0, "min_return": -12, "max_return": 10},
-                {"name": "Gold", "return": 5.5, "volatility": 15.0, "allocation": 10.0, "min_return": -25, "max_return": 25},
-                {"name": "REIT", "return": 4.0, "volatility": 10.0, "allocation": 10.0, "min_return": -17, "max_return": 15}
+                {"name": "Stocks", "return": 7.0, "volatility": 17.0, "allocation": 50.0, "min_return": -40.0, "max_return": 35.0},
+                {"name": "Bond", "return": 2.5, "volatility": 6.0, "allocation": 30.0, "min_return": -12.0, "max_return": 10.0},
+                {"name": "Gold", "return": 5.5, "volatility": 15.0, "allocation": 10.0, "min_return": -25.0, "max_return": 25.0},
+                {"name": "REIT", "return": 4.0, "volatility": 10.0, "allocation": 10.0, "min_return": -17.0, "max_return": 15.0}
             ],
             "Dinamico": [
-                {"name": "Stocks", "return": 9.0, "volatility": 20.0, "allocation": 70.0, "min_return": -50, "max_return": 50},
-                {"name": "Bond", "return": 3.5, "volatility": 7.0, "allocation": 15.0, "min_return": -15, "max_return": 12},
-                {"name": "Commodities", "return": 3.0, "volatility": 20.0, "allocation": 10.0, "min_return": -35, "max_return": 40},
-                {"name": "REIT", "return": 5.0, "volatility": 12.0, "allocation": 5.0, "min_return": -17, "max_return": 15}
+                {"name": "Stocks", "return": 9.0, "volatility": 20.0, "allocation": 70.0, "min_return": -50.0, "max_return": 50.0},
+                {"name": "Bond", "return": 3.5, "volatility": 7.0, "allocation": 15.0, "min_return": -15.0, "max_return": 12.0},
+                {"name": "Commodities", "return": 3.0, "volatility": 20.0, "allocation": 10.0, "min_return": -35.0, "max_return": 40.0},
+                {"name": "REIT", "return": 5.0, "volatility": 12.0, "allocation": 5.0, "min_return": -17.0, "max_return": 15.0}
             ]
         }
 
@@ -46,12 +46,12 @@ def main():
         
         # Parametri generali
         st.subheader("📊 Parametri Generali")
-        initial_amount = st.number_input("Cifra iniziale (€)", value=0.0, min_value=0, step=1.0)  # int
-        years_to_retirement = st.number_input("Anni prima del pensionamento", value=25, min_value=1, max_value=50, step=1.0)  # int
-        years_retired = st.number_input("Anni in pensione", value=25.0, min_value=1, max_value=50, step=1.0)  # int
-        annual_contribution = st.number_input("Versamento annuo (€)", value=6000, min_value=0, step=500.0)  # int
+        initial_amount = st.number_input("Cifra iniziale (€)", value=0.0, min_value=0.0, step=1.0)  # int
+        years_to_retirement = st.number_input("Anni prima del pensionamento", value=25.0, min_value=1.0, max_value=50.0, step=1.0)  # int
+        years_retired = st.number_input("Anni in pensione", value=25.0, min_value=1.0, max_value=50.0, step=1.0)  # int
+        annual_contribution = st.number_input("Versamento annuo (€)", value=6000.0, min_value=0.0, step=500.0)  # int
         inflation = st.number_input("Inflazione annua (%)", value=2.5, min_value=0.0, max_value=10.0, step=0.1, format="%.2f")  # float
-        withdrawal = st.number_input("Prelievo annuo in pensione (€)", value=12000.0, min_value=0, step=500.0)  # int
+        withdrawal = st.number_input("Prelievo annuo in pensione (€)", value=12000.0, min_value=0.0, step=500.0)  # int
         n_simulations = st.selectbox("Numero di simulazioni", [1000, 5000, 10000], index=2)  # int
         
         # Profilo di rischio
@@ -164,7 +164,7 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
         
         balance = initial_amount
         
-        for year in range(years_to_retirement):
+        for year in range(int(years_to_retirement)):
             annual_returns = [np.random.normal(mean_returns[i], volatilities[i]) for i in range(len(mean_returns))]
             capped_returns = [max(min(annual_returns[i], max_returns[i]), min_returns[i]) for i in range(len(mean_returns))]
             annual_return = sum(capped_returns[i] * allocations[i] for i in range(len(mean_returns)))
@@ -174,7 +174,7 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
         
         accumulation_balances.append(balance)
         
-        for year in range(years_retired):
+        for year in range(int(years_retired)):
             annual_returns = [np.random.normal(mean_returns[i], volatilities[i]) for i in range(len(mean_returns))]
             capped_returns = [max(min(annual_returns[i], max_returns[i]), min_returns[i]) for i in range(len(mean_returns))]
             annual_return = sum(capped_returns[i] * allocations[i] for i in range(len(mean_returns)))
@@ -251,7 +251,7 @@ def show_results(results, total_deposited, n_simulations):
         fig_final.update_xaxes(title="Valore (€)")
         fig_final.update_yaxes(title="Frequenza")
         st.plotly_chart(fig_final, use_container_width=True)
-    
+
     if success_rate >= 90:
         st.success(f"🎉 Ottimo! Con il {success_rate:.1f}% di probabilità di successo, il tuo piano sembra molto solido!")
     elif success_rate >= 70:
