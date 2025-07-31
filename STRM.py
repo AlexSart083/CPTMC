@@ -132,7 +132,7 @@ def main():
     
     st.markdown("---")
     
-    if st.button("🚀 **ESEGUI SIMULAZIONE MONTE CARLO**", type="primary"):
+    if st.button("🚀 **ESEGUI SIMULAZIONE**", type="primary"):
         if abs(total_allocation - 100.0) > 0.01:
             st.error("❌ Correggi prima le allocazioni!")
             return
@@ -260,11 +260,11 @@ def show_results(results, total_deposited, n_simulations):
         st.plotly_chart(fig_final, use_container_width=True)
 
     if success_rate >= 80:
-        st.success(f"🎉 Ottimo! Con il {success_rate:.1f}% di probabilità di successo, Ciao Poveri!!!!!")
+        st.success(f"🎉 Ottimo! Con il {success_rate:.1f}% di probabilità di successo, ora si guarda i cantieri da Montecarlo")
     elif success_rate >= 60:
         st.warning(f"⚠️ Discreto. Con il {success_rate:.1f}% di successo, potresti dover considerare il tonno in scatola.")
     else:
-        st.error(f"❌ Attenzione! Solo il {success_rate:.1f}% di probabilità di successo. LA caritas ti aspetta.")
+        st.error(f"❌ Attenzione! Solo il {success_rate:.1f}% di probabilità di successo. La caritas ti aspetta.")
 
 if __name__ == "__main__":
     main()
