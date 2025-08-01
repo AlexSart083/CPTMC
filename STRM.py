@@ -61,9 +61,7 @@ def main():
     
     # Header principale
     st.title("🏗️ Simulazione Monte Carlo per la pianificazione del retirement")
-    st.markdown("Questa applicazione ha <strong>scopo esclusivamente didattico</strong> e simula scenari <em>puramente teorici</em> basati su ipotesi semplificate.
-        I risultati non devono essere interpretati come previsioni reali né come raccomandazioni di investimento.
-        Nessuna informazione fornita costituisce <strong>consulenza finanziaria</strong>, patrimoniale o fiscale.")
+    st.markdown("Questa applicazione ha <strong>scopo esclusivamente didattico e simula scenari puramente teorici basati su ipotesi semplificate. I risultati non devono essere interpretati come previsioni reali né come raccomandazioni di investimento. Nessuna informazione fornita costituisce consulenza finanziaria, patrimoniale o fiscale.")
     
     # Sidebar per parametri
     with st.sidebar:
