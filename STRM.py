@@ -276,7 +276,7 @@ def show_results(results, total_deposited, n_simulations):
         st.plotly_chart(fig_final, use_container_width=True)
 
     if success_rate >= 80:
-        st.success(f"🎉 Ottimo! Con il {success_rate:.1f}% di probabilità di successo, ora si guarda i cantieri da Montecarlo")
+        st.success(f"🎉 Ottimo! Con il {success_rate:.1f}% di probabilità di successo, ora si guarda i cantieri da Monte-Carlo")
     elif success_rate >= 60:
         st.warning(f"⚠️ Discreto. Con il {success_rate:.1f}% di successo, potresti dover considerare il tonno in scatola.")
     else:
