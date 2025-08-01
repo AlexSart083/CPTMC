@@ -126,11 +126,11 @@ def main():
         else:
             st.success(f"✅ Allocazione corretta: {total_allocation:.1f}%")
         
-        if st.button("⚖️ Resetta Allocazioni"):
+       # if st.button("⚖️ Resetta Allocazioni"):
           # equal_alloc = 100.0 / len(assets_data)
-            equal_alloc = 0
-            for i in range(len(assets_data)):
-                assets_data[i]['allocation'] = equal_alloc
+         #   equal_alloc = 0
+        #    for i in range(len(assets_data)):
+         #       assets_data[i]['allocation'] = equal_alloc
     
     with col2:
         st.subheader("📈 Grafico Allocazioni")
