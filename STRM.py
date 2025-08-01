@@ -98,7 +98,7 @@ def main():
         assets_data = []
         
         for i, asset in enumerate(st.session_state.current_assets):
-            with st.expander(f"📈 {asset['name']}", expanded=True):
+            with st.expander(f"📈 {asset['name']}", expanded=False):
                 col_a, col_b = st.columns(2)
                 
                 with col_a:
