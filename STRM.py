@@ -76,9 +76,9 @@ def main():
         
         # Parametri generali
         st.subheader("📊 Parametri Generali")
-        initial_amount = st.number_input("Cifra iniziale (€)", value=0.0, min_value=0.0, step=1.0)  # int
-        years_to_retirement = st.number_input("Anni prima del pensionamento", value=25.0, min_value=1.0, max_value=50.0, step=1.0)  # int
-        years_retired = st.number_input("Anni in pensione", value=25.0, min_value=1.0, max_value=50.0, step=1.0)  # int
+        initial_amount = st.number_input("Cifra iniziale (€)", value=0.0, min_value=0.0, step=500.0)  # int
+        years_to_retirement = st.number_input("Anni prima del pensionamento", value=25.0, min_value=0.0, max_value=99.0, step=1.0)  # int
+        years_retired = st.number_input("Anni in pensione", value=25.0, min_value=0.0, max_value=99.0, step=1.0)  # int
         annual_contribution = st.number_input("Versamento annuo (€)", value=6000.0, min_value=0.0, step=500.0)  # int
         inflation = st.number_input("Inflazione annua (%)", value=2.5, min_value=0.0, max_value=10.0, step=0.1, format="%.2f")  # float
         withdrawal = st.number_input("Prelievo annuo in pensione (€)", value=12000.0, min_value=0.0, step=500.0)  # int
