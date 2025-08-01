@@ -46,7 +46,7 @@ class CantierSimulatorWeb:
                 {"name": "REIT", "return": 4.5, "volatility": 15.0, "allocation": 15.0, "min_return": -17.0, "max_return": 15.0},
                 {"name": "Commodities", "return": 2.8, "volatility": 25.0, "allocation": 10.0, "min_return": -35.0, "max_return": 37.0},  
                 {"name": "Cash", "return": 1.0, "volatility": 0.5, "allocation": 10.0, "min_return": 0.0, "max_return": 4.0}     
-            ]
+            ],
             "Libero": [
                 {"name": "Stocks", "return": 7.5, "volatility": 15.0, "allocation": 0.0, "min_return": -37.0, "max_return": 32.0},
                 {"name": "Bond", "return": 3.0, "volatility": 5.0, "allocation": 0.0, "min_return": -17.0, "max_return": 12.0},
