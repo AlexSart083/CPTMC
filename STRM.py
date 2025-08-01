@@ -32,7 +32,7 @@ class CantierSimulatorWeb:
                 {"name": "Cash", "return": 1.0, "volatility": 0.5, "allocation": 5.0, "min_return": 0.0, "max_return": 4.0}     
             ],
             "Stock_Gold": [
-                {"name": "Stocks", "return": 7.0, "volatility": 15.0, "allocation": 70.0, "min_return": -37.0, "max_return": 32.0},
+                {"name": "Stocks", "return": 7.5, "volatility": 15.0, "allocation": 70.0, "min_return": -37.0, "max_return": 32.0},
                 {"name": "Bond", "return": 3.0, "volatility": 5.0, "allocation": 0.0, "min_return": -17.0, "max_return": 12.0},
                 {"name": "Gold", "return": 6.0, "volatility": 20.0, "allocation": 30.0, "min_return": -29.0, "max_return": 30.0},
                 {"name": "REIT", "return": 4.5, "volatility": 15.0, "allocation": 0.0, "min_return": -17.0, "max_return": 15.0},
@@ -40,7 +40,7 @@ class CantierSimulatorWeb:
                 {"name": "Cash", "return": 1.0, "volatility": 0.5, "allocation": 0.0, "min_return": 0.0, "max_return": 4.0}     
             ],
             "Diversificato": [
-                {"name": "Stocks", "return": 7.0, "volatility": 15.0, "allocation": 25.0, "min_return": -37.0, "max_return": 32.0},
+                {"name": "Stocks", "return": 7.5, "volatility": 15.0, "allocation": 25.0, "min_return": -37.0, "max_return": 32.0},
                 {"name": "Bond", "return": 3.0, "volatility": 5.0, "allocation": 25.0, "min_return": -17.0, "max_return": 12.0},
                 {"name": "Gold", "return": 6.0, "volatility": 20.0, "allocation": 15.0, "min_return": -29.0, "max_return": 30.0},
                 {"name": "REIT", "return": 4.5, "volatility": 15.0, "allocation": 15.0, "min_return": -17.0, "max_return": 15.0},
@@ -61,8 +61,7 @@ def main():
     
     # Header principale
     st.title("🏗️ Simulazione Monte Carlo per la pianificazione del retirement")
-    st.markdown("Questa applicazione ha <strong>scopo esclusivamente didattico e simula scenari puramente teorici basati su ipotesi semplificate. I risultati non devono essere interpretati come previsioni reali né come raccomandazioni di investimento. Nessuna informazione fornita costituisce consulenza finanziaria, patrimoniale o fiscale.")
-    
+    st.markdown("Questa applicazione ha scopo esclusivamente didattico e simula scenari puramente teorici basati su ipotesi semplificate. I risultati non devono essere interpretati come previsioni reali né come raccomandazioni di investimento. Nessuna informazione fornita costituisce consulenza finanziaria, patrimoniale o fiscale.")    
     # Sidebar per parametri
     with st.sidebar:
         st.header("⚙️ Parametri di Simulazione")
