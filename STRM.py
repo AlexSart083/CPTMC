@@ -8,25 +8,25 @@ class CantierSimulatorWeb:
         # Profili asset predefiniti
         self.asset_profiles = {
             "Conservativo": [
-                {"name": "Stocks", "return": 7.0, "volatility": 15.0, "allocation": 30.0, "min_return": -37.0, "max_return": 32.0},
-                {"name": "Bond", "return": 3.0, "volatility": 5.0, "allocation": 50.0, "min_return": -17.0, "max_return": 12.0},
-                {"name": "Gold", "return": 5.5, "volatility": 20.0, "allocation": 0.0, "min_return": -29.0, "max_return": 30.0},
+                {"name": "Stocks", "return": 7.5, "volatility": 15.0, "allocation": 40.0, "min_return": -37.0, "max_return": 32.0},
+                {"name": "Bond", "return": 3.0, "volatility": 5.0, "allocation": 40.0, "min_return": -17.0, "max_return": 12.0},
+                {"name": "Gold", "return": 6.0, "volatility": 20.0, "allocation": 0.0, "min_return": -29.0, "max_return": 30.0},
                 {"name": "REIT", "return": 4.5, "volatility": 15.0, "allocation": 0.0, "min_return": -17.0, "max_return": 15.0},
                 {"name": "Commodities", "return": 2.8, "volatility": 25.0, "allocation": 0.0, "min_return": -35.0, "max_return": 37.0},  
                 {"name": "Cash", "return": 1.0, "volatility": 0.5, "allocation": 20.0, "min_return": 0.0, "max_return": 4.0}                                 
             ],
             "Moderato": [
-                {"name": "Stocks", "return": 7.0, "volatility": 15.0, "allocation": 60.0, "min_return": -37.0, "max_return": 32.0},
+                {"name": "Stocks", "return": 7.5, "volatility": 15.0, "allocation": 60.0, "min_return": -37.0, "max_return": 32.0},
                 {"name": "Bond", "return": 3.0, "volatility": 5.0, "allocation": 30.0, "min_return": -17.0, "max_return": 12.0},
-                {"name": "Gold", "return": 5.5, "volatility": 20.0, "allocation": 0.0, "min_return": -29.0, "max_return": 30.0},
+                {"name": "Gold", "return": 6.0, "volatility": 20.0, "allocation": 0.0, "min_return": -29.0, "max_return": 30.0},
                 {"name": "REIT", "return": 4.5, "volatility": 15.0, "allocation": 0.0, "min_return": -17.0, "max_return": 15.0},
                 {"name": "Commodities", "return": 2.8, "volatility": 25.0, "allocation": 0.0, "min_return": -35.0, "max_return": 37.0},  
                 {"name": "Cash", "return": 1.0, "volatility": 0.5, "allocation": 10.0, "min_return": 0.0, "max_return": 4.0}                    
             ],
             "Dinamico": [
-                {"name": "Stocks", "return": 7.0, "volatility": 15.0, "allocation": 70.0, "min_return": -37.0, "max_return": 32.0},
+                {"name": "Stocks", "return": 7.5, "volatility": 15.0, "allocation": 70.0, "min_return": -37.0, "max_return": 32.0},
                 {"name": "Bond", "return": 3.0, "volatility": 5.0, "allocation": 10.0, "min_return": -17.0, "max_return": 12.0},
-                {"name": "Gold", "return": 5.5, "volatility": 20.0, "allocation": 15.0, "min_return": -29.0, "max_return": 30.0},
+                {"name": "Gold", "return": 6.0, "volatility": 20.0, "allocation": 15.0, "min_return": -29.0, "max_return": 30.0},
                 {"name": "REIT", "return": 4.5, "volatility": 15.0, "allocation": 0.0, "min_return": -17.0, "max_return": 15.0},
                 {"name": "Commodities", "return": 2.8, "volatility": 25.0, "allocation": 0.0, "min_return": -35.0, "max_return": 37.0},   
                 {"name": "Cash", "return": 1.0, "volatility": 0.5, "allocation": 5.0, "min_return": 0.0, "max_return": 4.0}     
@@ -34,7 +34,7 @@ class CantierSimulatorWeb:
             "Stock_Gold": [
                 {"name": "Stocks", "return": 7.0, "volatility": 15.0, "allocation": 70.0, "min_return": -37.0, "max_return": 32.0},
                 {"name": "Bond", "return": 3.0, "volatility": 5.0, "allocation": 0.0, "min_return": -17.0, "max_return": 12.0},
-                {"name": "Gold", "return": 5.5, "volatility": 20.0, "allocation": 30.0, "min_return": -29.0, "max_return": 30.0},
+                {"name": "Gold", "return": 6.0, "volatility": 20.0, "allocation": 30.0, "min_return": -29.0, "max_return": 30.0},
                 {"name": "REIT", "return": 4.5, "volatility": 15.0, "allocation": 0.0, "min_return": -17.0, "max_return": 15.0},
                 {"name": "Commodities", "return": 2.8, "volatility": 25.0, "allocation": 0.0, "min_return": -35.0, "max_return": 37.0},   
                 {"name": "Cash", "return": 1.0, "volatility": 0.5, "allocation": 0.0, "min_return": 0.0, "max_return": 4.0}     
@@ -42,7 +42,7 @@ class CantierSimulatorWeb:
             "Diversificato": [
                 {"name": "Stocks", "return": 7.0, "volatility": 15.0, "allocation": 25.0, "min_return": -37.0, "max_return": 32.0},
                 {"name": "Bond", "return": 3.0, "volatility": 5.0, "allocation": 25.0, "min_return": -17.0, "max_return": 12.0},
-                {"name": "Gold", "return": 5.5, "volatility": 20.0, "allocation": 15.0, "min_return": -29.0, "max_return": 30.0},
+                {"name": "Gold", "return": 6.0, "volatility": 20.0, "allocation": 15.0, "min_return": -29.0, "max_return": 30.0},
                 {"name": "REIT", "return": 4.5, "volatility": 15.0, "allocation": 15.0, "min_return": -17.0, "max_return": 15.0},
                 {"name": "Commodities", "return": 2.8, "volatility": 25.0, "allocation": 10.0, "min_return": -35.0, "max_return": 37.0},  
                 {"name": "Cash", "return": 1.0, "volatility": 0.5, "allocation": 10.0, "min_return": 0.0, "max_return": 4.0}     
@@ -51,7 +51,7 @@ class CantierSimulatorWeb:
 
 def main():
     st.set_page_config(
-        page_title="Simulatore Monte Carlo Cantieri",
+        page_title="Simulatore Monte Carlo Investimenti",
         page_icon="🏗️",
         layout="wide",
         initial_sidebar_state="expanded"
@@ -60,7 +60,7 @@ def main():
     simulator = CantierSimulatorWeb()
     
     # Header principale
-    st.title("🏗️ Calcolo del Potenziale Temporale di Monitoraggio Cantieri")
+    st.title("🏗️ Simulazione Monte Carlo per la pianificazione del retirement(Teorica)")
     st.markdown("**Simulazione Monte Carlo per la pianificazione del retirement**")
     
     # Sidebar per parametri
