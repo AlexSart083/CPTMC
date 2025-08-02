@@ -10,7 +10,7 @@ class CantierSimulatorWeb:
         self.asset_profiles = self.load_asset_profiles()
     
     def load_asset_profiles(self):
-        """Loads asset profiles from the configuration file"""
+        """Loads asset profiles from the configuration file and merges them with asset characteristics"""
         config_file = 'config.json'
         
         if not os.path.exists(config_file):
@@ -20,11 +20,30 @@ class CantierSimulatorWeb:
         try:
             with open(config_file, 'r', encoding='utf-8') as f:
                 config = json.load(f)
-            return config['asset_profiles']
+            
+            asset_profiles = config['asset_profiles']
+            asset_chars = config['asset_characteristics']
+            
+            # Merge asset characteristics into profiles
+            merged_profiles = {}
+            for profile_name, assets in asset_profiles.items():
+                merged_profiles[profile_name] = []
+                for asset in assets:
+                    asset_name = asset['name']
+                    if asset_name in asset_chars:
+                        merged_asset = {**asset, **asset_chars[asset_name]}
+                        merged_profiles[profile_name].append(merged_asset)
+                    else:
+                        st.warning(f"⚠️ Characteristics for asset '{asset_name}' not found in config file. Skipping.")
+            
+            return merged_profiles
+        
+        except KeyError as e:
+            st.error(f"❌ Missing key in configuration file: {e}. Please check your config.json.")
+            st.stop()
         except Exception as e:
             st.error(f"❌ Error loading configuration file: {str(e)}")
             st.stop()
-
 def main():
     st.set_page_config(
         page_title="Monte Carlo Investment Simulator",
