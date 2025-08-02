@@ -10,9 +10,9 @@ TRANSLATIONS = {
         'language_selector': 'Language',
         
         # Disclaimers
-        'disclaimers_header': 'ℹ️ **Informazioni Importanti e Disclaimer**',
-        'educational_disclaimer': '**Disclaimer Scopo Educativo:**',
-        'educational_text': 'Questa applicazione è solo a scopo educativo e simula scenari puramente teorici basati su assunzioni semplificate. I risultati non devono essere interpretati come previsioni reali né come raccomandazioni di investimento. Nessuna informazione fornita costituisce consulenza finanziaria, patrimoniale o fiscale.',
+        'disclaimers_header': 'ℹ️ **Important Information & Disclaimers**',
+        'educational_disclaimer': '**Educational Purpose Disclaimer:**',
+        'educational_text': 'This application is for educational purposes only and simulates purely theoretical scenarios based on simplified assumptions. Results should not be interpreted as real predictions nor as investment recommendations. No information provided constitutes financial, wealth or tax advice.',
         'app_explanation': (
             "🔍 **What does this application do?**\n"
             "This application uses the Monte Carlo method to generate thousands of possible market scenarios, "
@@ -109,11 +109,11 @@ TRANSLATIONS = {
         'page_title': 'Simulatore Monte Carlo per Investimenti',
         'main_title': '🏗️ Simulazione Monte Carlo per la Pianificazione Pensionistica',
         'language_selector': 'Lingua',
-        
+
         # Disclaimers
-        'disclaimers_header': 'ℹ️ **Important Information & Disclaimers**',
-        'educational_disclaimer': '**Educational Purpose Disclaimer:**',
-        'educational_text': 'This application is for educational purposes only and simulates purely theoretical scenarios based on simplified assumptions. Results should not be interpreted as real predictions nor as investment recommendations. No information provided constitutes financial, wealth or tax advice.',
+        'disclaimers_header': 'ℹ️ **Informazioni Importanti e Disclaimer**',
+        'educational_disclaimer': '**Disclaimer Scopo Educativo:**',
+        'educational_text': 'Questa applicazione è solo a scopo educativo e simula scenari puramente teorici basati su assunzioni semplificate. I risultati non devono essere interpretati come previsioni reali né come raccomandazioni di investimento. Nessuna informazione fornita costituisce consulenza finanziaria, patrimoniale o fiscale.',
         'app_explanation': (
             "🔍 **Cosa fa questa applicazione?**\n"
             "Questa applicazione utilizza il metodo Monte Carlo per generare migliaia di scenari di mercato possibili, "
