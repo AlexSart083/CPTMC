@@ -243,6 +243,42 @@ def main():
     with tab3:
         st.subheader("🚀 Esecuzione Simulazione")
         
+        # Mostra riassunto asset allocation prima della simulazione
+        if 'current_assets' in st.session_state:
+            active_assets_preview = [asset for asset in st.session_state.current_assets if asset['allocation'] > 0]
+            
+            if active_assets_preview:
+                st.subheader("📊 Asset Allocation Corrente")
+                
+                allocation_data = []
+                for asset in active_assets_preview:
+                    allocation_data.append({
+                        'Asset': asset['name'],
+                        'Allocazione (%)': f"{asset['allocation']:.2f}%",
+                        'TER (%)': f"{asset['ter']:.3f}%"
+                    })
+                
+                df_allocation_summary = pd.DataFrame(allocation_data)
+                
+                col1, col2 = st.columns([2, 1])
+                with col1:
+                    st.dataframe(df_allocation_summary, hide_index=True, use_container_width=True)
+                
+                with col2:
+                    # Grafico a torta dell'allocazione
+                    df_alloc_chart = pd.DataFrame([
+                        {'Asset': asset['name'], 'Allocazione': asset['allocation']}
+                        for asset in active_assets_preview
+                    ])
+                    fig_allocation = px.pie(df_alloc_chart, values='Allocazione', names='Asset', 
+                                          title="Distribuzione Asset")
+                    fig_allocation.update_layout(height=300, showlegend=False)
+                    st.plotly_chart(fig_allocation, use_container_width=True)
+                
+                st.markdown("---")
+            else:
+                st.info("⚠️ Nessun asset selezionato. Configura il portafoglio nella prima scheda.")
+        
         if st.button("🚀 **ESEGUI SIMULAZIONE**", type="primary"):
             # Filtra solo asset con allocazione > 0
             active_assets = [asset for asset in st.session_state.current_assets if asset['allocation'] > 0]
@@ -269,7 +305,7 @@ def main():
                     progress_bar, status_text
                 )
             
-            show_results(results, total_deposited, n_simulations, active_assets)
+            show_results(results, total_deposited, n_simulations)
 
 def run_monte_carlo_simulation(assets_data, asset_characteristics, initial_amount, 
                               years_to_retirement, years_retired, annual_contribution, 
@@ -357,39 +393,9 @@ def run_monte_carlo_simulation(assets_data, asset_characteristics, initial_amoun
     
     return {'accumulation': accumulation_balances, 'final': final_results}
 
-def show_results(results, total_deposited, n_simulations, active_assets):
+def show_results(results, total_deposited, n_simulations):
     st.markdown("---")
     st.header("🎯 Risultati della Simulazione")
-    
-    # AGGIUNTA: Tabella riassuntiva Asset Allocation
-    st.subheader("📊 Asset Allocation Utilizzata")
-    
-    allocation_data = []
-    for asset in active_assets:
-        allocation_data.append({
-            'Asset': asset['name'],
-            'Allocazione (%)': f"{asset['allocation']:.2f}%",
-            'TER (%)': f"{asset['ter']:.3f}%"
-        })
-    
-    df_allocation_summary = pd.DataFrame(allocation_data)
-    
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.dataframe(df_allocation_summary, hide_index=True, use_container_width=True)
-    
-    with col2:
-        # Grafico a torta dell'allocazione
-        df_alloc_chart = pd.DataFrame([
-            {'Asset': asset['name'], 'Allocazione': asset['allocation']}
-            for asset in active_assets
-        ])
-        fig_allocation = px.pie(df_alloc_chart, values='Allocazione', names='Asset', 
-                              title="Distribuzione Asset")
-        fig_allocation.update_layout(height=300, showlegend=False)
-        st.plotly_chart(fig_allocation, use_container_width=True)
-    
-    st.markdown("---")
     
     accumulation_balances = results['accumulation']
     final_results = results['final']
