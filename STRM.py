@@ -495,14 +495,7 @@ def show_results(results, total_deposited, n_simulations, lang):
         st.table(pd.DataFrame(acc_data_nominal))
     
     with col3:
-        # Create title with info tooltip
-        title_col, info_col = st.columns([4, 1])
-        with title_col:
-            st.subheader(get_text('final_values', lang))
-        with info_col:
-            with st.popover("ℹ️"):
-                st.write(get_text('final_values_info', lang))
-        
+        st.subheader(get_text('final_values', lang))
         final_data = {
             get_text('percentile', lang): [get_text('median', lang), '25th', '75th', get_text('average', lang)], 
             get_text('value_euro', lang): [f"{final_50th:,.0f}",  f"{final_25th:,.0f}", f"{final_75th:,.0f}", f"{avg_final:,.0f}"]
