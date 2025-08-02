@@ -383,14 +383,15 @@ def show_results(results, total_deposited, n_simulations):
     accumulation_balances = results['accumulation']
     final_results = results['final']
     
+    # Calcolo della media e dei percentili
     avg_accumulation = np.mean(accumulation_balances)
     acc_25th = np.percentile(accumulation_balances, 25)
-    acc_50th = np.percentile(accumulation_balances, 50)  # Aggiunto il 50° percentile
+    acc_50th = np.percentile(accumulation_balances, 50)
     acc_75th = np.percentile(accumulation_balances, 75)
     
     avg_final = np.mean(final_results)
     final_25th = np.percentile(final_results, 25)
-    final_50th = np.percentile(final_results, 50)  # Aggiunto il 50° percentile
+    final_50th = np.percentile(final_results, 50)
     final_75th = np.percentile(final_results, 75)
     success_rate = sum(r > 0 for r in final_results) / n_simulations * 100
     
@@ -399,9 +400,11 @@ def show_results(results, total_deposited, n_simulations):
     with col1:
         st.metric("💰 Total Deposited", f"€{total_deposited:,.0f}")
     with col2:
-        st.metric("📈 Average Accumulation Value", f"€{avg_accumulation:,.0f}")
+        # Modifica: Sostituito Average con Median
+        st.metric("📈 Median Accumulation Value", f"€{acc_50th:,.0f}")
     with col3:
-        st.metric("✨ Average Final Value", f"€{avg_final:,.0f}")
+        # Modifica: Sostituito Average con Median
+        st.metric("✨ Median Final Value", f"€{final_50th:,.0f}")
     with col4:
         st.metric("✅ Success Rate", f"{success_rate:.1f}%")
     
@@ -410,16 +413,18 @@ def show_results(results, total_deposited, n_simulations):
     with col1:
         st.subheader("📊 Accumulation Phase")
         acc_data = {
-            'Percentile': ['Average', '25th', '50th', '75th'], # Riordinato
-            'Value (€)': [f"{avg_accumulation:,.0f}", f"{acc_25th:,.0f}", f"{acc_50th:,.0f}", f"{acc_75th:,.0f}"]
+            # Modifica: Riordinato e sostituito Average con Median
+            'Percentile': ['Median', 'Average', '25th', '75th'], 
+            'Value (€)': [f"{acc_50th:,.0f}", f"{avg_accumulation:,.0f}", f"{acc_25th:,.0f}", f"{acc_75th:,.0f}"]
         }
         st.table(pd.DataFrame(acc_data))
     
     with col2:
         st.subheader("🏁 Final Values")
         final_data = {
-            'Percentile': ['Average', '25th', '50th', '75th'], # Riordinato
-            'Value (€)': [f"{avg_final:,.0f}", f"{final_25th:,.0f}", f"{final_50th:,.0f}", f"{final_75th:,.0f}"]
+            # Modifica: Riordinato e sostituito Average con Median
+            'Percentile': ['Median', 'Average', '25th', '75th'], 
+            'Value (€)': [f"{final_50th:,.0f}", f"{avg_final:,.0f}", f"{final_25th:,.0f}", f"{final_75th:,.0f}"]
         }
         st.table(pd.DataFrame(final_data))
     
