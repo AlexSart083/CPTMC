@@ -333,15 +333,11 @@ def main():
         # Show only assets with allocation > 0 in the summary table
         active_assets_df = pd.DataFrame([asset for asset in assets_data if asset['allocation'] > 0])
         if not active_assets_df.empty:
-            # Use display names for the table and reorder columns
-            active_assets_df = active_assets_df.drop('name', axis=1)
-            columns_order = ['display_name', 'allocation', 'ter', 'return', 'volatility', 'min_return', 'max_return']
-            active_assets_df = active_assets_df.reindex(columns=columns_order)
+            # Show only asset name and allocation
+            summary_df = active_assets_df[['display_name', 'allocation']].copy()
             # Rename columns for display
-            active_assets_df.columns = ['Asset', get_text('allocation_percent', lang), get_text('ter_percent', lang), 
-                                      get_text('return_percent', lang), get_text('volatility_percent', lang),
-                                      get_text('min_return_percent', lang), get_text('max_return_percent', lang)]
-            st.dataframe(active_assets_df, use_container_width=True)
+            summary_df.columns = ['Asset', get_text('allocation_percent', lang)]
+            st.dataframe(summary_df, use_container_width=True)
         else:
             st.info(get_text('no_active_assets', lang))
     
