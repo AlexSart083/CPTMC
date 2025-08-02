@@ -385,10 +385,12 @@ def show_results(results, total_deposited, n_simulations):
     
     avg_accumulation = np.mean(accumulation_balances)
     acc_25th = np.percentile(accumulation_balances, 25)
+    acc_50th = np.percentile(accumulation_balances, 50)  # Aggiunto il 50° percentile
     acc_75th = np.percentile(accumulation_balances, 75)
     
     avg_final = np.mean(final_results)
     final_25th = np.percentile(final_results, 25)
+    final_50th = np.percentile(final_results, 50)  # Aggiunto il 50° percentile
     final_75th = np.percentile(final_results, 75)
     success_rate = sum(r > 0 for r in final_results) / n_simulations * 100
     
@@ -408,16 +410,16 @@ def show_results(results, total_deposited, n_simulations):
     with col1:
         st.subheader("📊 Accumulation Phase")
         acc_data = {
-            'Percentile': ['25th', 'Average', '75th'],
-            'Value (€)': [f"{acc_25th:,.0f}", f"{avg_accumulation:,.0f}", f"{acc_75th:,.0f}"]
+            'Percentile': ['Average', '25th', '50th', '75th'], # Riordinato
+            'Value (€)': [f"{avg_accumulation:,.0f}", f"{acc_25th:,.0f}", f"{acc_50th:,.0f}", f"{acc_75th:,.0f}"]
         }
         st.table(pd.DataFrame(acc_data))
     
     with col2:
         st.subheader("🏁 Final Values")
         final_data = {
-            'Percentile': ['25th', 'Average', '75th'],
-            'Value (€)': [f"{final_25th:,.0f}", f"{avg_final:,.0f}", f"{final_75th:,.0f}"]
+            'Percentile': ['Average', '25th', '50th', '75th'], # Riordinato
+            'Value (€)': [f"{avg_final:,.0f}", f"{final_25th:,.0f}", f"{final_50th:,.0f}", f"{final_75th:,.0f}"]
         }
         st.table(pd.DataFrame(final_data))
     
