@@ -18,7 +18,8 @@ TRANSLATIONS = {
             "This application uses the Monte Carlo method to generate thousands of possible market scenarios, "
             "simulating whether the selected portfolio may or may not be suitable for the retirement plan "
             "chosen, based on the parameters entered by the user. The app estimates the probability of success "
-            "of the plan and offers an overview of potential risks and benefits based on the combination of assets selected."
+            "of the plan and provides an overview of possible outcomes accounting for inflation, based on the "
+            "simulation of assets selected."
         ),
         'data_info': '**Data Information:**',
         'data_text': 'The returns are based on global and european market data from the last 30 years. Data may be inaccurate or outdated and should be used for educational purposes only.',        
@@ -115,12 +116,12 @@ TRANSLATIONS = {
         'educational_disclaimer': '**Disclaimer Scopo Educativo:**',
         'educational_text': 'Questa applicazione è solo a scopo educativo e simula scenari puramente teorici basati su assunzioni semplificate. I risultati non devono essere interpretati come previsioni reali né come raccomandazioni di investimento. Nessuna informazione fornita costituisce consulenza finanziaria, patrimoniale o fiscale.',
         'app_explanation': (
-            "🔍 **Cosa fa questa applicazione?**\n"
+            "**Cosa fa questa applicazione?**\n"
             "Questa applicazione utilizza il metodo Monte Carlo per generare migliaia di scenari di mercato possibili, "
             "simulando la possibilità che il portafoglio selezionato possa o meno essere adatto al piano pensionistico "
             "scelto in base ai parametri inseriti dall’utente. L’app restituisce una stima della probabilità "
-            "di successo del piano stesso e fornisce una panoramica dei possibili rischi e benefici in base alle "
-            "combinazioni di asset selezionate."
+            "di successo del piano stesso e fornisce una panoramica dei possibili risultati (outcome) tenendo conto "
+            "dell'inflazione in base alle simulazioni sugli asset selezionati."
         ),
         'data_info': '**Informazioni sui Dati:**',
         'data_text': 'I rendimenti sono basati su dati di mercato globali ed europei degli ultimi 30 anni. I dati potrebbero essere imprecisi o obsoleti e dovrebbero essere utilizzati solo a scopo educativo.',
@@ -275,4 +276,5 @@ def get_asset_names(lang='en'):
         }
     }
     return assets.get(lang, assets['en'])
+
 
