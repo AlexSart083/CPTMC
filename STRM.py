@@ -1,14 +1,4 @@
-st.header("🎯 Simulation Results")
-    
-    accumulation_balances = results['accumulation']
-    final_results = results['final']
-    
-    avg_accumulation = np.mean(accumulation_balances)
-    acc_25th = np.percentile(accumulation_balances, 25)
-    acc_75th = np.percentile(accumulation_balances, 75)
-    
-    avg_final = np.mean(final_results)
-    final_25import streamlit as st
+import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -21,7 +11,7 @@ class CantierSimulatorWeb:
         self.asset_characteristics = self.load_asset_characteristics()
     
     def load_asset_profiles(self):
-        """Carica i profili asset dal file di configurazione"""
+        """Load asset profiles from configuration file"""
         config_file = 'config.json'
         
         if not os.path.exists(config_file):
@@ -37,7 +27,7 @@ class CantierSimulatorWeb:
             st.stop()
     
     def load_asset_characteristics(self):
-        """Carica le caratteristiche degli asset dal file di configurazione"""
+        """Load asset characteristics from configuration file"""
         config_file = 'config.json'
         
         try:
@@ -342,6 +332,7 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
         
         balance = initial_amount
         
+        # Accumulation phase
         for year in range(int(years_to_retirement)):
             annual_returns = [np.random.normal(mean_returns[i], volatilities[i]) for i in range(len(mean_returns))]
             capped_returns = [max(min(annual_returns[i], max_returns[i]), min_returns[i]) for i in range(len(mean_returns))]
@@ -354,6 +345,7 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
         
         accumulation_balances.append(balance)
         
+        # Retirement phase
         for year in range(int(years_retired)):
             annual_returns = [np.random.normal(mean_returns[i], volatilities[i]) for i in range(len(mean_returns))]
             capped_returns = [max(min(annual_returns[i], max_returns[i]), min_returns[i]) for i in range(len(mean_returns))]
@@ -377,7 +369,7 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
 
 def show_results(results, total_deposited, n_simulations):
     st.markdown("---")
-    st.header("🎯 Risultati della Simulazione")
+    st.header("🎯 Simulation Results")
     
     accumulation_balances = results['accumulation']
     final_results = results['final']
@@ -394,52 +386,52 @@ def show_results(results, total_deposited, n_simulations):
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric("💰 Totale Depositato", f"€{total_deposited:,.0f}")
+        st.metric("💰 Total Deposited", f"€{total_deposited:,.0f}")
     with col2:
-        st.metric("📈 Valore Medio Accumulo", f"€{avg_accumulation:,.0f}")
+        st.metric("📈 Average Accumulation Value", f"€{avg_accumulation:,.0f}")
     with col3:
-        st.metric("✨ Valore Medio Finale", f"€{avg_final:,.0f}")
+        st.metric("✨ Average Final Value", f"€{avg_final:,.0f}")
     with col4:
-        st.metric("✅ Tasso di Successo", f"{success_rate:.1f}%")
+        st.metric("✅ Success Rate", f"{success_rate:.1f}%")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("📊 Fase di Accumulo")
+        st.subheader("📊 Accumulation Phase")
         acc_data = {
-            'Percentile': ['25°', 'Medio', '75°'],
-            'Valore (€)': [f"{acc_25th:,.0f}", f"{avg_accumulation:,.0f}", f"{acc_75th:,.0f}"]
+            'Percentile': ['25th', 'Average', '75th'],
+            'Value (€)': [f"{acc_25th:,.0f}", f"{avg_accumulation:,.0f}", f"{acc_75th:,.0f}"]
         }
         st.table(pd.DataFrame(acc_data))
     
     with col2:
-        st.subheader("🏁 Valori Finali")
+        st.subheader("🏁 Final Values")
         final_data = {
-            'Percentile': ['25°', 'Medio', '75°'],
-            'Valore (€)': [f"{final_25th:,.0f}", f"{avg_final:,.0f}", f"{final_75th:,.0f}"]
+            'Percentile': ['25th', 'Average', '75th'],
+            'Value (€)': [f"{final_25th:,.0f}", f"{avg_final:,.0f}", f"{final_75th:,.0f}"]
         }
         st.table(pd.DataFrame(final_data))
     
     col1, col2 = st.columns(2)
     
     with col1:
-        fig_acc = px.histogram(x=accumulation_balances, nbins=50, title="Distribuzione Valori Fine Accumulo")
-        fig_acc.update_xaxes(title="Valore (€)")
-        fig_acc.update_yaxes(title="Frequenza")
+        fig_acc = px.histogram(x=accumulation_balances, nbins=50, title="Distribution of End-of-Accumulation Values")
+        fig_acc.update_xaxes(title="Value (€)")
+        fig_acc.update_yaxes(title="Frequency")
         st.plotly_chart(fig_acc, use_container_width=True)
     
     with col2:
-        fig_final = px.histogram(x=final_results, nbins=50, title="Distribuzione Valori Finali")
-        fig_final.update_xaxes(title="Valore (€)")
-        fig_final.update_yaxes(title="Frequenza")
+        fig_final = px.histogram(x=final_results, nbins=50, title="Distribution of Final Values")
+        fig_final.update_xaxes(title="Value (€)")
+        fig_final.update_yaxes(title="Frequency")
         st.plotly_chart(fig_final, use_container_width=True)
 
     if success_rate >= 80:
-        st.success(f"🎉 Ottimo! Con il {success_rate:.1f}% di probabilità di successo, ora si guarda i cantieri da Monte-Carlo")
+        st.success(f"🎉 Excellent! With {success_rate:.1f}% probability of success, you can now watch the construction sites from Monte Carlo")
     elif success_rate >= 60:
-        st.warning(f"⚠️ Discreto. Con il {success_rate:.1f}% di successo, potresti dover considerare il tonno in scatola.")
+        st.warning(f"⚠️ Fair. With {success_rate:.1f}% success rate, you might need to consider canned tuna.")
     else:
-        st.error(f"❌ Attenzione! Solo il {success_rate:.1f}% di probabilità di successo. La caritas ti aspetta.")
+        st.error(f"❌ Warning! Only {success_rate:.1f}% probability of success. Charity awaits you.")
 
 if __name__ == "__main__":
     main()
