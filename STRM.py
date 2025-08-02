@@ -1,6 +1,8 @@
-st.header("🎯 Simulation Results")  
+st.header("🎯 Simulation Results")
+    
     accumulation_balances = results['accumulation']
     final_results = results['final']
+    
     avg_accumulation = np.mean(accumulation_balances)
     acc_25th = np.percentile(accumulation_balances, 25)
     acc_75th = np.percentile(accumulation_balances, 75)
@@ -23,7 +25,7 @@ class CantierSimulatorWeb:
         config_file = 'config.json'
         
         if not os.path.exists(config_file):
-            st.error(f"❌ File di configurazione '{config_file}' non trovato!")
+            st.error(f"❌ Configuration file '{config_file}' not found!")
             st.stop()
         
         try:
@@ -31,7 +33,7 @@ class CantierSimulatorWeb:
                 config = json.load(f)
             return config['asset_profiles']
         except Exception as e:
-            st.error(f"❌ Errore nel caricamento del file di configurazione: {str(e)}")
+            st.error(f"❌ Error loading configuration file: {str(e)}")
             st.stop()
     
     def load_asset_characteristics(self):
@@ -43,7 +45,7 @@ class CantierSimulatorWeb:
                 config = json.load(f)
             return config['asset_characteristics']
         except Exception as e:
-            st.error(f"❌ Errore nel caricamento delle caratteristiche asset: {str(e)}")
+            st.error(f"❌ Error loading asset characteristics: {str(e)}")
             st.stop()
 
 def main():
