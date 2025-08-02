@@ -1,8 +1,6 @@
-st.header("🎯 Simulation Results")
-    
+st.header("🎯 Simulation Results")  
     accumulation_balances = results['accumulation']
     final_results = results['final']
-    
     avg_accumulation = np.mean(accumulation_balances)
     acc_25th = np.percentile(accumulation_balances, 25)
     acc_75th = np.percentile(accumulation_balances, 75)
