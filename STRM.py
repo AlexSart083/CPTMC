@@ -414,8 +414,8 @@ def show_results(results, total_deposited, n_simulations):
         st.subheader("📊 Accumulation Phase")
         acc_data = {
             # Modifica: Riordinato e sostituito Average con Median
-            'Percentile': ['Median', 'Average', '25th', '75th'], 
-            'Value (€)': [f"{acc_50th:,.0f}", f"{avg_accumulation:,.0f}", f"{acc_25th:,.0f}", f"{acc_75th:,.0f}"]
+            'Percentile': ['Median', '25th', '75th', 'Average',], 
+            'Value (€)': [f"{acc_50th:,.0f}",  f"{acc_25th:,.0f}", f"{acc_75th:,.0f}", f"{avg_accumulation:,.0f}"]
         }
         st.table(pd.DataFrame(acc_data))
     
@@ -423,8 +423,8 @@ def show_results(results, total_deposited, n_simulations):
         st.subheader("🏁 Final Values")
         final_data = {
             # Modifica: Riordinato e sostituito Average con Median
-            'Percentile': ['Median', 'Average', '25th', '75th'], 
-            'Value (€)': [f"{final_50th:,.0f}", f"{avg_final:,.0f}", f"{final_25th:,.0f}", f"{final_75th:,.0f}"]
+            'Percentile': ['Median', '25th', '75th', 'Average'], 
+            'Value (€)': [f"{final_50th:,.0f}",  f"{final_25th:,.0f}", f"{final_75th:,.0f}", f"{avg_final:,.0f}"]
         }
         st.table(pd.DataFrame(final_data))
     
