@@ -7,13 +7,10 @@ import os
 
 class CantierSimulatorWeb:
     def __init__(self):
-        self.config = self.load_config()
-        self.asset_profiles = self.config['asset_profiles']
-        self.asset_characteristics = self.config['asset_characteristics']
-        self.original_characteristics = self.config['asset_characteristics'].copy()
+        self.asset_profiles = self.load_asset_profiles()
     
-    def load_config(self):
-        """Carica i profili asset e le caratteristiche dal file di configurazione"""
+    def load_asset_profiles(self):
+        """Carica i profili asset dal file di configurazione"""
         config_file = 'config.json'
         
         if not os.path.exists(config_file):
@@ -23,10 +20,90 @@ class CantierSimulatorWeb:
         try:
             with open(config_file, 'r', encoding='utf-8') as f:
                 config = json.load(f)
-            return config
+            return config['asset_profiles']
         except Exception as e:
             st.error(f"❌ Errore nel caricamento del file di configurazione: {str(e)}")
             st.stop()
+
+def show_asset_popup(asset, asset_index):
+    """Mostra un popup modale per modificare un singolo asset"""
+    with st.popover(f"✏️ Modifica {asset['name']}", use_container_width=True):
+        st.markdown(f"### 📊 {asset['name']}")
+        
+        # Crea due colonne per il layout
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("**📈 Caratteristiche di Rendimento**")
+            new_return = st.number_input(
+                "Rendimento medio (%)", 
+                value=asset['return'], 
+                step=0.1, 
+                format="%.2f",
+                key=f"popup_return_{asset_index}",
+                help="Rendimento annuo atteso dell'asset"
+            )
+            
+            new_volatility = st.number_input(
+                "Volatilità (%)", 
+                value=asset['volatility'], 
+                step=0.1, 
+                format="%.2f",
+                key=f"popup_vol_{asset_index}",
+                help="Deviazione standard dei rendimenti"
+            )
+        
+        with col2:
+            st.markdown("**🎯 Limiti e Allocazione**")
+            new_min_return = st.number_input(
+                "Rendimento minimo (%)", 
+                value=asset['min_return'], 
+                step=1.0, 
+                format="%.2f",
+                key=f"popup_min_{asset_index}",
+                help="Rendimento minimo possibile (cap inferiore)"
+            )
+            
+            new_max_return = st.number_input(
+                "Rendimento massimo (%)", 
+                value=asset['max_return'], 
+                step=1.0, 
+                format="%.2f",
+                key=f"popup_max_{asset_index}",
+                help="Rendimento massimo possibile (cap superiore)"
+            )
+        
+        # Allocazione in una riga separata per darle più spazio
+        st.markdown("**💼 Allocazione nel Portafoglio**")
+        new_allocation = st.slider(
+            "Allocazione (%)", 
+            min_value=0.0, 
+            max_value=100.0, 
+            value=asset['allocation'], 
+            step=1.0,
+            key=f"popup_alloc_{asset_index}",
+            help="Percentuale di questo asset nel portafoglio"
+        )
+        
+        # Pulsanti di azione
+        col_save, col_cancel = st.columns(2)
+        
+        with col_save:
+            if st.button("💾 Salva Modifiche", key=f"save_{asset_index}", type="primary"):
+                # Aggiorna l'asset nella sessione
+                st.session_state.current_assets[asset_index].update({
+                    'return': new_return,
+                    'volatility': new_volatility,
+                    'min_return': new_min_return,
+                    'max_return': new_max_return,
+                    'allocation': new_allocation
+                })
+                st.success("✅ Modifiche salvate!")
+                st.rerun()
+        
+        with col_cancel:
+            if st.button("❌ Annulla", key=f"cancel_{asset_index}"):
+                st.info("Modifiche annullate")
 
 def main():
     st.set_page_config(
@@ -49,7 +126,7 @@ def main():
         # Parametri generali
         st.subheader("📊 Parametri Generali")
         initial_amount = st.number_input("Cifra iniziale (€)", value=0.0, min_value=0.0, step=500.0)
-        years_to_retirement = st.number_input("Anni prima del pensionamento", value=25.0, min_value=0.0, max_value=99.0, step=1.0)
+        years_to_retirement = st.number_input("Anni prima del pensionamento", value=40.0, min_value=0.0, max_value=99.0, step=1.0)
         years_retired = st.number_input("Anni in pensione", value=25.0, min_value=0.0, max_value=99.0, step=1.0)
         annual_contribution = st.number_input("Versamento annuo (€)", value=6000.0, min_value=0.0, step=500.0)
         inflation = st.number_input("Inflazione annua (%)", value=2.5, min_value=0.0, max_value=10.0, step=0.1, format="%.2f")
@@ -60,256 +137,152 @@ def main():
         st.subheader("🎯 Profilo di Investimento")
         selected_profile = st.selectbox("Seleziona profilo:", list(simulator.asset_profiles.keys()), index=1)
     
-    # Inizializza le caratteristiche asset nel session state se non esistono
-    if 'asset_characteristics' not in st.session_state:
-        st.session_state.asset_characteristics = simulator.asset_characteristics.copy()
+    # Area principale divisa in colonne
+    col1, col2 = st.columns([1, 1])
     
-    # Tab per organizzare le sezioni - RINOMINATA LA TERZA SCHEDA
-    tab1, tab2, tab3 = st.tabs(["💼 Portafoglio", "📊 Caratteristiche Asset", "🎲 Simulazione"])
-    
-    with tab1:
+    with col1:
         st.subheader("💼 Configurazione Portafoglio")
         
-        col1, col2, col3 = st.columns([1, 1, 1])
-        
-        with col1:
-            if st.button("🔄 Carica Profilo Selezionato"):
-                st.session_state.current_assets = [asset.copy() for asset in simulator.asset_profiles[selected_profile]]
-                st.rerun()
-        
-        with col2:
-            if st.button("🔄 Reset Allocazioni"):
-                if 'current_assets' in st.session_state:
-                    for asset in st.session_state.current_assets:
-                        asset['allocation'] = 0.0
-                    st.rerun()
-        
-        with col3:
-            if st.button("⚖️ Bilancia Allocazioni"):
-                if 'current_assets' in st.session_state:
-                    active_assets = [asset for asset in st.session_state.current_assets if asset['allocation'] > 0]
-                    if active_assets:
-                        equal_alloc = 100.0 / len(active_assets)
-                        for asset in st.session_state.current_assets:
-                            if asset['allocation'] > 0:
-                                asset['allocation'] = equal_alloc
-                            else:
-                                asset['allocation'] = 0.0
-                        st.rerun()
+        # Carica profilo selezionato
+        if st.button("🔄 Carica Profilo Selezionato"):
+            st.session_state.current_assets = [asset.copy() for asset in simulator.asset_profiles[selected_profile]]
+            st.rerun()
         
         # Inizializza asset se non esistono
         if 'current_assets' not in st.session_state:
             st.session_state.current_assets = [asset.copy() for asset in simulator.asset_profiles[selected_profile]]
         
-        # Tabella modificabile per il portafoglio
-        st.subheader("📋 Configurazione Asset")
+        # Pulsanti di gestione globale
+        col_reset, col_balance = st.columns(2)
         
-        # Crea DataFrame per editing
-        portfolio_data = []
-        for asset in st.session_state.current_assets:
-            portfolio_data.append({
-                'Nome Asset': asset['name'],
-                'Allocazione (%)': asset['allocation'],
-                'TER (%)': asset['ter']
-            })
+        with col_reset:
+            if st.button("🔄 Reset Allocazioni"):
+                for asset in st.session_state.current_assets:
+                    asset['allocation'] = 0.0
+                st.rerun()
         
-        df_portfolio = pd.DataFrame(portfolio_data)
+        with col_balance:
+            if st.button("⚖️ Bilancia Allocazioni"):
+                # Distribuisce equamente tra gli asset con allocazione > 0
+                active_assets = [asset for asset in st.session_state.current_assets if asset['allocation'] > 0]
+                if active_assets:
+                    equal_alloc = 100.0 / len(active_assets)
+                    for asset in st.session_state.current_assets:
+                        if asset['allocation'] > 0:
+                            asset['allocation'] = equal_alloc
+                        else:
+                            asset['allocation'] = 0.0
+                    st.rerun()
         
-        # Editor di tabella
-        edited_df = st.data_editor(
-            df_portfolio,
-            column_config={
-                "Nome Asset": st.column_config.TextColumn("Nome Asset", disabled=True),
-                "Allocazione (%)": st.column_config.NumberColumn(
-                    "Allocazione (%)",
-                    min_value=0.0,
-                    max_value=100.0,
-                    step=0.1,
-                    format="%.2f"
-                ),
-                "TER (%)": st.column_config.NumberColumn(
-                    "TER (%)",
-                    min_value=0.0,
-                    max_value=5.0,
-                    step=0.01,
-                    format="%.3f"
-                )
-            },
-            hide_index=True,
-            use_container_width=True
-        )
+        st.markdown("---")
         
-        # Aggiorna i dati nel session state
+        # Lista asset con popup per modifica
+        assets_data = []
+        
         for i, asset in enumerate(st.session_state.current_assets):
-            asset['allocation'] = edited_df.iloc[i]['Allocazione (%)']
-            asset['ter'] = edited_df.iloc[i]['TER (%)']
+            # Container per ogni asset
+            with st.container():
+                # Header dell'asset con informazioni principali
+                col_info, col_edit = st.columns([3, 1])
+                
+                with col_info:
+                    # Mostra info essenziali in formato compatto
+                    allocation_color = "🟢" if asset['allocation'] > 0 else "⚪"
+                    st.markdown(f"""
+                    **{allocation_color} {asset['name']}**  
+                    📊 Rend: {asset['return']:.1f}% | 📈 Vol: {asset['volatility']:.1f}% | 💼 Alloc: {asset['allocation']:.1f}%
+                    """)
+                
+                with col_edit:
+                    # Popup per modifica
+                    show_asset_popup(asset, i)
+                
+                assets_data.append({
+                    'name': asset['name'],
+                    'return': asset['return'],
+                    'volatility': asset['volatility'],
+                    'allocation': asset['allocation'],
+                    'min_return': asset['min_return'],
+                    'max_return': asset['max_return']
+                })
+                
+                st.markdown("---")
         
-        # Verifica allocazione
-        total_allocation = sum(asset['allocation'] for asset in st.session_state.current_assets)
+        total_allocation = sum(asset['allocation'] for asset in assets_data)
         
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if abs(total_allocation - 100.0) > 0.01:
-                st.error(f"⚠️ Allocazione totale: {total_allocation:.1f}% (deve essere 100%)")
-            else:
-                st.success(f"✅ Allocazione corretta: {total_allocation:.1f}%")
-        
-        with col2:
-            # Grafico allocazioni
-            active_assets = [asset for asset in st.session_state.current_assets if asset['allocation'] > 0]
-            if active_assets and abs(total_allocation - 100.0) <= 0.01:
+        # Mostra stato allocazione
+        if abs(total_allocation - 100.0) > 0.01:
+            st.error(f"⚠️ Allocazione totale: {total_allocation:.1f}% (deve essere 100%)")
+        else:
+            st.success(f"✅ Allocazione corretta: {total_allocation:.1f}%")
+    
+    with col2:
+        st.subheader("📈 Grafico Allocazioni")
+        if abs(total_allocation - 100.0) <= 0.01:
+            # Filtra solo gli asset con allocazione > 0 per il grafico
+            active_assets = [asset for asset in assets_data if asset['allocation'] > 0]
+            if active_assets:
                 df_alloc = pd.DataFrame([
                     {'Asset': asset['name'], 'Allocazione': asset['allocation']}
                     for asset in active_assets
                 ])
-                fig_pie = px.pie(df_alloc, values='Allocazione', names='Asset', 
-                               title="Distribuzione del Portafoglio")
+                fig_pie = px.pie(df_alloc, values='Allocazione', names='Asset', title="Distribuzione del Portafoglio")
                 fig_pie.update_layout(height=400)
                 st.plotly_chart(fig_pie, use_container_width=True)
             else:
-                st.info("Nessun asset attivo o allocazione non valida")
+                st.info("Nessun asset selezionato")
+        
+        st.subheader("📋 Riassunto Asset Attivi")
+        # Mostra solo asset con allocazione > 0 nella tabella riassuntiva
+        active_assets_df = pd.DataFrame([asset for asset in assets_data if asset['allocation'] > 0])
+        if not active_assets_df.empty:
+            # Formatta i numeri per una migliore leggibilità
+            display_df = active_assets_df.copy()
+            for col in ['return', 'volatility', 'allocation', 'min_return', 'max_return']:
+                if col in display_df.columns:
+                    display_df[col] = display_df[col].round(2)
+            st.dataframe(display_df, use_container_width=True)
+        else:
+            st.info("Nessun asset attivo")
     
-    with tab2:
-        st.subheader("📊 Caratteristiche degli Asset")
-        
-        col1, col2 = st.columns([3, 1])
-        
-        with col2:
-            if st.button("🔄 Reset a Valori Originali"):
-                st.session_state.asset_characteristics = simulator.original_characteristics.copy()
-                st.rerun()
-        
-        # Crea DataFrame per le caratteristiche
-        characteristics_data = []
-        for asset_name, characteristics in st.session_state.asset_characteristics.items():
-            characteristics_data.append({
-                'Nome Asset': asset_name,
-                'Rendimento (%)': characteristics['return'],
-                'Volatilità (%)': characteristics['volatility'],
-                'Rendimento Min (%)': characteristics['min_return'],
-                'Rendimento Max (%)': characteristics['max_return']
-            })
-        
-        df_characteristics = pd.DataFrame(characteristics_data)
-        
-        # Editor di tabella per caratteristiche
-        edited_characteristics = st.data_editor(
-            df_characteristics,
-            column_config={
-                "Nome Asset": st.column_config.TextColumn("Nome Asset", disabled=True),
-                "Rendimento (%)": st.column_config.NumberColumn(
-                    "Rendimento (%)",
-                    min_value=-50.0,
-                    max_value=50.0,
-                    step=0.1,
-                    format="%.2f"
-                ),
-                "Volatilità (%)": st.column_config.NumberColumn(
-                    "Volatilità (%)",
-                    min_value=0.0,
-                    max_value=100.0,
-                    step=0.1,
-                    format="%.2f"
-                ),
-                "Rendimento Min (%)": st.column_config.NumberColumn(
-                    "Rendimento Min (%)",
-                    min_value=-100.0,
-                    max_value=100.0,
-                    step=0.1,
-                    format="%.2f"
-                ),
-                "Rendimento Max (%)": st.column_config.NumberColumn(
-                    "Rendimento Max (%)",
-                    min_value=-100.0,
-                    max_value=100.0,
-                    step=0.1,
-                    format="%.2f"
-                )
-            },
-            hide_index=True,
-            use_container_width=True
-        )
-        
-        # Aggiorna i dati nel session state
-        for i, (asset_name, _) in enumerate(st.session_state.asset_characteristics.items()):
-            st.session_state.asset_characteristics[asset_name] = {
-                'return': edited_characteristics.iloc[i]['Rendimento (%)'],
-                'volatility': edited_characteristics.iloc[i]['Volatilità (%)'],
-                'min_return': edited_characteristics.iloc[i]['Rendimento Min (%)'],
-                'max_return': edited_characteristics.iloc[i]['Rendimento Max (%)']
-            }
+    st.markdown("---")
     
-    with tab3:
-        st.subheader("🚀 Esecuzione Simulazione")
+    if st.button("🚀 **ESEGUI SIMULAZIONE**", type="primary"):
+        # Filtra solo asset con allocazione > 0
+        active_assets = [asset for asset in assets_data if asset['allocation'] > 0]
         
-        # Mostra riassunto asset allocation prima della simulazione
-        if 'current_assets' in st.session_state:
-            active_assets_preview = [asset for asset in st.session_state.current_assets if asset['allocation'] > 0]
-            
-            if active_assets_preview:
-                st.subheader("📊 Asset Allocation Corrente")
-                
-                allocation_data = []
-                for asset in active_assets_preview:
-                    allocation_data.append({
-                        'Asset': asset['name'],
-                        'Allocazione (%)': f"{asset['allocation']:.2f}%",
-                        'TER (%)': f"{asset['ter']:.3f}%"
-                    })
-                
-                df_allocation_summary = pd.DataFrame(allocation_data)
-                
-                col1, col2 = st.columns([2, 1])
-                with col1:
-                    st.dataframe(df_allocation_summary, hide_index=True, use_container_width=True)
-                
-                with col2:
-                    # Grafico a torta dell'allocazione
-                    df_alloc_chart = pd.DataFrame([
-                        {'Asset': asset['name'], 'Allocazione': asset['allocation']}
-                        for asset in active_assets_preview
-                    ])
-                    fig_allocation = px.pie(df_alloc_chart, values='Allocazione', names='Asset', 
-                                          title="Distribuzione Asset")
-                    fig_allocation.update_layout(height=300, showlegend=False)
-                    st.plotly_chart(fig_allocation, use_container_width=True)
-                
-                st.markdown("---")
-            else:
-                st.info("⚠️ Nessun asset selezionato. Configura il portafoglio nella prima scheda.")
+        if not active_assets:
+            st.error("❌ Seleziona almeno un asset con allocazione > 0!")
+            return
         
-        if st.button("🚀 **ESEGUI SIMULAZIONE**", type="primary"):
-            # Filtra solo asset con allocazione > 0
-            active_assets = [asset for asset in st.session_state.current_assets if asset['allocation'] > 0]
-            
-            if not active_assets:
-                st.error("❌ Seleziona almeno un asset con allocazione > 0!")
-                return
-            
-            active_total = sum(asset['allocation'] for asset in active_assets)
-            if abs(active_total - 100.0) > 0.01:
-                st.error("❌ Correggi prima le allocazioni!")
-                return
-            
-            total_deposited = initial_amount + (annual_contribution * years_to_retirement)
-            
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            
-            with st.spinner("🔄 Simulazione in corso..."):
-                results = run_monte_carlo_simulation(
-                    active_assets, st.session_state.asset_characteristics,
-                    initial_amount, years_to_retirement, years_retired,
-                    annual_contribution, inflation / 100, withdrawal, n_simulations,
-                    progress_bar, status_text
-                )
-            
-            show_results(results, total_deposited, n_simulations)
+        active_total = sum(asset['allocation'] for asset in active_assets)
+        if abs(active_total - 100.0) > 0.01:
+            st.error("❌ Correggi prima le allocazioni!")
+            return
+        
+        total_deposited = initial_amount + (annual_contribution * years_to_retirement)
+        
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        with st.spinner("🔄 Simulazione in corso..."):
+            results = run_monte_carlo_simulation(
+                active_assets, initial_amount, years_to_retirement, years_retired,
+                annual_contribution, inflation / 100, withdrawal, n_simulations,
+                progress_bar, status_text
+            )
+        
+        show_results(results, total_deposited, n_simulations)
 
-def run_monte_carlo_simulation(assets_data, asset_characteristics, initial_amount, 
-                              years_to_retirement, years_retired, annual_contribution, 
-                              inflation, withdrawal, n_simulations, progress_bar, status_text):
+def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement, 
+                              years_retired, annual_contribution, inflation, 
+                              withdrawal, n_simulations, progress_bar, status_text):
+    
+    mean_returns = [asset['return'] / 100 for asset in assets_data]
+    volatilities = [asset['volatility'] / 100 for asset in assets_data]
+    allocations = [asset['allocation'] / 100 for asset in assets_data]
+    min_returns = [asset['min_return'] / 100 for asset in assets_data]
+    max_returns = [asset['max_return'] / 100 for asset in assets_data]
     
     accumulation_balances = []
     final_results = []
@@ -321,64 +294,20 @@ def run_monte_carlo_simulation(assets_data, asset_characteristics, initial_amoun
         
         balance = initial_amount
         
-        # Fase di accumulo
         for year in range(int(years_to_retirement)):
-            annual_return = 0.0
-            
-            # Calcola il rendimento del portafoglio
-            for asset in assets_data:
-                asset_name = asset['name']
-                allocation = asset['allocation'] / 100
-                ter = asset['ter'] / 100
-                
-                characteristics = asset_characteristics[asset_name]
-                mean_return = characteristics['return'] / 100
-                volatility = characteristics['volatility'] / 100
-                min_return = characteristics['min_return'] / 100
-                max_return = characteristics['max_return'] / 100
-                
-                # Genera rendimento random per l'asset
-                random_return = np.random.normal(mean_return, volatility)
-                # Cap il rendimento tra min e max
-                capped_return = max(min(random_return, max_return), min_return)
-                # Sottrai il TER
-                net_return = capped_return - ter
-                
-                # Contributo al portafoglio
-                annual_return += net_return * allocation
-            
+            annual_returns = [np.random.normal(mean_returns[i], volatilities[i]) for i in range(len(mean_returns))]
+            capped_returns = [max(min(annual_returns[i], max_returns[i]), min_returns[i]) for i in range(len(mean_returns))]
+            annual_return = sum(capped_returns[i] * allocations[i] for i in range(len(mean_returns)))
             balance *= (1 + annual_return)
             balance += annual_contribution
             balance /= (1 + inflation)
         
         accumulation_balances.append(balance)
         
-        # Fase di pensionamento
         for year in range(int(years_retired)):
-            annual_return = 0.0
-            
-            # Calcola il rendimento del portafoglio
-            for asset in assets_data:
-                asset_name = asset['name']
-                allocation = asset['allocation'] / 100
-                ter = asset['ter'] / 100
-                
-                characteristics = asset_characteristics[asset_name]
-                mean_return = characteristics['return'] / 100
-                volatility = characteristics['volatility'] / 100
-                min_return = characteristics['min_return'] / 100
-                max_return = characteristics['max_return'] / 100
-                
-                # Genera rendimento random per l'asset
-                random_return = np.random.normal(mean_return, volatility)
-                # Cap il rendimento tra min e max
-                capped_return = max(min(random_return, max_return), min_return)
-                # Sottrai il TER
-                net_return = capped_return - ter
-                
-                # Contributo al portafoglio
-                annual_return += net_return * allocation
-            
+            annual_returns = [np.random.normal(mean_returns[i], volatilities[i]) for i in range(len(mean_returns))]
+            capped_returns = [max(min(annual_returns[i], max_returns[i]), min_returns[i]) for i in range(len(mean_returns))]
+            annual_return = sum(capped_returns[i] * allocations[i] for i in range(len(mean_returns)))
             balance *= (1 + annual_return)
             balance /= (1 + inflation)
             balance -= withdrawal
@@ -392,6 +321,7 @@ def run_monte_carlo_simulation(assets_data, asset_characteristics, initial_amoun
     status_text.text("✅ Simulazione completata!")
     
     return {'accumulation': accumulation_balances, 'final': final_results}
+
 
 def show_results(results, total_deposited, n_simulations):
     st.markdown("---")
