@@ -382,6 +382,7 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
     ters = [asset['ter'] / 100 for asset in assets_data]
     
     accumulation_balances = []
+    accumulation_balances_nominal = []  # Without inflation adjustment
     final_results = []
     
     for sim in range(n_simulations):
@@ -390,6 +391,7 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
             status_text.text(get_text('simulation_step', lang).format(sim + 1, n_simulations))
         
         balance = initial_amount
+        balance_nominal = initial_amount  # Track nominal value without inflation
         
         # Accumulation phase
         for year in range(int(years_to_retirement)):
@@ -398,13 +400,20 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
             # Apply TER (subtract fees from returns)
             net_returns = [capped_returns[i] - ters[i] for i in range(len(capped_returns))]
             annual_return = sum(net_returns[i] * allocations[i] for i in range(len(net_returns)))
+            
+            # Real value (adjusted for inflation)
             balance *= (1 + annual_return)
             balance += annual_contribution
             balance /= (1 + inflation)
+            
+            # Nominal value (not adjusted for inflation)
+            balance_nominal *= (1 + annual_return)
+            balance_nominal += annual_contribution
         
         accumulation_balances.append(balance)
+        accumulation_balances_nominal.append(balance_nominal)
         
-        # Retirement phase
+        # Retirement phase (continue with real value)
         for year in range(int(years_retired)):
             annual_returns = [np.random.normal(mean_returns[i], volatilities[i]) for i in range(len(mean_returns))]
             capped_returns = [max(min(annual_returns[i], max_returns[i]), min_returns[i]) for i in range(len(mean_returns))]
@@ -423,7 +432,11 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
     progress_bar.progress(1.0)
     status_text.text(get_text('simulation_completed', lang))
     
-    return {'accumulation': accumulation_balances, 'final': final_results}
+    return {
+        'accumulation': accumulation_balances, 
+        'accumulation_nominal': accumulation_balances_nominal,
+        'final': final_results
+    }
 
 
 def show_results(results, total_deposited, n_simulations, lang):
@@ -431,13 +444,20 @@ def show_results(results, total_deposited, n_simulations, lang):
     st.header(get_text('simulation_results', lang))
     
     accumulation_balances = results['accumulation']
+    accumulation_balances_nominal = results['accumulation_nominal']
     final_results = results['final']
     
-    # Calcolo della media e dei percentili
+    # Calcolo della media e dei percentili per valori reali (aggiustati per inflazione)
     avg_accumulation = np.mean(accumulation_balances)
     acc_25th = np.percentile(accumulation_balances, 25)
     acc_50th = np.percentile(accumulation_balances, 50)
     acc_75th = np.percentile(accumulation_balances, 75)
+    
+    # Calcolo della media e dei percentili per valori nominali (senza aggiustamento inflazione)
+    avg_accumulation_nominal = np.mean(accumulation_balances_nominal)
+    acc_25th_nominal = np.percentile(accumulation_balances_nominal, 25)
+    acc_50th_nominal = np.percentile(accumulation_balances_nominal, 50)
+    acc_75th_nominal = np.percentile(accumulation_balances_nominal, 75)
     
     avg_final = np.mean(final_results)
     final_25th = np.percentile(final_results, 25)
@@ -456,10 +476,10 @@ def show_results(results, total_deposited, n_simulations, lang):
     with col4:
         st.metric(get_text('success_rate', lang), f"{success_rate:.1f}%")
     
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.subheader(get_text('accumulation_phase', lang))
+        st.subheader(get_text('accumulation_phase_real', lang))
         acc_data = {
             get_text('percentile', lang): [get_text('median', lang), '25th', '75th', get_text('average', lang)], 
             get_text('value_euro', lang): [f"{acc_50th:,.0f}",  f"{acc_25th:,.0f}", f"{acc_75th:,.0f}", f"{avg_accumulation:,.0f}"]
@@ -467,6 +487,14 @@ def show_results(results, total_deposited, n_simulations, lang):
         st.table(pd.DataFrame(acc_data))
     
     with col2:
+        st.subheader(get_text('accumulation_phase_nominal', lang))
+        acc_data_nominal = {
+            get_text('percentile', lang): [get_text('median', lang), '25th', '75th', get_text('average', lang)], 
+            get_text('value_euro', lang): [f"{acc_50th_nominal:,.0f}",  f"{acc_25th_nominal:,.0f}", f"{acc_75th_nominal:,.0f}", f"{avg_accumulation_nominal:,.0f}"]
+        }
+        st.table(pd.DataFrame(acc_data_nominal))
+    
+    with col3:
         st.subheader(get_text('final_values', lang))
         final_data = {
             get_text('percentile', lang): [get_text('median', lang), '25th', '75th', get_text('average', lang)], 
@@ -474,15 +502,21 @@ def show_results(results, total_deposited, n_simulations, lang):
         }
         st.table(pd.DataFrame(final_data))
     
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     
     with col1:
-        fig_acc = px.histogram(x=accumulation_balances, nbins=50, title=get_text('distribution_accumulation', lang))
+        fig_acc = px.histogram(x=accumulation_balances, nbins=50, title=get_text('distribution_accumulation_real', lang))
         fig_acc.update_xaxes(title=get_text('value_euro', lang))
         fig_acc.update_yaxes(title=get_text('frequency', lang))
         st.plotly_chart(fig_acc, use_container_width=True)
     
     with col2:
+        fig_acc_nominal = px.histogram(x=accumulation_balances_nominal, nbins=50, title=get_text('distribution_accumulation_nominal', lang))
+        fig_acc_nominal.update_xaxes(title=get_text('value_euro', lang))
+        fig_acc_nominal.update_yaxes(title=get_text('frequency', lang))
+        st.plotly_chart(fig_acc_nominal, use_container_width=True)
+    
+    with col3:
         fig_final = px.histogram(x=final_results, nbins=50, title=get_text('distribution_final', lang))
         fig_final.update_xaxes(title=get_text('value_euro', lang))
         fig_final.update_yaxes(title=get_text('frequency', lang))
