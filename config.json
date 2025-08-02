@@ -39,196 +39,52 @@
   },
   "asset_profiles": {
     "Conservativo": [
-      {
-        "name": "Stocks",
-        "allocation": 40.0,
-        "ter": 0.5
-      },
-      {
-        "name": "Bond",
-        "allocation": 40.0,
-        "ter": 0.3
-      },
-      {
-        "name": "Gold",
-        "allocation": 0.0,
-        "ter": 0.4
-      },
-      {
-        "name": "REIT",
-        "allocation": 0.0,
-        "ter": 0.6
-      },
-      {
-        "name": "Commodities",
-        "allocation": 0.0,
-        "ter": 0.8
-      },
-      {
-        "name": "Cash",
-        "allocation": 20.0,
-        "ter": 0.0
-      }
+      { "name": "Stocks", "allocation": 40.0, "ter": 0.2 },
+      { "name": "Bond", "allocation": 40.0, "ter": 0.1 },
+      { "name": "Gold", "allocation": 0.0, "ter": 0.12 },
+      { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
+      { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
+      { "name": "Cash", "allocation": 20.0, "ter": 0.0 }
     ],
     "Moderato": [
-      {
-        "name": "Stocks",
-        "allocation": 60.0,
-        "ter": 0.5
-      },
-      {
-        "name": "Bond",
-        "allocation": 30.0,
-        "ter": 0.3
-      },
-      {
-        "name": "Gold",
-        "allocation": 0.0,
-        "ter": 0.4
-      },
-      {
-        "name": "REIT",
-        "allocation": 0.0,
-        "ter": 0.6
-      },
-      {
-        "name": "Commodities",
-        "allocation": 0.0,
-        "ter": 0.8
-      },
-      {
-        "name": "Cash",
-        "allocation": 10.0,
-        "ter": 0.0
-      }
+      { "name": "Stocks", "allocation": 60.0, "ter": 0.2 },
+      { "name": "Bond", "allocation": 30.0, "ter": 0.1 },
+      { "name": "Gold", "allocation": 0.0, "ter": 0.12 },
+      { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
+      { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
+      { "name": "Cash", "allocation": 10.0, "ter": 0.0 }
     ],
     "Dinamico": [
-      {
-        "name": "Stocks",
-        "allocation": 70.0,
-        "ter": 0.5
-      },
-      {
-        "name": "Bond",
-        "allocation": 10.0,
-        "ter": 0.3
-      },
-      {
-        "name": "Gold",
-        "allocation": 15.0,
-        "ter": 0.4
-      },
-      {
-        "name": "REIT",
-        "allocation": 0.0,
-        "ter": 0.6
-      },
-      {
-        "name": "Commodities",
-        "allocation": 0.0,
-        "ter": 0.8
-      },
-      {
-        "name": "Cash",
-        "allocation": 5.0,
-        "ter": 0.0
-      }
+      { "name": "Stocks", "allocation": 70.0, "ter": 0.2 },
+      { "name": "Bond", "allocation": 10.0, "ter": 0.1 },
+      { "name": "Gold", "allocation": 15.0, "ter": 0.12 },
+      { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
+      { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
+      { "name": "Cash", "allocation": 5.0, "ter": 0.0 }
     ],
     "70_30AzioniOro": [
-      {
-        "name": "Stocks",
-        "allocation": 70.0,
-        "ter": 0.5
-      },
-      {
-        "name": "Bond",
-        "allocation": 0.0,
-        "ter": 0.3
-      },
-      {
-        "name": "Gold",
-        "allocation": 30.0,
-        "ter": 0.4
-      },
-      {
-        "name": "REIT",
-        "allocation": 0.0,
-        "ter": 0.6
-      },
-      {
-        "name": "Commodities",
-        "allocation": 0.0,
-        "ter": 0.8
-      },
-      {
-        "name": "Cash",
-        "allocation": 0.0,
-        "ter": 0.0
-      }
+      { "name": "Stocks", "allocation": 70.0, "ter": 0.2 },
+      { "name": "Bond", "allocation": 0.0, "ter": 0.1 },
+      { "name": "Gold", "allocation": 30.0, "ter": 0.12 },
+      { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
+      { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
+      { "name": "Cash", "allocation": 0.0, "ter": 0.0 }
     ],
     "Diversificato": [
-      {
-        "name": "Stocks",
-        "allocation": 25.0,
-        "ter": 0.5
-      },
-      {
-        "name": "Bond",
-        "allocation": 25.0,
-        "ter": 0.3
-      },
-      {
-        "name": "Gold",
-        "allocation": 15.0,
-        "ter": 0.4
-      },
-      {
-        "name": "REIT",
-        "allocation": 15.0,
-        "ter": 0.6
-      },
-      {
-        "name": "Commodities",
-        "allocation": 10.0,
-        "ter": 0.8
-      },
-      {
-        "name": "Cash",
-        "allocation": 10.0,
-        "ter": 0.0
-      }
+      { "name": "Stocks", "allocation": 25.0, "ter": 0.2 },
+      { "name": "Bond", "allocation": 25.0, "ter": 0.1 },
+      { "name": "Gold", "allocation": 15.0, "ter": 0.12 },
+      { "name": "REIT", "allocation": 15.0, "ter": 0.3 },
+      { "name": "Commodities", "allocation": 10.0, "ter": 0.4 },
+      { "name": "Cash", "allocation": 10.0, "ter": 0.0 }
     ],
     "Libero": [
-      {
-        "name": "Stocks",
-        "allocation": 0.0,
-        "ter": 0.5
-      },
-      {
-        "name": "Bond",
-        "allocation": 0.0,
-        "ter": 0.3
-      },
-      {
-        "name": "Gold",
-        "allocation": 0.0,
-        "ter": 0.4
-      },
-      {
-        "name": "REIT",
-        "allocation": 0.0,
-        "ter": 0.6
-      },
-      {
-        "name": "Commodities",
-        "allocation": 0.0,
-        "ter": 0.8
-      },
-      {
-        "name": "Cash",
-        "allocation": 0.0,
-        "ter": 0.0
-      }
+      { "name": "Stocks", "allocation": 0.0, "ter": 0.2 },
+      { "name": "Bond", "allocation": 0.0, "ter": 0.1 },
+      { "name": "Gold", "allocation": 0.0, "ter": 0.12 },
+      { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
+      { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
+      { "name": "Cash", "allocation": 0.0, "ter": 0.0 }
     ]
   }
 }
