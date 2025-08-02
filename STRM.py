@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 import json
 import os
+from translations import get_text, get_profile_names, get_asset_names
 
 class CantierSimulatorWeb:
     def __init__(self):
@@ -15,7 +16,8 @@ class CantierSimulatorWeb:
         config_file = 'config.json'
         
         if not os.path.exists(config_file):
-            st.error(f"❌ Configuration file '{config_file}' not found!")
+            lang = st.session_state.get('language', 'en')
+            st.error(get_text('config_not_found', lang).format(config_file))
             st.stop()
         
         try:
@@ -23,7 +25,8 @@ class CantierSimulatorWeb:
                 config = json.load(f)
             return config['asset_profiles']
         except Exception as e:
-            st.error(f"❌ Error loading configuration file: {str(e)}")
+            lang = st.session_state.get('language', 'en')
+            st.error(get_text('config_load_error', lang).format(str(e)))
             st.stop()
     
     def load_asset_characteristics(self):
@@ -35,58 +38,100 @@ class CantierSimulatorWeb:
                 config = json.load(f)
             return config['asset_characteristics']
         except Exception as e:
-            st.error(f"❌ Error loading asset characteristics: {str(e)}")
+            lang = st.session_state.get('language', 'en')
+            st.error(get_text('asset_characteristics_error', lang).format(str(e)))
             st.stop()
 
 def main():
+    # Initialize language in session state
+    if 'language' not in st.session_state:
+        st.session_state.language = 'en'
+    
+    lang = st.session_state.language
+    
     st.set_page_config(
-        page_title="Monte Carlo Investment Simulator",
+        page_title=get_text('page_title', lang),
         page_icon="🏗️",
         layout="wide",
         initial_sidebar_state="expanded"
     )
     
+    # Language selector in the top right corner
+    col1, col2, col3 = st.columns([6, 1, 1])
+    with col3:
+        language_options = {'English': 'en', 'Italiano': 'it'}
+        selected_lang = st.selectbox(
+            get_text('language_selector', lang),
+            options=list(language_options.keys()),
+            index=0 if lang == 'en' else 1,
+            key='lang_selector'
+        )
+        
+        # Update language if changed
+        new_lang = language_options[selected_lang]
+        if new_lang != st.session_state.language:
+            st.session_state.language = new_lang
+            st.rerun()
+    
     simulator = CantierSimulatorWeb()
     
     # Main header
-    st.title("🏗️ Monte Carlo Simulation for Retirement Planning")
+    st.title(get_text('main_title', lang))
     
     # Collapsible disclaimers
-    with st.expander("ℹ️ **Important Information & Disclaimers**"):
-        st.markdown("**Educational Purpose Disclaimer:**")
-        st.markdown("This application is for educational purposes only and simulates purely theoretical scenarios based on simplified assumptions. Results should not be interpreted as real predictions nor as investment recommendations. No information provided constitutes financial, wealth or tax advice.")
+    with st.expander(get_text('disclaimers_header', lang)):
+        st.markdown(get_text('educational_disclaimer', lang))
+        st.markdown(get_text('educational_text', lang))
         
-        st.markdown("**Data Information:**")
-        st.markdown("📊 The returns are based on global and European market data from the last 30 years. Data may be inaccurate or outdated and should be used for educational purposes only.")
+        st.markdown(get_text('data_info', lang))
+        st.markdown(get_text('data_text', lang))
     
     st.markdown("---")    
     
     # Sidebar for parameters
     with st.sidebar:
-        st.header("⚙️ Simulation Parameters")
+        st.header(get_text('simulation_parameters', lang))
         
         # General parameters
-        st.subheader("📊 General Parameters")
-        initial_amount = st.number_input("Initial amount (€)", value=0.0, min_value=0.0, step=500.0)
-        years_to_retirement = st.number_input("Years to retirement", value=40.0, min_value=0.0, max_value=99.0, step=1.0)
-        years_retired = st.number_input("Years in retirement", value=25.0, min_value=0.0, max_value=99.0, step=1.0)
-        annual_contribution = st.number_input("Annual contribution (€)", value=6000.0, min_value=0.0, step=500.0)
-        inflation = st.number_input("Annual inflation (%)", value=2.5, min_value=0.0, max_value=10.0, step=0.1, format="%.2f")
-        withdrawal = st.number_input("Annual withdrawal in retirement (€)", value=12000.0, min_value=0.0, step=500.0)
-        n_simulations = st.selectbox("Number of simulations", [1000, 5000, 10000], index=2)
+        st.subheader(get_text('general_parameters', lang))
+        initial_amount = st.number_input(get_text('initial_amount', lang), value=0.0, min_value=0.0, step=500.0)
+        years_to_retirement = st.number_input(get_text('years_to_retirement', lang), value=40.0, min_value=0.0, max_value=99.0, step=1.0)
+        years_retired = st.number_input(get_text('years_retired', lang), value=25.0, min_value=0.0, max_value=99.0, step=1.0)
+        annual_contribution = st.number_input(get_text('annual_contribution', lang), value=6000.0, min_value=0.0, step=500.0)
+        inflation = st.number_input(get_text('inflation', lang), value=2.5, min_value=0.0, max_value=10.0, step=0.1, format="%.2f")
+        withdrawal = st.number_input(get_text('withdrawal', lang), value=12000.0, min_value=0.0, step=500.0)
+        n_simulations = st.selectbox(get_text('n_simulations', lang), [1000, 5000, 10000], index=2)
         
-        # Risk profile
-        st.subheader("🎯 Investment Profile")
-        selected_profile = st.selectbox("Select profile:", list(simulator.asset_profiles.keys()), index=1)
+
     
     # Main area divided into columns
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.subheader("💼 Portfolio Configuration")
+        st.subheader(get_text('portfolio_config', lang))
         
-        # Load selected profile
-        if st.button("🔄 Load Selected Profile"):
+        # Investment profile selector
+        st.subheader(get_text('investment_profile', lang))
+        profile_names = get_profile_names(lang)
+        profile_keys = list(simulator.asset_profiles.keys())
+        profile_display_names = [profile_names.get(key, key) for key in profile_keys]
+        
+        selected_profile_display = st.selectbox(
+            get_text('select_profile', lang), 
+            profile_display_names, 
+            index=1,
+            key='profile_selector'
+        )
+        
+        # Get the actual profile key
+        selected_profile = profile_keys[profile_display_names.index(selected_profile_display)]
+        
+        # Auto-load profile when selection changes
+        if 'last_selected_profile' not in st.session_state:
+            st.session_state.last_selected_profile = selected_profile
+        
+        if selected_profile != st.session_state.last_selected_profile:
+            st.session_state.last_selected_profile = selected_profile
             # Combine profile data with asset characteristics
             loaded_assets = []
             for asset_profile in simulator.asset_profiles[selected_profile]:
@@ -104,8 +149,9 @@ def main():
                     }
                     loaded_assets.append(combined_asset)
             st.session_state.current_assets = loaded_assets
+            st.rerun()
         
-        # Initialize assets if they don't exist
+        # Initialize assets if they don't exist or if it's the first load
         if 'current_assets' not in st.session_state:
             loaded_assets = []
             for asset_profile in simulator.asset_profiles[selected_profile]:
@@ -129,16 +175,18 @@ def main():
             st.session_state.edit_mode = {}
         
         assets_data = []
+        asset_names = get_asset_names(lang)
         
         for i, asset in enumerate(st.session_state.current_assets):
-            with st.expander(f"📈 {asset['name']}", expanded=False):
+            display_name = asset_names.get(asset['name'], asset['name'])
+            with st.expander(f"📈 {display_name}", expanded=False):
                 
                 # Always editable fields: Allocation and TER
                 col_a, col_b = st.columns(2)
                 
                 with col_a:
                     alloc = st.number_input(
-                        f"Allocation (%)", 
+                        get_text('allocation_percent', lang), 
                         value=asset['allocation'], 
                         key=f"alloc_{i}", 
                         step=1.0, 
@@ -149,7 +197,7 @@ def main():
                 
                 with col_b:
                     ter = st.number_input(
-                        f"TER (%)", 
+                        get_text('ter_percent', lang), 
                         value=asset['ter'], 
                         key=f"ter_{i}", 
                         step=0.01, 
@@ -167,24 +215,24 @@ def main():
                 if edit_key not in st.session_state.edit_mode:
                     st.session_state.edit_mode[edit_key] = False
                 
-                if st.button(f"✏️ Edit Parameters", key=f"edit_btn_{i}"):
+                if st.button(get_text('edit_parameters', lang), key=f"edit_btn_{i}"):
                     st.session_state.edit_mode[edit_key] = not st.session_state.edit_mode[edit_key]
                 
                 # Fields editable only in edit mode
                 if st.session_state.edit_mode[edit_key]:
-                    st.markdown("**Advanced Parameters:**")
+                    st.markdown(get_text('advanced_parameters', lang))
                     col_c, col_d = st.columns(2)
                     
                     with col_c:
                         ret = st.number_input(
-                            f"Return (%)", 
+                            get_text('return_percent', lang), 
                             value=asset['return'], 
                             key=f"return_{i}", 
                             step=0.1, 
                             format="%.2f"
                         )
                         vol = st.number_input(
-                            f"Volatility (%)", 
+                            get_text('volatility_percent', lang), 
                             value=asset['volatility'], 
                             key=f"vol_{i}", 
                             step=0.1, 
@@ -194,14 +242,14 @@ def main():
                     
                     with col_d:
                         min_ret = st.number_input(
-                            f"Min Return (%)", 
+                            get_text('min_return_percent', lang), 
                             value=asset['min_return'], 
                             key=f"min_{i}", 
                             step=1.0, 
                             format="%.2f"
                         )
                         max_ret = st.number_input(
-                            f"Max Return (%)", 
+                            get_text('max_return_percent', lang), 
                             value=asset['max_return'], 
                             key=f"max_{i}", 
                             step=1.0, 
@@ -218,14 +266,15 @@ def main():
                     # Show parameters in read-only mode
                     col_info1, col_info2 = st.columns(2)
                     with col_info1:
-                        st.info(f"**Return:** {asset['return']:.2f}%")
-                        st.info(f"**Volatility:** {asset['volatility']:.2f}%")
+                        st.info(f"{get_text('return_label', lang)} {asset['return']:.2f}%")
+                        st.info(f"{get_text('volatility_label', lang)} {asset['volatility']:.2f}%")
                     with col_info2:
-                        st.info(f"**Min Return:** {asset['min_return']:.2f}%")
-                        st.info(f"**Max Return:** {asset['max_return']:.2f}%")
+                        st.info(f"{get_text('min_return_label', lang)} {asset['min_return']:.2f}%")
+                        st.info(f"{get_text('max_return_label', lang)} {asset['max_return']:.2f}%")
                 
                 assets_data.append({
                     'name': asset['name'],
+                    'display_name': display_name,
                     'allocation': alloc,
                     'ter': ter,
                     'return': asset['return'],
@@ -240,13 +289,13 @@ def main():
         col_reset, col_balance = st.columns(2)
         
         with col_reset:
-            if st.button("🔄 Reset Allocations"):
+            if st.button(get_text('reset_allocations', lang)):
                 for asset in st.session_state.current_assets:
                     asset['allocation'] = 0.0
                 st.rerun()
         
         with col_balance:
-            if st.button("⚖️ Balance Allocations"):
+            if st.button(get_text('balance_allocations', lang)):
                 # Distribute equally among assets with allocation > 0
                 active_assets = [asset for asset in st.session_state.current_assets if asset['allocation'] > 0]
                 if active_assets:
@@ -260,50 +309,55 @@ def main():
         
         # Show allocation status
         if abs(total_allocation - 100.0) > 0.01:
-            st.error(f"⚠️ Total allocation: {total_allocation:.1f}% (must be 100%)")
+            st.error(get_text('total_allocation_error', lang, total_allocation))
         else:
-            st.success(f"✅ Correct allocation: {total_allocation:.1f}%")
+            st.success(get_text('correct_allocation', lang, total_allocation))
     
     with col2:
-        st.subheader("📈 Allocation Chart")
+        st.subheader(get_text('allocation_chart', lang))
         if abs(total_allocation - 100.0) <= 0.01:
             # Filter only assets with allocation > 0 for the chart
             active_assets = [asset for asset in assets_data if asset['allocation'] > 0]
             if active_assets:
                 df_alloc = pd.DataFrame([
-                    {'Asset': asset['name'], 'Allocation': asset['allocation']}
+                    {'Asset': asset['display_name'], 'Allocation': asset['allocation']}
                     for asset in active_assets
                 ])
-                fig_pie = px.pie(df_alloc, values='Allocation', names='Asset', title="Portfolio Distribution")
+                fig_pie = px.pie(df_alloc, values='Allocation', names='Asset', title=get_text('portfolio_distribution', lang))
                 fig_pie.update_layout(height=400)
                 st.plotly_chart(fig_pie, use_container_width=True)
             else:
-                st.info("No asset selected")
+                st.info(get_text('no_asset_selected', lang))
         
-        st.subheader("📋 Asset Summary")
+        st.subheader(get_text('asset_summary', lang))
         # Show only assets with allocation > 0 in the summary table
         active_assets_df = pd.DataFrame([asset for asset in assets_data if asset['allocation'] > 0])
         if not active_assets_df.empty:
-            # Reorder columns to show allocation and ter first
-            columns_order = ['name', 'allocation', 'ter', 'return', 'volatility', 'min_return', 'max_return']
+            # Use display names for the table and reorder columns
+            active_assets_df = active_assets_df.drop('name', axis=1)
+            columns_order = ['display_name', 'allocation', 'ter', 'return', 'volatility', 'min_return', 'max_return']
             active_assets_df = active_assets_df.reindex(columns=columns_order)
+            # Rename columns for display
+            active_assets_df.columns = ['Asset', get_text('allocation_percent', lang), get_text('ter_percent', lang), 
+                                      get_text('return_percent', lang), get_text('volatility_percent', lang),
+                                      get_text('min_return_percent', lang), get_text('max_return_percent', lang)]
             st.dataframe(active_assets_df, use_container_width=True)
         else:
-            st.info("No active assets")
+            st.info(get_text('no_active_assets', lang))
     
     st.markdown("---")
     
-    if st.button("🚀 **RUN SIMULATION**", type="primary"):
+    if st.button(get_text('run_simulation', lang), type="primary"):
         # Filter only assets with allocation > 0
         active_assets = [asset for asset in assets_data if asset['allocation'] > 0]
         
         if not active_assets:
-            st.error("❌ Select at least one asset with allocation > 0!")
+            st.error(get_text('select_assets_error', lang))
             return
         
         active_total = sum(asset['allocation'] for asset in active_assets)
         if abs(active_total - 100.0) > 0.01:
-            st.error("❌ Fix allocations first!")
+            st.error(get_text('fix_allocations_error', lang))
             return
         
         total_deposited = initial_amount + (annual_contribution * years_to_retirement)
@@ -311,18 +365,18 @@ def main():
         progress_bar = st.progress(0)
         status_text = st.empty()
         
-        with st.spinner("🔄 Simulation in progress..."):
+        with st.spinner(get_text('simulation_progress', lang)):
             results = run_monte_carlo_simulation(
                 active_assets, initial_amount, years_to_retirement, years_retired,
                 annual_contribution, inflation / 100, withdrawal, n_simulations,
-                progress_bar, status_text
+                progress_bar, status_text, lang
             )
         
-        show_results(results, total_deposited, n_simulations)
+        show_results(results, total_deposited, n_simulations, lang)
 
 def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement, 
                               years_retired, annual_contribution, inflation, 
-                              withdrawal, n_simulations, progress_bar, status_text):
+                              withdrawal, n_simulations, progress_bar, status_text, lang):
     
     mean_returns = [asset['return'] / 100 for asset in assets_data]
     volatilities = [asset['volatility'] / 100 for asset in assets_data]
@@ -337,7 +391,7 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
     for sim in range(n_simulations):
         if sim % 100 == 0:
             progress_bar.progress((sim + 1) / n_simulations)
-            status_text.text(f"Simulation {sim + 1} of {n_simulations}")
+            status_text.text(get_text('simulation_step', lang).format(sim + 1, n_simulations))
         
         balance = initial_amount
         
@@ -371,14 +425,14 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
         final_results.append(balance)
     
     progress_bar.progress(1.0)
-    status_text.text("✅ Simulation completed!")
+    status_text.text(get_text('simulation_completed', lang))
     
     return {'accumulation': accumulation_balances, 'final': final_results}
 
 
-def show_results(results, total_deposited, n_simulations):
+def show_results(results, total_deposited, n_simulations, lang):
     st.markdown("---")
-    st.header("🎯 Simulation Results")
+    st.header(get_text('simulation_results', lang))
     
     accumulation_balances = results['accumulation']
     final_results = results['final']
@@ -398,65 +452,62 @@ def show_results(results, total_deposited, n_simulations):
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric("💰 Total Deposited", f"€{total_deposited:,.0f}")
+        st.metric(get_text('total_deposited', lang), f"€{total_deposited:,.0f}")
     with col2:
-        # Modifica: Sostituito Average con Median
-        st.metric("📈 Median Accumulation Value", f"€{acc_50th:,.0f}")
+        st.metric(get_text('median_accumulation', lang), f"€{acc_50th:,.0f}")
     with col3:
-        # Modifica: Sostituito Average con Median
-        st.metric("✨ Median Final Value", f"€{final_50th:,.0f}")
+        st.metric(get_text('median_final', lang), f"€{final_50th:,.0f}")
     with col4:
-        st.metric("✅ Success Rate", f"{success_rate:.1f}%")
+        st.metric(get_text('success_rate', lang), f"{success_rate:.1f}%")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("📊 Accumulation Phase")
+        st.subheader(get_text('accumulation_phase', lang))
         acc_data = {
-            # Modifica: Riordinato e sostituito Average con Median
-            'Percentile': ['Median', '25th', '75th', 'Average',], 
-            'Value (€)': [f"{acc_50th:,.0f}",  f"{acc_25th:,.0f}", f"{acc_75th:,.0f}", f"{avg_accumulation:,.0f}"]
+            get_text('percentile', lang): [get_text('median', lang), '25th', '75th', get_text('average', lang)], 
+            get_text('value_euro', lang): [f"{acc_50th:,.0f}",  f"{acc_25th:,.0f}", f"{acc_75th:,.0f}", f"{avg_accumulation:,.0f}"]
         }
         st.table(pd.DataFrame(acc_data))
     
     with col2:
-        st.subheader("🏁 Final Values")
+        st.subheader(get_text('final_values', lang))
         final_data = {
-            # Modifica: Riordinato e sostituito Average con Median
-            'Percentile': ['Median', '25th', '75th', 'Average'], 
-            'Value (€)': [f"{final_50th:,.0f}",  f"{final_25th:,.0f}", f"{final_75th:,.0f}", f"{avg_final:,.0f}"]
+            get_text('percentile', lang): [get_text('median', lang), '25th', '75th', get_text('average', lang)], 
+            get_text('value_euro', lang): [f"{final_50th:,.0f}",  f"{final_25th:,.0f}", f"{final_75th:,.0f}", f"{avg_final:,.0f}"]
         }
         st.table(pd.DataFrame(final_data))
     
     col1, col2 = st.columns(2)
     
     with col1:
-        fig_acc = px.histogram(x=accumulation_balances, nbins=50, title="Distribution of End-of-Accumulation Values")
-        fig_acc.update_xaxes(title="Value (€)")
-        fig_acc.update_yaxes(title="Frequency")
+        fig_acc = px.histogram(x=accumulation_balances, nbins=50, title=get_text('distribution_accumulation', lang))
+        fig_acc.update_xaxes(title=get_text('value_euro', lang))
+        fig_acc.update_yaxes(title=get_text('frequency', lang))
         st.plotly_chart(fig_acc, use_container_width=True)
     
     with col2:
-        fig_final = px.histogram(x=final_results, nbins=50, title="Distribution of Final Values")
-        fig_final.update_xaxes(title="Value (€)")
-        fig_final.update_yaxes(title="Frequency")
+        fig_final = px.histogram(x=final_results, nbins=50, title=get_text('distribution_final', lang))
+        fig_final.update_xaxes(title=get_text('value_euro', lang))
+        fig_final.update_yaxes(title=get_text('frequency', lang))
         st.plotly_chart(fig_final, use_container_width=True)
 
     if success_rate >= 80:
-        st.success(f"🎉 Excellent! With {success_rate:.1f}% probability of success, you can now watch the construction sites from Monte Carlo")
+        st.success(get_text('excellent_success', lang).format(success_rate))
     elif success_rate >= 60:
-        st.warning(f"⚠️ Fair. With {success_rate:.1f}% success rate, you might need to consider canned tuna.")
+        st.warning(get_text('fair_success', lang).format(success_rate))
     else:
-        st.error(f"❌ Warning! Only {success_rate:.1f}% probability of success. Charity awaits you.")
+        st.error(get_text('warning_success', lang).format(success_rate))
 
 if __name__ == "__main__":
     main()
     
     # Footer
     st.markdown("---")
+    lang = st.session_state.get('language', 'en')
     st.markdown(
-        "<div style='text-align: center; color: #666; font-size: 0.8em; margin-top: 2em;'>"
-        "Created by AS with the supervision of KIM"
-        "</div>", 
+        f"<div style='text-align: center; color: #666; font-size: 0.8em; margin-top: 2em;'>"
+        f"{get_text('footer', lang)}"
+        f"</div>", 
         unsafe_allow_html=True
     )
