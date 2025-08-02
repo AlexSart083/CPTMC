@@ -13,7 +13,7 @@ TRANSLATIONS = {
         'disclaimers_header': 'ℹ️ **Informazioni Importanti e Disclaimer**',
         'educational_disclaimer': '**Disclaimer Scopo Educativo:**',
         'educational_text': 'Questa applicazione è solo a scopo educativo e simula scenari puramente teorici basati su assunzioni semplificate. I risultati non devono essere interpretati come previsioni reali né come raccomandazioni di investimento. Nessuna informazione fornita costituisce consulenza finanziaria, patrimoniale o fiscale.',
-        'app_explanation': 'test01'
+        'app_explanation': 'test01',
         # Sidebar parameters
         'simulation_parameters': '⚙️ Simulation Parameters',
         'general_parameters': '📊 General Parameters',
@@ -93,7 +93,7 @@ TRANSLATIONS = {
         # Config errors
         'config_not_found': '❌ Configuration file \'{}\' not found!',
         'config_load_error': '❌ Error loading configuration file: {}',
-        'asset_characteristics_error': '❌ Error loading asset characteristics: {}',
+        'asset_characteristics_error': '❌ Errore nel caricamento delle caratteristiche degli asset: {}',
     },
     
     'it': {
@@ -106,7 +106,7 @@ TRANSLATIONS = {
         'disclaimers_header': 'ℹ️ **Important Information & Disclaimers**',
         'educational_disclaimer': '**Educational Purpose Disclaimer:**',
         'educational_text': 'This application is for educational purposes only and simulates purely theoretical scenarios based on simplified assumptions. Results should not be interpreted as real predictions nor as investment recommendations. No information provided constitutes financial, wealth or tax advice.',
-        'app_explanation': 'test01'
+        'app_explanation': 'test01',
         # Sidebar parameters
         'simulation_parameters': '⚙️ Parametri di Simulazione',
         'general_parameters': '📊 Parametri Generali',
@@ -257,5 +257,6 @@ def get_asset_names(lang='en'):
         }
     }
     return assets.get(lang, assets['en'])
+
 
 
