@@ -21,7 +21,7 @@ TRANSLATIONS = {
             "of the plan and offers an overview of potential risks and benefits based on the combination of assets selected."
         ),
         'data_info': '**Data Information:**',
-        'data_text': 'The returns are based on global and European market data from the last 30 years. Data may be inaccurate or outdated and should be used for educational purposes only.',        
+        'data_text': 'The returns are based on global and european market data from the last 30 years. Data may be inaccurate or outdated and should be used for educational purposes only.',        
         # Sidebar parameters
         'simulation_parameters': '⚙️ Simulation Parameters',
         'general_parameters': '📊 General Parameters',
@@ -260,18 +260,19 @@ def get_asset_names(lang='en'):
             'REIT': 'REIT',
             'Commodities': 'Commodities',
             'Cash': 'Cash',
-            'UserAsset1': 'User Asset 1',
-            'UserAsset2': 'User Asset 2'
+            'UserAsset1': 'User Custom 1',
+            'UserAsset2': 'User Custom 2'
         },
         'it': {
             'Stocks': 'Azioni',
             'Bond': 'Obbligazioni', 
             'Gold': 'Oro',
-            'REIT': 'REIT',
+            'REIT': 'Immobiliare',
             'Commodities': 'Materie Prime',
             'Cash': 'Liquidità',
-            'UserAsset1': 'Asset Utente 1',
-            'UserAsset2': 'Asset Utente 2'
+            'UserAsset1': 'Asset Custom 1',
+            'UserAsset2': 'Asset Custom 2'
         }
     }
     return assets.get(lang, assets['en'])
+
