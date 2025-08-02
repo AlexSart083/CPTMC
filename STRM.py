@@ -14,21 +14,95 @@ class CantierSimulatorWeb:
         config_file = 'config.json'
         
         if not os.path.exists(config_file):
-            st.error(f"❌ File di configurazione '{config_file}' non trovato!")
-            st.stop()
+            st.warning(f"⚠️ File di configurazione '{config_file}' non trovato! Uso configurazione di default.")
+            return self.get_default_profiles()
         
         try:
             with open(config_file, 'r', encoding='utf-8') as f:
                 config = json.load(f)
-            return config['asset_profiles']
+            
+            # Verifica la presenza delle sezioni necessarie
+            if 'asset_profiles' not in config or 'asset_characteristics' not in config:
+                st.error("❌ Il file config.json deve contenere 'asset_profiles' e 'asset_characteristics'")
+                return self.get_default_profiles()
+            
+            asset_characteristics = config['asset_characteristics']
+            asset_profiles = config['asset_profiles']
+            
+            # Combina i profili con le caratteristiche
+            validated_profiles = {}
+            for profile_name, assets in asset_profiles.items():
+                validated_assets = []
+                for asset in assets:
+                    validated_asset = self.merge_asset_data(asset, asset_characteristics)
+                    if validated_asset:
+                        validated_assets.append(validated_asset)
+                
+                if validated_assets:
+                    validated_profiles[profile_name] = validated_assets
+            
+            return validated_profiles if validated_profiles else self.get_default_profiles()
+            
         except Exception as e:
             st.error(f"❌ Errore nel caricamento del file di configurazione: {str(e)}")
-            st.stop()
+            return self.get_default_profiles()
+    
+    def merge_asset_data(self, asset_profile, asset_characteristics):
+        """Combina i dati del profilo con le caratteristiche dell'asset"""
+        asset_name = asset_profile.get('name', '')
+        
+        if asset_name not in asset_characteristics:
+            st.warning(f"⚠️ Caratteristiche per '{asset_name}' non trovate in asset_characteristics")
+            return None
+        
+        characteristics = asset_characteristics[asset_name]
+        
+        # Combina i dati
+        merged_asset = {
+            'name': asset_name,
+            'allocation': asset_profile.get('allocation', 0.0),
+            'ter': asset_profile.get('ter', 0.0),  # Total Expense Ratio
+            'return': characteristics.get('return', 5.0),
+            'volatility': characteristics.get('volatility', 10.0),
+            'min_return': characteristics.get('min_return', -20.0),
+            'max_return': characteristics.get('max_return', 30.0)
+        }
+        
+        return merged_asset
+    
+    def get_default_profiles(self):
+        """Restituisce profili asset di default"""
+        return {
+            'Conservativo': [
+                {'name': 'Obbligazioni Gov', 'return': 2.5, 'volatility': 3.0, 'allocation': 70.0, 'min_return': -5.0, 'max_return': 8.0},
+                {'name': 'Azioni Div', 'return': 6.0, 'volatility': 12.0, 'allocation': 30.0, 'min_return': -25.0, 'max_return': 25.0}
+            ],
+            'Moderato': [
+                {'name': 'Obbligazioni', 'return': 3.0, 'volatility': 4.0, 'allocation': 40.0, 'min_return': -8.0, 'max_return': 10.0},
+                {'name': 'Azioni Globali', 'return': 7.0, 'volatility': 15.0, 'allocation': 50.0, 'min_return': -30.0, 'max_return': 35.0},
+                {'name': 'REIT', 'return': 5.5, 'volatility': 18.0, 'allocation': 10.0, 'min_return': -35.0, 'max_return': 40.0}
+            ],
+            'Aggressivo': [
+                {'name': 'Azioni Growth', 'return': 8.5, 'volatility': 20.0, 'allocation': 60.0, 'min_return': -40.0, 'max_return': 50.0},
+                {'name': 'Azioni Emergenti', 'return': 9.0, 'volatility': 25.0, 'allocation': 25.0, 'min_return': -50.0, 'max_return': 60.0},
+                {'name': 'Small Cap', 'return': 10.0, 'volatility': 22.0, 'allocation': 15.0, 'min_return': -45.0, 'max_return': 55.0}
+            ]
+        }
 
 def show_asset_popup(asset, asset_index):
     """Mostra un popup modale per modificare un singolo asset"""
+    # Verifica che l'asset abbia tutti i campi necessari
+    required_fields = ['name', 'return', 'volatility', 'allocation', 'min_return', 'max_return']
+    if not all(key in asset for key in required_fields):
+        st.error(f"❌ Asset '{asset.get('name', 'Sconosciuto')}' ha una struttura non valida")
+        return
+    
     with st.popover(f"✏️ Modifica {asset['name']}", use_container_width=True):
         st.markdown(f"### 📊 {asset['name']}")
+        
+        # Mostra il TER se presente
+        if 'ter' in asset:
+            st.info(f"💰 TER (Total Expense Ratio): {asset['ter']:.2f}%")
         
         # Crea due colonne per il layout
         col1, col2 = st.columns(2)
@@ -37,7 +111,7 @@ def show_asset_popup(asset, asset_index):
             st.markdown("**📈 Caratteristiche di Rendimento**")
             new_return = st.number_input(
                 "Rendimento medio (%)", 
-                value=asset['return'], 
+                value=float(asset['return']), 
                 step=0.1, 
                 format="%.2f",
                 key=f"popup_return_{asset_index}",
@@ -46,7 +120,7 @@ def show_asset_popup(asset, asset_index):
             
             new_volatility = st.number_input(
                 "Volatilità (%)", 
-                value=asset['volatility'], 
+                value=float(asset['volatility']), 
                 step=0.1, 
                 format="%.2f",
                 key=f"popup_vol_{asset_index}",
@@ -54,10 +128,10 @@ def show_asset_popup(asset, asset_index):
             )
         
         with col2:
-            st.markdown("**🎯 Limiti e Allocazione**")
+            st.markdown("**🎯 Limiti di Rendimento**")
             new_min_return = st.number_input(
                 "Rendimento minimo (%)", 
-                value=asset['min_return'], 
+                value=float(asset['min_return']), 
                 step=1.0, 
                 format="%.2f",
                 key=f"popup_min_{asset_index}",
@@ -66,7 +140,7 @@ def show_asset_popup(asset, asset_index):
             
             new_max_return = st.number_input(
                 "Rendimento massimo (%)", 
-                value=asset['max_return'], 
+                value=float(asset['max_return']), 
                 step=1.0, 
                 format="%.2f",
                 key=f"popup_max_{asset_index}",
@@ -79,11 +153,23 @@ def show_asset_popup(asset, asset_index):
             "Allocazione (%)", 
             min_value=0.0, 
             max_value=100.0, 
-            value=asset['allocation'], 
+            value=float(asset['allocation']), 
             step=1.0,
             key=f"popup_alloc_{asset_index}",
             help="Percentuale di questo asset nel portafoglio"
         )
+        
+        # Mostra il TER modificabile se presente
+        new_ter = asset.get('ter', 0.0)
+        if 'ter' in asset:
+            new_ter = st.number_input(
+                "TER - Total Expense Ratio (%)", 
+                value=float(asset['ter']), 
+                step=0.01, 
+                format="%.3f",
+                key=f"popup_ter_{asset_index}",
+                help="Costi annuali dell'asset"
+            )
         
         # Pulsanti di azione
         col_save, col_cancel = st.columns(2)
@@ -91,13 +177,19 @@ def show_asset_popup(asset, asset_index):
         with col_save:
             if st.button("💾 Salva Modifiche", key=f"save_{asset_index}", type="primary"):
                 # Aggiorna l'asset nella sessione
-                st.session_state.current_assets[asset_index].update({
+                update_data = {
                     'return': new_return,
                     'volatility': new_volatility,
                     'min_return': new_min_return,
                     'max_return': new_max_return,
                     'allocation': new_allocation
-                })
+                }
+                
+                # Aggiungi TER se presente
+                if 'ter' in asset:
+                    update_data['ter'] = new_ter
+                
+                st.session_state.current_assets[asset_index].update(update_data)
                 st.success("✅ Modifiche salvate!")
                 st.rerun()
         
@@ -179,7 +271,17 @@ def main():
         # Lista asset con popup per modifica
         assets_data = []
         
+        # Assicurati che current_assets sia inizializzato correttamente
+        if not st.session_state.current_assets:
+            st.warning("⚠️ Nessun asset caricato. Carica un profilo per iniziare.")
+            return
+        
         for i, asset in enumerate(st.session_state.current_assets):
+            # Verifica che l'asset abbia tutti i campi necessari
+            if not all(key in asset for key in ['name', 'return', 'volatility', 'allocation', 'min_return', 'max_return']):
+                st.error(f"❌ Asset {i} ha una struttura non valida. Ricarica il profilo.")
+                continue
+                
             # Container per ogni asset
             with st.container():
                 # Header dell'asset con informazioni principali
@@ -188,9 +290,10 @@ def main():
                 with col_info:
                     # Mostra info essenziali in formato compatto
                     allocation_color = "🟢" if asset['allocation'] > 0 else "⚪"
+                    ter_info = f" | 💰 TER: {asset.get('ter', 0):.2f}%" if 'ter' in asset else ""
                     st.markdown(f"""
                     **{allocation_color} {asset['name']}**  
-                    📊 Rend: {asset['return']:.1f}% | 📈 Vol: {asset['volatility']:.1f}% | 💼 Alloc: {asset['allocation']:.1f}%
+                    📊 Rend: {asset['return']:.1f}% | 📈 Vol: {asset['volatility']:.1f}% | 💼 Alloc: {asset['allocation']:.1f}%{ter_info}
                     """)
                 
                 with col_edit:
@@ -203,7 +306,8 @@ def main():
                     'volatility': asset['volatility'],
                     'allocation': asset['allocation'],
                     'min_return': asset['min_return'],
-                    'max_return': asset['max_return']
+                    'max_return': asset['max_return'],
+                    'ter': asset.get('ter', 0.0)
                 })
                 
                 st.markdown("---")
