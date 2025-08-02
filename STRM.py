@@ -59,11 +59,6 @@ def main():
         st.markdown("**Data Information:**")
         st.markdown("📊 The returns are based on global and European market data from the last 30 years. Data may be inaccurate or outdated and should be used for educational purposes only.")
     
-    # Credits
-    st.markdown("---")
-    col_left, col_right = st.columns([3, 1])
-    with col_right:
-        st.markdown("**Created by AS with the supervision of KIM**")
     st.markdown("---")    
     
     # Sidebar for parameters
@@ -449,3 +444,12 @@ def show_results(results, total_deposited, n_simulations):
 
 if __name__ == "__main__":
     main()
+    
+    # Footer
+    st.markdown("---")
+    st.markdown(
+        "<div style='text-align: center; color: #666; font-size: 0.8em; margin-top: 2em;'>"
+        "Created by AS with the supervision of KIM"
+        "</div>", 
+        unsafe_allow_html=True
+    )
