@@ -82,9 +82,10 @@ def main():
     with st.expander(get_text('disclaimers_header', lang)):
         st.markdown(get_text('educational_disclaimer', lang))
         st.markdown(get_text('educational_text', lang))
-        
+        st.markdown(get_text('app_explanation', lang))   # Aggiunta spiegazione app
         st.markdown(get_text('data_info', lang))
         st.markdown(get_text('data_text', lang))
+        st.markdown("---")
     
     st.markdown("---")    
     
