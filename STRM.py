@@ -309,9 +309,9 @@ def main():
         
         # Show allocation status
         if abs(total_allocation - 100.0) > 0.01:
-            st.error(get_text('total_allocation_error', lang, total_allocation))
+            st.error(get_text('total_allocation_error', lang).format(total_allocation))
         else:
-            st.success(get_text('correct_allocation', lang, total_allocation))
+            st.success(get_text('correct_allocation', lang).format(total_allocation))
     
     with col2:
         st.subheader(get_text('allocation_chart', lang))
