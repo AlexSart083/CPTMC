@@ -50,7 +50,17 @@ def main():
     
     # Main header
     st.title("🏗️ Monte Carlo Simulation for Retirement Planning")
-    st.markdown("This application is for educational purposes only and simulates purely theoretical scenarios based on simplified assumptions. Results should not be interpreted as real predictions nor as investment recommendations. No information provided constitutes financial, wealth or tax advice.")    
+    st.markdown("This application is for educational purposes only and simulates purely theoretical scenarios based on simplified assumptions. Results should not be interpreted as real predictions nor as investment recommendations. No information provided constitutes financial, wealth or tax advice.")
+    
+    # Data disclaimer and credits
+    st.info("📊 **Data Information**: The returns used are based on the last 30 years with Euro currency. Data may be inaccurate or outdated and should be used for educational purposes only.")
+    
+    # Credits
+    st.markdown("---")
+    col_left, col_right = st.columns([3, 1])
+    with col_right:
+        st.markdown("**Created by AS with the supervision of KIM**")
+    st.markdown("---")    
     
     # Sidebar for parameters
     with st.sidebar:
