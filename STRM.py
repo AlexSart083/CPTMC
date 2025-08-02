@@ -64,8 +64,8 @@ def main():
     if 'asset_characteristics' not in st.session_state:
         st.session_state.asset_characteristics = simulator.asset_characteristics.copy()
     
-    # Tab per organizzare le sezioni
-    tab1, tab2, tab3 = st.tabs(["💼 Portafoglio", "📊 Caratteristiche Asset", "📈 Risultati"])
+    # Tab per organizzare le sezioni - RINOMINATA LA TERZA SCHEDA
+    tab1, tab2, tab3 = st.tabs(["💼 Portafoglio", "📊 Caratteristiche Asset", "🎲 Simulazione"])
     
     with tab1:
         st.subheader("💼 Configurazione Portafoglio")
@@ -269,7 +269,7 @@ def main():
                     progress_bar, status_text
                 )
             
-            show_results(results, total_deposited, n_simulations)
+            show_results(results, total_deposited, n_simulations, active_assets)
 
 def run_monte_carlo_simulation(assets_data, asset_characteristics, initial_amount, 
                               years_to_retirement, years_retired, annual_contribution, 
@@ -357,9 +357,39 @@ def run_monte_carlo_simulation(assets_data, asset_characteristics, initial_amoun
     
     return {'accumulation': accumulation_balances, 'final': final_results}
 
-def show_results(results, total_deposited, n_simulations):
+def show_results(results, total_deposited, n_simulations, active_assets):
     st.markdown("---")
     st.header("🎯 Risultati della Simulazione")
+    
+    # AGGIUNTA: Tabella riassuntiva Asset Allocation
+    st.subheader("📊 Asset Allocation Utilizzata")
+    
+    allocation_data = []
+    for asset in active_assets:
+        allocation_data.append({
+            'Asset': asset['name'],
+            'Allocazione (%)': f"{asset['allocation']:.2f}%",
+            'TER (%)': f"{asset['ter']:.3f}%"
+        })
+    
+    df_allocation_summary = pd.DataFrame(allocation_data)
+    
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.dataframe(df_allocation_summary, hide_index=True, use_container_width=True)
+    
+    with col2:
+        # Grafico a torta dell'allocazione
+        df_alloc_chart = pd.DataFrame([
+            {'Asset': asset['name'], 'Allocazione': asset['allocation']}
+            for asset in active_assets
+        ])
+        fig_allocation = px.pie(df_alloc_chart, values='Allocazione', names='Asset', 
+                              title="Distribuzione Asset")
+        fig_allocation.update_layout(height=300, showlegend=False)
+        st.plotly_chart(fig_allocation, use_container_width=True)
+    
+    st.markdown("---")
     
     accumulation_balances = results['accumulation']
     final_results = results['final']
