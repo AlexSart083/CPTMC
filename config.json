@@ -35,56 +35,80 @@
       "volatility": 0.5,
       "min_return": 0.0,
       "max_return": 4.0
+    },
+    "UserAsset1": {
+      "return": 5.5,
+      "volatility": 12.0,
+      "min_return": -15.0,
+      "max_return": 25.0
+    },
+    "UserAsset2": {
+      "return": 4.0,
+      "volatility": 8.0,
+      "min_return": -10.0,
+      "max_return": 18.0
     }
   },
   "asset_profiles": {
-    "Conservativo": [
+    "Conservative": [
       { "name": "Stocks", "allocation": 40.0, "ter": 0.2 },
       { "name": "Bond", "allocation": 40.0, "ter": 0.1 },
       { "name": "Gold", "allocation": 0.0, "ter": 0.12 },
       { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
       { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
-      { "name": "Cash", "allocation": 20.0, "ter": 0.0 }
+      { "name": "Cash", "allocation": 20.0, "ter": 0.0 },
+      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
     ],
-    "Moderato": [
+    "Moderate": [
       { "name": "Stocks", "allocation": 60.0, "ter": 0.2 },
       { "name": "Bond", "allocation": 30.0, "ter": 0.1 },
       { "name": "Gold", "allocation": 0.0, "ter": 0.12 },
       { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
       { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
-      { "name": "Cash", "allocation": 10.0, "ter": 0.0 }
+      { "name": "Cash", "allocation": 10.0, "ter": 0.0 },
+      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
     ],
-    "Dinamico": [
+    "Dynamic": [
       { "name": "Stocks", "allocation": 70.0, "ter": 0.2 },
       { "name": "Bond", "allocation": 10.0, "ter": 0.1 },
       { "name": "Gold", "allocation": 15.0, "ter": 0.12 },
       { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
       { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
-      { "name": "Cash", "allocation": 5.0, "ter": 0.0 }
+      { "name": "Cash", "allocation": 5.0, "ter": 0.0 },
+      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
     ],
-    "70_30AzioniOro": [
+    "StrategicEquityGold": [
       { "name": "Stocks", "allocation": 70.0, "ter": 0.2 },
       { "name": "Bond", "allocation": 0.0, "ter": 0.1 },
       { "name": "Gold", "allocation": 30.0, "ter": 0.12 },
       { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
       { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
-      { "name": "Cash", "allocation": 0.0, "ter": 0.0 }
+      { "name": "Cash", "allocation": 0.0, "ter": 0.0 },
+      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
     ],
-    "Diversificato": [
+    "Diversified": [
       { "name": "Stocks", "allocation": 25.0, "ter": 0.2 },
       { "name": "Bond", "allocation": 25.0, "ter": 0.1 },
       { "name": "Gold", "allocation": 15.0, "ter": 0.12 },
       { "name": "REIT", "allocation": 15.0, "ter": 0.3 },
       { "name": "Commodities", "allocation": 10.0, "ter": 0.4 },
-      { "name": "Cash", "allocation": 10.0, "ter": 0.0 }
+      { "name": "Cash", "allocation": 10.0, "ter": 0.0 },
+      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
     ],
-    "Libero": [
+    "NoAllocation": [
       { "name": "Stocks", "allocation": 0.0, "ter": 0.2 },
       { "name": "Bond", "allocation": 0.0, "ter": 0.1 },
       { "name": "Gold", "allocation": 0.0, "ter": 0.12 },
       { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
       { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
-      { "name": "Cash", "allocation": 0.0, "ter": 0.0 }
+      { "name": "Cash", "allocation": 0.0, "ter": 0.0 },
+      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
     ]
   }
 }
