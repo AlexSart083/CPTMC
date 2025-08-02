@@ -1,303 +1,233 @@
 {
+  "asset_characteristics": {
+    "Stocks": {
+      "return": 7.5,
+      "volatility": 15.0,
+      "min_return": -37.0,
+      "max_return": 32.0
+    },
+    "Bond": {
+      "return": 3.0,
+      "volatility": 5.0,
+      "min_return": -17.0,
+      "max_return": 12.0
+    },
+    "Gold": {
+      "return": 6.0,
+      "volatility": 20.0,
+      "min_return": -29.0,
+      "max_return": 30.0
+    },
+    "REIT": {
+      "return": 4.5,
+      "volatility": 15.0,
+      "min_return": -17.0,
+      "max_return": 15.0
+    },
+    "Commodities": {
+      "return": 2.8,
+      "volatility": 25.0,
+      "min_return": -35.0,
+      "max_return": 37.0
+    },
+    "Cash": {
+      "return": 1.0,
+      "volatility": 0.5,
+      "min_return": 0.0,
+      "max_return": 4.0
+    }
+  },
   "asset_profiles": {
     "Conservativo": [
       {
         "name": "Stocks",
-        "return": 7.5,
-        "volatility": 15.0,
         "allocation": 40.0,
-        "min_return": -37.0,
-        "max_return": 32.0
+        "ter": 0.5
       },
       {
         "name": "Bond",
-        "return": 3.0,
-        "volatility": 5.0,
         "allocation": 40.0,
-        "min_return": -17.0,
-        "max_return": 12.0
+        "ter": 0.3
       },
       {
         "name": "Gold",
-        "return": 6.0,
-        "volatility": 20.0,
         "allocation": 0.0,
-        "min_return": -29.0,
-        "max_return": 30.0
+        "ter": 0.4
       },
       {
         "name": "REIT",
-        "return": 4.5,
-        "volatility": 15.0,
         "allocation": 0.0,
-        "min_return": -17.0,
-        "max_return": 15.0
+        "ter": 0.6
       },
       {
         "name": "Commodities",
-        "return": 2.8,
-        "volatility": 25.0,
         "allocation": 0.0,
-        "min_return": -35.0,
-        "max_return": 37.0
+        "ter": 0.8
       },
       {
         "name": "Cash",
-        "return": 1.0,
-        "volatility": 0.5,
         "allocation": 20.0,
-        "min_return": 0.0,
-        "max_return": 4.0
+        "ter": 0.0
       }
     ],
     "Moderato": [
       {
         "name": "Stocks",
-        "return": 7.5,
-        "volatility": 15.0,
         "allocation": 60.0,
-        "min_return": -37.0,
-        "max_return": 32.0
+        "ter": 0.5
       },
       {
         "name": "Bond",
-        "return": 3.0,
-        "volatility": 5.0,
         "allocation": 30.0,
-        "min_return": -17.0,
-        "max_return": 12.0
+        "ter": 0.3
       },
       {
         "name": "Gold",
-        "return": 6.0,
-        "volatility": 20.0,
         "allocation": 0.0,
-        "min_return": -29.0,
-        "max_return": 30.0
+        "ter": 0.4
       },
       {
         "name": "REIT",
-        "return": 4.5,
-        "volatility": 15.0,
         "allocation": 0.0,
-        "min_return": -17.0,
-        "max_return": 15.0
+        "ter": 0.6
       },
       {
         "name": "Commodities",
-        "return": 2.8,
-        "volatility": 25.0,
         "allocation": 0.0,
-        "min_return": -35.0,
-        "max_return": 37.0
+        "ter": 0.8
       },
       {
         "name": "Cash",
-        "return": 1.0,
-        "volatility": 0.5,
         "allocation": 10.0,
-        "min_return": 0.0,
-        "max_return": 4.0
+        "ter": 0.0
       }
     ],
     "Dinamico": [
       {
         "name": "Stocks",
-        "return": 7.5,
-        "volatility": 15.0,
         "allocation": 70.0,
-        "min_return": -37.0,
-        "max_return": 32.0
+        "ter": 0.5
       },
       {
         "name": "Bond",
-        "return": 3.0,
-        "volatility": 5.0,
         "allocation": 10.0,
-        "min_return": -17.0,
-        "max_return": 12.0
+        "ter": 0.3
       },
       {
         "name": "Gold",
-        "return": 6.0,
-        "volatility": 20.0,
         "allocation": 15.0,
-        "min_return": -29.0,
-        "max_return": 30.0
+        "ter": 0.4
       },
       {
         "name": "REIT",
-        "return": 4.5,
-        "volatility": 15.0,
         "allocation": 0.0,
-        "min_return": -17.0,
-        "max_return": 15.0
+        "ter": 0.6
       },
       {
         "name": "Commodities",
-        "return": 2.8,
-        "volatility": 25.0,
         "allocation": 0.0,
-        "min_return": -35.0,
-        "max_return": 37.0
+        "ter": 0.8
       },
       {
         "name": "Cash",
-        "return": 1.0,
-        "volatility": 0.5,
         "allocation": 5.0,
-        "min_return": 0.0,
-        "max_return": 4.0
+        "ter": 0.0
       }
     ],
     "70_30AzioniOro": [
       {
         "name": "Stocks",
-        "return": 7.5,
-        "volatility": 15.0,
         "allocation": 70.0,
-        "min_return": -37.0,
-        "max_return": 32.0
+        "ter": 0.5
       },
       {
         "name": "Bond",
-        "return": 3.0,
-        "volatility": 5.0,
         "allocation": 0.0,
-        "min_return": -17.0,
-        "max_return": 12.0
+        "ter": 0.3
       },
       {
         "name": "Gold",
-        "return": 6.0,
-        "volatility": 20.0,
         "allocation": 30.0,
-        "min_return": -29.0,
-        "max_return": 30.0
+        "ter": 0.4
       },
       {
         "name": "REIT",
-        "return": 4.5,
-        "volatility": 15.0,
         "allocation": 0.0,
-        "min_return": -17.0,
-        "max_return": 15.0
+        "ter": 0.6
       },
       {
         "name": "Commodities",
-        "return": 2.8,
-        "volatility": 25.0,
         "allocation": 0.0,
-        "min_return": -35.0,
-        "max_return": 37.0
+        "ter": 0.8
       },
       {
         "name": "Cash",
-        "return": 1.0,
-        "volatility": 0.5,
         "allocation": 0.0,
-        "min_return": 0.0,
-        "max_return": 4.0
+        "ter": 0.0
       }
     ],
     "Diversificato": [
       {
         "name": "Stocks",
-        "return": 7.5,
-        "volatility": 15.0,
         "allocation": 25.0,
-        "min_return": -37.0,
-        "max_return": 32.0
+        "ter": 0.5
       },
       {
         "name": "Bond",
-        "return": 3.0,
-        "volatility": 5.0,
         "allocation": 25.0,
-        "min_return": -17.0,
-        "max_return": 12.0
+        "ter": 0.3
       },
       {
         "name": "Gold",
-        "return": 6.0,
-        "volatility": 20.0,
         "allocation": 15.0,
-        "min_return": -29.0,
-        "max_return": 30.0
+        "ter": 0.4
       },
       {
         "name": "REIT",
-        "return": 4.5,
-        "volatility": 15.0,
         "allocation": 15.0,
-        "min_return": -17.0,
-        "max_return": 15.0
+        "ter": 0.6
       },
       {
         "name": "Commodities",
-        "return": 2.8,
-        "volatility": 25.0,
         "allocation": 10.0,
-        "min_return": -35.0,
-        "max_return": 37.0
+        "ter": 0.8
       },
       {
         "name": "Cash",
-        "return": 1.0,
-        "volatility": 0.5,
         "allocation": 10.0,
-        "min_return": 0.0,
-        "max_return": 4.0
+        "ter": 0.0
       }
     ],
     "Libero": [
       {
         "name": "Stocks",
-        "return": 7.5,
-        "volatility": 15.0,
         "allocation": 0.0,
-        "min_return": -37.0,
-        "max_return": 32.0
+        "ter": 0.5
       },
       {
         "name": "Bond",
-        "return": 3.0,
-        "volatility": 5.0,
         "allocation": 0.0,
-        "min_return": -17.0,
-        "max_return": 12.0
+        "ter": 0.3
       },
       {
         "name": "Gold",
-        "return": 6.0,
-        "volatility": 20.0,
         "allocation": 0.0,
-        "min_return": -29.0,
-        "max_return": 30.0
+        "ter": 0.4
       },
       {
         "name": "REIT",
-        "return": 4.5,
-        "volatility": 15.0,
         "allocation": 0.0,
-        "min_return": -17.0,
-        "max_return": 15.0
+        "ter": 0.6
       },
       {
         "name": "Commodities",
-        "return": 2.8,
-        "volatility": 25.0,
         "allocation": 0.0,
-        "min_return": -35.0,
-        "max_return": 37.0
+        "ter": 0.8
       },
       {
         "name": "Cash",
-        "return": 1.0,
-        "volatility": 0.5,
         "allocation": 0.0,
-        "min_return": 0.0,
-        "max_return": 4.0
+        "ter": 0.0
       }
     ]
   }
