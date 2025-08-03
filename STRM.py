@@ -401,7 +401,7 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
     ters = [asset['ter'] / 100 for asset in assets_data]
     
     accumulation_balances = []
-    accumulation_balances_nominal = []  # Without inflation adjustment
+    accumulation_balances_nominal = []  # Same as accumulation_balances_real but kept for clarity
     final_results = []
     
     for sim in range(n_simulations):
@@ -409,11 +409,10 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
             progress_bar.progress((sim + 1) / n_simulations)
             status_text.text(get_text('simulation_step', lang).format(sim + 1, n_simulations))
         
-        balance = initial_amount
-        balance_nominal = initial_amount  # Track nominal value without inflation
+        balance_nominal = initial_amount
         current_contribution = annual_contribution  # For inflation-adjusted contributions
         
-        # Accumulation phase
+        # Accumulation phase - calculate everything in NOMINAL terms
         for year in range(int(years_to_retirement)):
             annual_returns = [np.random.normal(mean_returns[i], volatilities[i]) for i in range(len(mean_returns))]
             capped_returns = [max(min(annual_returns[i], max_returns[i]), min_returns[i]) for i in range(len(mean_returns))]
@@ -421,14 +420,7 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
             net_returns = [capped_returns[i] - ters[i] for i in range(len(capped_returns))]
             annual_return_nominal = sum(net_returns[i] * allocations[i] for i in range(len(net_returns)))
             
-            # Calculate real return (nominal return adjusted for inflation)
-            annual_return_real = annual_return_nominal - inflation
-            
-            # Real value (using real returns)
-            balance *= (1 + annual_return_real)
-            balance += current_contribution
-            
-            # Nominal value (using nominal returns)
+            # Calculate nominal balance
             balance_nominal *= (1 + annual_return_nominal)
             balance_nominal += current_contribution
             
@@ -436,10 +428,15 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
             if adjust_contribution_inflation:
                 current_contribution *= (1 + inflation)
         
-        accumulation_balances.append(balance)
+        # Store nominal accumulation value
         accumulation_balances_nominal.append(balance_nominal)
         
-        # Retirement phase (continue with real value)
+        # Convert to real value by deflating for all years of inflation
+        balance_real = balance_nominal / ((1 + inflation) ** years_to_retirement)
+        accumulation_balances.append(balance_real)
+        
+        # Retirement phase - use REAL balance and REAL returns
+        balance = balance_real  # Start retirement with real balance
         for year in range(int(years_retired)):
             annual_returns = [np.random.normal(mean_returns[i], volatilities[i]) for i in range(len(mean_returns))]
             capped_returns = [max(min(annual_returns[i], max_returns[i]), min_returns[i]) for i in range(len(mean_returns))]
@@ -447,10 +444,10 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
             net_returns = [capped_returns[i] - ters[i] for i in range(len(capped_returns))]
             annual_return_nominal = sum(net_returns[i] * allocations[i] for i in range(len(net_returns)))
             
-            # Calculate real return (nominal return adjusted for inflation)
+            # Calculate real return for retirement phase
             annual_return_real = annual_return_nominal - inflation
             
-            # Apply real return and subtract withdrawal
+            # Apply real return and subtract withdrawal (in real terms)
             balance *= (1 + annual_return_real)
             balance -= withdrawal
             if balance < 0:
