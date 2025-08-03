@@ -419,15 +419,17 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
             capped_returns = [max(min(annual_returns[i], max_returns[i]), min_returns[i]) for i in range(len(mean_returns))]
             # Apply TER (subtract fees from returns)
             net_returns = [capped_returns[i] - ters[i] for i in range(len(capped_returns))]
-            annual_return = sum(net_returns[i] * allocations[i] for i in range(len(net_returns)))
+            annual_return_nominal = sum(net_returns[i] * allocations[i] for i in range(len(net_returns)))
             
-            # Real value (adjusted for inflation)
-            balance *= (1 + annual_return)
+            # Calculate real return (nominal return adjusted for inflation)
+            annual_return_real = annual_return_nominal - inflation
+            
+            # Real value (using real returns)
+            balance *= (1 + annual_return_real)
             balance += current_contribution
-            balance /= (1 + inflation)
             
-            # Nominal value (not adjusted for inflation)
-            balance_nominal *= (1 + annual_return)
+            # Nominal value (using nominal returns)
+            balance_nominal *= (1 + annual_return_nominal)
             balance_nominal += current_contribution
             
             # Update contribution for next year if inflation adjustment is enabled
@@ -443,9 +445,13 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
             capped_returns = [max(min(annual_returns[i], max_returns[i]), min_returns[i]) for i in range(len(mean_returns))]
             # Apply TER (subtract fees from returns)
             net_returns = [capped_returns[i] - ters[i] for i in range(len(capped_returns))]
-            annual_return = sum(net_returns[i] * allocations[i] for i in range(len(net_returns)))
-            balance *= (1 + annual_return)
-            balance /= (1 + inflation)
+            annual_return_nominal = sum(net_returns[i] * allocations[i] for i in range(len(net_returns)))
+            
+            # Calculate real return (nominal return adjusted for inflation)
+            annual_return_real = annual_return_nominal - inflation
+            
+            # Apply real return and subtract withdrawal
+            balance *= (1 + annual_return_real)
             balance -= withdrawal
             if balance < 0:
                 balance = 0
