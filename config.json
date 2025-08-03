@@ -2,30 +2,30 @@
   "asset_characteristics": {
     "Stocks": {
       "return": 7.5,
-      "volatility": 15.0,
-      "min_return": -37.0,
-      "max_return": 32.0
+      "volatility": 15.2,
+      "min_return": -38.0,
+      "max_return": 41.0
     },
     "Bond": {
       "return": 3.0,
       "volatility": 5.0,
-      "min_return": -17.0,
-      "max_return": 12.0
+      "min_return": -18.0,
+      "max_return": 13.0
     },
     "Gold": {
-      "return": 6.0,
-      "volatility": 20.0,
-      "min_return": -29.0,
-      "max_return": 30.0
+      "return": 6.4,
+      "volatility": 17.5,
+      "min_return": -30.0,
+      "max_return": 32.0
     },
     "REIT": {
       "return": 4.5,
-      "volatility": 15.0,
-      "min_return": -17.0,
-      "max_return": 15.0
+      "volatility": 22.0,
+      "min_return": -28.0,
+      "max_return": 16.0
     },
     "Commodities": {
-      "return": 2.8,
+      "return": 0.8,
       "volatility": 25.0,
       "min_return": -35.0,
       "max_return": 37.0
@@ -50,6 +50,16 @@
     }
   },
   "asset_profiles": {
+    "Protective": [
+      { "name": "Stocks", "allocation": 20.0, "ter": 0.2 },
+      { "name": "Bond", "allocation": 55.0, "ter": 0.1 },
+      { "name": "Gold", "allocation": 0.0, "ter": 0.12 },
+      { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
+      { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
+      { "name": "Cash", "allocation": 25.0, "ter": 0.0 },
+      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
+    ],
     "Conservative": [
       { "name": "Stocks", "allocation": 40.0, "ter": 0.2 },
       { "name": "Bond", "allocation": 40.0, "ter": 0.1 },
@@ -70,6 +80,16 @@
       { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
       { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
     ],
+    "Aggressive": [
+      { "name": "Stocks", "allocation": 80.0, "ter": 0.2 },
+      { "name": "Bond", "allocation": 20.0, "ter": 0.1 },
+      { "name": "Gold", "allocation": 0.0, "ter": 0.12 },
+      { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
+      { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
+      { "name": "Cash", "allocation": 0.0, "ter": 0.0 },
+      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
+    ],  
     "Dynamic": [
       { "name": "Stocks", "allocation": 70.0, "ter": 0.2 },
       { "name": "Bond", "allocation": 10.0, "ter": 0.1 },
@@ -79,7 +99,7 @@
       { "name": "Cash", "allocation": 5.0, "ter": 0.0 },
       { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
       { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
-    ],
+    ],  
     "StrategicEquityGold": [
       { "name": "Stocks", "allocation": 70.0, "ter": 0.2 },
       { "name": "Bond", "allocation": 0.0, "ter": 0.1 },
@@ -112,3 +132,4 @@
     ]
   }
 }
+
