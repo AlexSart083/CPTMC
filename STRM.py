@@ -120,7 +120,7 @@ def main():
         selected_profile_display = st.selectbox(
             get_text('select_profile', lang), 
             profile_display_names, 
-            index=1,
+            index=2,
             key='profile_selector'
         )
         
