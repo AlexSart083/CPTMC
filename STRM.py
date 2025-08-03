@@ -387,7 +387,7 @@ def main():
                 progress_bar, status_text, lang
             )
         
-        show_results(results, total_deposited, n_simulations, lang)
+        show_results(results, total_deposited, n_simulations, years_to_retirement, years_retired, lang)
 
 def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement, 
                               years_retired, annual_contribution, adjust_contribution_inflation,
@@ -463,7 +463,7 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
     }
 
 
-def show_results(results, total_deposited, n_simulations, lang):
+def show_results(results, total_deposited, n_simulations, years_to_retirement, years_retired, lang):
     st.markdown("---")
     st.header(get_text('simulation_results', lang))
     
@@ -489,6 +489,31 @@ def show_results(results, total_deposited, n_simulations, lang):
     final_75th = np.percentile(final_results, 75)
     success_rate = sum(r > 0 for r in final_results) / n_simulations * 100
     
+    # Funzione per calcolare CAGR
+    def calculate_cagr(final_value, initial_value, years):
+        if initial_value <= 0 or final_value <= 0 or years <= 0:
+            return 0
+        return ((final_value / initial_value) ** (1/years) - 1) * 100
+    
+    # Calcolo CAGR per accumulation phase (nominal)
+    acc_cagr_50th_nominal = calculate_cagr(acc_50th_nominal, total_deposited, years_to_retirement)
+    acc_cagr_25th_nominal = calculate_cagr(acc_25th_nominal, total_deposited, years_to_retirement)
+    acc_cagr_75th_nominal = calculate_cagr(acc_75th_nominal, total_deposited, years_to_retirement)
+    acc_cagr_avg_nominal = calculate_cagr(avg_accumulation_nominal, total_deposited, years_to_retirement)
+    
+    # Calcolo CAGR per accumulation phase (real)
+    acc_cagr_50th = calculate_cagr(acc_50th, total_deposited, years_to_retirement)
+    acc_cagr_25th = calculate_cagr(acc_25th, total_deposited, years_to_retirement)
+    acc_cagr_75th = calculate_cagr(acc_75th, total_deposited, years_to_retirement)
+    acc_cagr_avg = calculate_cagr(avg_accumulation, total_deposited, years_to_retirement)
+    
+    # Calcolo CAGR per final phase (dall'inizio accumulo alla fine pensione)
+    total_years = years_to_retirement + years_retired
+    final_cagr_50th = calculate_cagr(final_50th, total_deposited, total_years)
+    final_cagr_25th = calculate_cagr(final_25th, total_deposited, total_years)
+    final_cagr_75th = calculate_cagr(final_75th, total_deposited, total_years)
+    final_cagr_avg = calculate_cagr(avg_final, total_deposited, total_years)
+    
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -506,7 +531,8 @@ def show_results(results, total_deposited, n_simulations, lang):
         st.subheader(get_text('accumulation_phase_nominal', lang))
         acc_data_nominal = {
             get_text('percentile', lang): [get_text('median', lang), '25th', '75th', get_text('average', lang)], 
-            get_text('value_euro', lang): [f"{acc_50th_nominal:,.0f}",  f"{acc_25th_nominal:,.0f}", f"{acc_75th_nominal:,.0f}", f"{avg_accumulation_nominal:,.0f}"]
+            get_text('value_euro', lang): [f"{acc_50th_nominal:,.0f}", f"{acc_25th_nominal:,.0f}", f"{acc_75th_nominal:,.0f}", f"{avg_accumulation_nominal:,.0f}"],
+            get_text('cagr_percent', lang): [f"{acc_cagr_50th_nominal:.2f}%", f"{acc_cagr_25th_nominal:.2f}%", f"{acc_cagr_75th_nominal:.2f}%", f"{acc_cagr_avg_nominal:.2f}%"]
         }
         st.table(pd.DataFrame(acc_data_nominal))
     
@@ -514,7 +540,8 @@ def show_results(results, total_deposited, n_simulations, lang):
         st.subheader(get_text('accumulation_phase_real', lang))
         acc_data = {
             get_text('percentile', lang): [get_text('median', lang), '25th', '75th', get_text('average', lang)], 
-            get_text('value_euro', lang): [f"{acc_50th:,.0f}",  f"{acc_25th:,.0f}", f"{acc_75th:,.0f}", f"{avg_accumulation:,.0f}"]
+            get_text('value_euro', lang): [f"{acc_50th:,.0f}", f"{acc_25th:,.0f}", f"{acc_75th:,.0f}", f"{avg_accumulation:,.0f}"],
+            get_text('cagr_percent', lang): [f"{acc_cagr_50th:.2f}%", f"{acc_cagr_25th:.2f}%", f"{acc_cagr_75th:.2f}%", f"{acc_cagr_avg:.2f}%"]
         }
         st.table(pd.DataFrame(acc_data))
     
@@ -522,7 +549,8 @@ def show_results(results, total_deposited, n_simulations, lang):
         st.subheader(get_text('final_values', lang))
         final_data = {
             get_text('percentile', lang): [get_text('median', lang), '25th', '75th', get_text('average', lang)], 
-            get_text('value_euro', lang): [f"{final_50th:,.0f}",  f"{final_25th:,.0f}", f"{final_75th:,.0f}", f"{avg_final:,.0f}"]
+            get_text('value_euro', lang): [f"{final_50th:,.0f}", f"{final_25th:,.0f}", f"{final_75th:,.0f}", f"{avg_final:,.0f}"],
+            get_text('cagr_percent', lang): [f"{final_cagr_50th:.2f}%", f"{final_cagr_25th:.2f}%", f"{final_cagr_75th:.2f}%", f"{final_cagr_avg:.2f}%"]
         }
         st.table(pd.DataFrame(final_data))
     
