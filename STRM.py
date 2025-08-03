@@ -99,6 +99,14 @@ def main():
         years_to_retirement = st.number_input(get_text('years_to_retirement', lang), value=40.0, min_value=0.0, max_value=99.0, step=1.0)
         years_retired = st.number_input(get_text('years_retired', lang), value=25.0, min_value=0.0, max_value=99.0, step=1.0)
         annual_contribution = st.number_input(get_text('annual_contribution', lang), value=6000.0, min_value=0.0, step=500.0)
+        
+        # NEW: Checkbox for inflation-adjusted contributions
+        adjust_contribution_inflation = st.checkbox(
+            get_text('adjust_contribution_inflation', lang), 
+            value=True,
+            help=get_text('adjust_contribution_inflation_help', lang)
+        )
+        
         inflation = st.number_input(get_text('inflation', lang), value=2.5, min_value=0.0, max_value=10.0, step=0.1, format="%.2f")
         withdrawal = st.number_input(get_text('withdrawal', lang), value=12000.0, min_value=0.0, step=500.0)
         n_simulations = st.selectbox(get_text('n_simulations', lang), [1000, 5000, 10000], index=2)
@@ -357,7 +365,17 @@ def main():
             st.error(get_text('fix_allocations_error', lang))
             return
         
-        total_deposited = initial_amount + (annual_contribution * years_to_retirement)
+        # Calculate total deposited based on inflation adjustment setting
+        if adjust_contribution_inflation:
+            # Calculate total with inflation adjustment
+            total_deposited = initial_amount
+            current_contribution = annual_contribution
+            for year in range(int(years_to_retirement)):
+                total_deposited += current_contribution
+                current_contribution *= (1 + inflation / 100)  # Adjust for next year
+        else:
+            # Simple calculation without inflation adjustment
+            total_deposited = initial_amount + (annual_contribution * years_to_retirement)
         
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -365,15 +383,15 @@ def main():
         with st.spinner(get_text('simulation_progress', lang)):
             results = run_monte_carlo_simulation(
                 active_assets, initial_amount, years_to_retirement, years_retired,
-                annual_contribution, inflation / 100, withdrawal, n_simulations,
+                annual_contribution, adjust_contribution_inflation, inflation / 100, withdrawal, n_simulations,
                 progress_bar, status_text, lang
             )
         
         show_results(results, total_deposited, n_simulations, lang)
 
 def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement, 
-                              years_retired, annual_contribution, inflation, 
-                              withdrawal, n_simulations, progress_bar, status_text, lang):
+                              years_retired, annual_contribution, adjust_contribution_inflation,
+                              inflation, withdrawal, n_simulations, progress_bar, status_text, lang):
     
     mean_returns = [asset['return'] / 100 for asset in assets_data]
     volatilities = [asset['volatility'] / 100 for asset in assets_data]
@@ -393,6 +411,7 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
         
         balance = initial_amount
         balance_nominal = initial_amount  # Track nominal value without inflation
+        current_contribution = annual_contribution  # For inflation-adjusted contributions
         
         # Accumulation phase
         for year in range(int(years_to_retirement)):
@@ -404,12 +423,16 @@ def run_monte_carlo_simulation(assets_data, initial_amount, years_to_retirement,
             
             # Real value (adjusted for inflation)
             balance *= (1 + annual_return)
-            balance += annual_contribution
+            balance += current_contribution
             balance /= (1 + inflation)
             
             # Nominal value (not adjusted for inflation)
             balance_nominal *= (1 + annual_return)
-            balance_nominal += annual_contribution
+            balance_nominal += current_contribution
+            
+            # Update contribution for next year if inflation adjustment is enabled
+            if adjust_contribution_inflation:
+                current_contribution *= (1 + inflation)
         
         accumulation_balances.append(balance)
         accumulation_balances_nominal.append(balance_nominal)
