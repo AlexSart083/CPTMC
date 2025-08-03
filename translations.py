@@ -233,17 +233,21 @@ def get_profile_names(lang='en'):
     """Get translated profile names"""
     profiles = {
         'en': {
+            'Protective': 'Protective',
             'Conservative': 'Conservative',
             'Moderate': 'Moderate', 
             'Dynamic': 'Dynamic',
+            'Aggressive': 'Aggressive',
             'StrategicEquityGold': 'Strategic Equity-Gold',
             'Diversified': 'Diversified',
             'NoAllocation': 'No Allocation'
         },
         'it': {
+            'Protective': 'Protettivo',
             'Conservative': 'Conservativo',
             'Moderate': 'Moderato',
             'Dynamic': 'Dinamico', 
+            'Aggressive': 'Aggressivo',
             'StrategicEquityGold': 'Strategico Equity-Oro',
             'Diversified': 'Diversificato',
             'NoAllocation': 'Nessuna Allocazione'
@@ -276,6 +280,7 @@ def get_asset_names(lang='en'):
         }
     }
     return assets.get(lang, assets['en'])
+
 
 
 
