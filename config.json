@@ -1,52 +1,52 @@
 {
   "asset_characteristics": {
     "Stocks": {
-      "return": 7.5,
-      "volatility": 15.2,
-      "min_return": -38.0,
-      "max_return": 41.0
+      "return": 8.4,
+      "volatility": 14.3,
+      "min_return": -55.0,
+      "max_return": 45.0
     },
     "Bond": {
-      "return": 3.0,
-      "volatility": 5.0,
-      "min_return": -18.0,
-      "max_return": 13.0
+      "return": 3.2,
+      "volatility": 4.8,
+      "min_return": -15.0,
+      "max_return": 12.0
     },
     "Gold": {
-      "return": 6.4,
-      "volatility": 17.5,
-      "min_return": -30.0,
-      "max_return": 32.0
+      "return": 6.8,
+      "volatility": 16.2, 
+      "min_return": -28.0,
+      "max_return": 38.0
     },
     "REIT": {
-      "return": 4.5,
-      "volatility": 22.0,
-      "min_return": -28.0,
-      "max_return": 16.0
+      "return": 6.8,
+      "volatility": 18.5,
+      "min_return": -45.0,
+      "max_return": 35.0
     },
     "Commodities": {
-      "return": 0.8,
-      "volatility": 25.0,
-      "min_return": -35.0,
-      "max_return": 37.0
+      "return": 2.1,
+      "volatility": 22.0,
+      "min_return": -45.0,
+      "max_return": 40.0
     },
     "Cash": {
-      "return": 1.0,
-      "volatility": 0.5,
-      "min_return": 0.0,
-      "max_return": 4.0
+      "return": 1.8,
+      "volatility": 0.8,
+      "min_return": -1.0,
+      "max_return": 4.5
     },
     "UserAsset1": {
-      "return": 5.5,
+      "return": 4.2,
       "volatility": 12.0,
-      "min_return": -15.0,
-      "max_return": 25.0
+      "min_return": -12.0,
+      "max_return": 15.0
     },
     "UserAsset2": {
-      "return": 4.0,
-      "volatility": 8.0,
-      "min_return": -10.0,
-      "max_return": 18.0
+      "return": 0.0,
+      "volatility": 0.0,
+      "min_return": 0.0,
+      "max_return": 0.0
     }
   },
   "asset_profiles": {
