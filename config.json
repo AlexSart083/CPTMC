@@ -13,16 +13,16 @@
       "max_return": 12.0
     },
     "Gold": {
-      "return": 6.8,
+      "return": 7.8,
       "volatility": 16.2, 
       "min_return": -28.0,
       "max_return": 38.0
     },
     "REIT": {
-      "return": 6.8,
-      "volatility": 18.5,
-      "min_return": -45.0,
-      "max_return": 35.0
+      "return": 4.8,
+      "volatility": 18.0,
+      "min_return": -37.2,
+      "max_return": 25.5
     },
     "Commodities": {
       "return": 2.1,
@@ -31,9 +31,9 @@
       "max_return": 40.0
     },
     "Cash": {
-      "return": 1.8,
+      "return": 1.0,
       "volatility": 0.8,
-      "min_return": -1.0,
+      "min_return": 0.0,
       "max_return": 4.5
     },
     "UserAsset1": {
