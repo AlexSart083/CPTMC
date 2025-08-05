@@ -1,5 +1,5 @@
 """
-Translations for the Monte Carlo Investment Simulator
+Updated translations with capital gains tax support
 """
 
 TRANSLATIONS = {
@@ -23,6 +23,7 @@ TRANSLATIONS = {
         ),
         'data_info': '**Data Information:**',
         'data_text': 'The returns are based on global and european market data from the last 30 years. Data may be inaccurate or outdated and should be used for educational purposes only.',        
+        
         # Sidebar parameters
         'simulation_parameters': '⚙️ Simulation Parameters',
         'general_parameters': '📊 General Parameters',
@@ -34,9 +35,11 @@ TRANSLATIONS = {
         'adjust_contribution_inflation_help': 'If checked, the annual contribution will increase each year by the inflation rate. If unchecked, the contribution remains fixed.',
         'inflation': 'Annual inflation (%)',
         'withdrawal': 'Annual withdrawal in retirement (€)',
+        'capital_gains_tax_rate': '💰 Capital gains tax rate (%)',
+        'capital_gains_tax_help': 'Tax rate applied to capital gains portion of withdrawals. The effective withdrawal amount will be reduced based on the capital gains percentage in your portfolio.',
         'n_simulations': 'Number of simulations',
         
-        # Portfolio configuration - NEW SECTIONS
+        # Portfolio configuration
         'portfolio_config': '💼 Portfolio Configuration',
         'accumulation_portfolio': '📈 Accumulation Phase Portfolio',
         'retirement_portfolio': '🏖️ Retirement Phase Portfolio',
@@ -94,6 +97,7 @@ TRANSLATIONS = {
         'median_accumulation': '📈 Median Accumulation Value',
         'median_final': '✨ Median Final Value',
         'success_rate': '✅ Success Rate',
+        'real_withdrawal_amount': '💸 Real Withdrawal Amount (After Tax)',
         'accumulation_phase': '📊 Accumulation Phase (With Inflation)',
         'accumulation_phase_real': '📊 Accumulation Phase (With Inflation)',
         'accumulation_phase_nominal': '💰 Accumulation Phase (Without Inflation)',
@@ -156,9 +160,11 @@ TRANSLATIONS = {
         'adjust_contribution_inflation_help': 'Se selezionato, il contributo annuale aumenterà ogni anno del tasso di inflazione. Se non selezionato, il contributo rimane fisso.',
         'inflation': 'Inflazione annuale (%)',
         'withdrawal': 'Prelievo annuale in pensione (€)',
+        'capital_gains_tax_rate': '💰 Aliquota tassazione capital gain (%)',
+        'capital_gains_tax_help': 'Aliquota fiscale applicata alla porzione di capital gain dei prelievi. L\'importo effettivo del prelievo sarà ridotto in base alla percentuale di capital gain nel portafoglio.',
         'n_simulations': 'Numero di simulazioni',
         
-        # Portfolio configuration - NEW SECTIONS
+        # Portfolio configuration
         'portfolio_config': '💼 Configurazione Portafoglio',
         'accumulation_portfolio': '📈 Portafoglio Fase di Accumulo',
         'retirement_portfolio': '🏖️ Portafoglio Fase Pensionistica',
@@ -216,6 +222,7 @@ TRANSLATIONS = {
         'median_accumulation': '📈 Valore Mediano Accumulo',
         'median_final': '✨ Valore Mediano Finale',
         'success_rate': '✅ Tasso di Successo',
+        'real_withdrawal_amount': '💸 Importo Prelievo Reale (Dopo Tasse)',
         'accumulation_phase': '📊 Fase di Accumulo (Con Inflazione)',
         'accumulation_phase_real': '📊 Fase di Accumulo (Con Inflazione)',
         'accumulation_phase_nominal': '💰 Fase di Accumulo (Senza Inflazione)',
