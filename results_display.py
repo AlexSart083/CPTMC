@@ -1,5 +1,5 @@
 """
-Results display components for the Monte Carlo Investment Simulator
+Updated results display components with real withdrawal amount
 """
 
 import streamlit as st
@@ -10,7 +10,7 @@ from translations import get_text
 
 
 class ResultsDisplay:
-    """Handles display of simulation results"""
+    """Handles display of simulation results including tax-adjusted withdrawals"""
     
     @staticmethod
     def calculate_cagr(final_value, initial_value, years):
@@ -39,13 +39,14 @@ class ResultsDisplay:
     @staticmethod
     def show_results(results, total_deposited, n_simulations, years_to_retirement, 
                     years_retired, lang):
-        """Display comprehensive simulation results"""
+        """Display comprehensive simulation results including real withdrawal amounts"""
         st.markdown("---")
         st.header(get_text('simulation_results', lang))
         
         accumulation_balances = results['accumulation']
         accumulation_balances_nominal = results['accumulation_nominal']
         final_results = results['final']
+        real_withdrawals = results.get('real_withdrawal', [])
         
         # Calculate statistics for real values (inflation-adjusted)
         avg_accumulation = np.mean(accumulation_balances)
@@ -64,6 +65,15 @@ class ResultsDisplay:
         final_50th = np.percentile(final_results, 50)
         final_75th = np.percentile(final_results, 75)
         success_rate = sum(r > 0 for r in final_results) / n_simulations * 100
+        
+        # Calculate real withdrawal statistics
+        if real_withdrawals:
+            avg_real_withdrawal = np.mean(real_withdrawals)
+            real_withdrawal_25th = np.percentile(real_withdrawals, 25)
+            real_withdrawal_50th = np.percentile(real_withdrawals, 50)
+            real_withdrawal_75th = np.percentile(real_withdrawals, 75)
+        else:
+            avg_real_withdrawal = real_withdrawal_25th = real_withdrawal_50th = real_withdrawal_75th = 0
         
         # Calculate CAGR for accumulation phase (nominal)
         acc_cagr_50th_nominal = ResultsDisplay.calculate_cagr(acc_50th_nominal, total_deposited, years_to_retirement)
@@ -84,8 +94,11 @@ class ResultsDisplay:
         final_cagr_75th = ResultsDisplay.calculate_cagr(final_75th, total_deposited, total_years)
         final_cagr_avg = ResultsDisplay.calculate_cagr(avg_final, total_deposited, total_years)
         
-        # Display key metrics
-        ResultsDisplay._show_key_metrics(total_deposited, acc_50th, final_50th, success_rate, lang)
+        # Display key metrics including real withdrawal
+        ResultsDisplay._show_key_metrics(
+            total_deposited, acc_50th, final_50th, success_rate, 
+            real_withdrawal_50th, lang
+        )
         
         # Display detailed tables
         ResultsDisplay._show_detailed_tables(
@@ -95,21 +108,24 @@ class ResultsDisplay:
             acc_cagr_50th, acc_cagr_25th, acc_cagr_75th, acc_cagr_avg,
             final_50th, final_25th, final_75th, avg_final,
             final_cagr_50th, final_cagr_25th, final_cagr_75th, final_cagr_avg,
+            real_withdrawal_50th, real_withdrawal_25th, real_withdrawal_75th, avg_real_withdrawal,
             lang
         )
         
         # Display histograms
         ResultsDisplay._show_histograms(
-            accumulation_balances_nominal, accumulation_balances, final_results, lang
+            accumulation_balances_nominal, accumulation_balances, final_results, 
+            real_withdrawals, lang
         )
         
         # Display success message
         ResultsDisplay._show_success_message(success_rate, lang)
     
     @staticmethod
-    def _show_key_metrics(total_deposited, median_accumulation, median_final, success_rate, lang):
-        """Display key metrics in columns"""
-        col1, col2, col3, col4 = st.columns(4)
+    def _show_key_metrics(total_deposited, median_accumulation, median_final, success_rate, 
+                         median_real_withdrawal, lang):
+        """Display key metrics in columns including real withdrawal"""
+        col1, col2, col3, col4, col5 = st.columns(5)
         
         with col1:
             st.metric(get_text('total_deposited', lang), f"€{total_deposited:,.0f}")
@@ -119,6 +135,8 @@ class ResultsDisplay:
             st.metric(get_text('median_final', lang), f"€{median_final:,.0f}")
         with col4:
             st.metric(get_text('success_rate', lang), f"{success_rate:.1f}%")
+        with col5:
+            st.metric(get_text('real_withdrawal_amount', lang), f"€{median_real_withdrawal:,.0f}")
     
     @staticmethod
     def _show_detailed_tables(acc_50th_nominal, acc_25th_nominal, acc_75th_nominal, avg_accumulation_nominal,
@@ -127,9 +145,10 @@ class ResultsDisplay:
                              acc_cagr_50th, acc_cagr_25th, acc_cagr_75th, acc_cagr_avg,
                              final_50th, final_25th, final_75th, avg_final,
                              final_cagr_50th, final_cagr_25th, final_cagr_75th, final_cagr_avg,
+                             real_withdrawal_50th, real_withdrawal_25th, real_withdrawal_75th, avg_real_withdrawal,
                              lang):
-        """Display detailed statistics tables"""
-        col1, col2, col3 = st.columns(3)
+        """Display detailed statistics tables including real withdrawal amounts"""
+        col1, col2 = st.columns(2)
         
         with col1:
             st.subheader(get_text('accumulation_phase_nominal', lang))
@@ -141,8 +160,7 @@ class ResultsDisplay:
                                                f"{acc_cagr_75th_nominal:.2f}%", f"{acc_cagr_avg_nominal:.2f}%"]
             }
             st.table(pd.DataFrame(acc_data_nominal))
-        
-        with col2:
+            
             st.subheader(get_text('accumulation_phase_real', lang))
             acc_data = {
                 get_text('percentile', lang): [get_text('median', lang), '25th', '75th', get_text('average', lang)], 
@@ -153,7 +171,7 @@ class ResultsDisplay:
             }
             st.table(pd.DataFrame(acc_data))
         
-        with col3:
+        with col2:
             st.subheader(get_text('final_values', lang))
             final_data = {
                 get_text('percentile', lang): [get_text('median', lang), '25th', '75th', get_text('average', lang)], 
@@ -163,11 +181,20 @@ class ResultsDisplay:
                                                f"{final_cagr_75th:.2f}%", f"{final_cagr_avg:.2f}%"]
             }
             st.table(pd.DataFrame(final_data))
+            
+            st.subheader(get_text('real_withdrawal_amount', lang))
+            withdrawal_data = {
+                get_text('percentile', lang): [get_text('median', lang), '25th', '75th', get_text('average', lang)], 
+                get_text('value_euro', lang): [f"{real_withdrawal_50th:,.0f}", f"{real_withdrawal_25th:,.0f}", 
+                                             f"{real_withdrawal_75th:,.0f}", f"{avg_real_withdrawal:,.0f}"]
+            }
+            st.table(pd.DataFrame(withdrawal_data))
     
     @staticmethod
-    def _show_histograms(accumulation_balances_nominal, accumulation_balances, final_results, lang):
-        """Display distribution histograms"""
-        col1, col2, col3 = st.columns(3)
+    def _show_histograms(accumulation_balances_nominal, accumulation_balances, final_results, 
+                        real_withdrawals, lang):
+        """Display distribution histograms including real withdrawals"""
+        col1, col2 = st.columns(2)
         
         with col1:
             fig_acc_nominal = px.histogram(
@@ -178,8 +205,7 @@ class ResultsDisplay:
             fig_acc_nominal.update_xaxes(title=get_text('value_euro', lang))
             fig_acc_nominal.update_yaxes(title=get_text('frequency', lang))
             st.plotly_chart(fig_acc_nominal, use_container_width=True)
-        
-        with col2:
+            
             fig_acc = px.histogram(
                 x=accumulation_balances, 
                 nbins=50, 
@@ -189,7 +215,7 @@ class ResultsDisplay:
             fig_acc.update_yaxes(title=get_text('frequency', lang))
             st.plotly_chart(fig_acc, use_container_width=True)
         
-        with col3:
+        with col2:
             fig_final = px.histogram(
                 x=final_results, 
                 nbins=50, 
@@ -198,6 +224,16 @@ class ResultsDisplay:
             fig_final.update_xaxes(title=get_text('value_euro', lang))
             fig_final.update_yaxes(title=get_text('frequency', lang))
             st.plotly_chart(fig_final, use_container_width=True)
+            
+            if real_withdrawals:
+                fig_withdrawal = px.histogram(
+                    x=real_withdrawals, 
+                    nbins=50, 
+                    title=get_text('real_withdrawal_amount', lang)
+                )
+                fig_withdrawal.update_xaxes(title=get_text('value_euro', lang))
+                fig_withdrawal.update_yaxes(title=get_text('frequency', lang))
+                st.plotly_chart(fig_withdrawal, use_container_width=True)
     
     @staticmethod
     def _show_success_message(success_rate, lang):
