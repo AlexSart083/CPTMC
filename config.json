@@ -36,13 +36,13 @@
       "min_return": 0.0,
       "max_return": 4.5
     },
-    "UserAsset1": {
+    "IlMattone": {
       "return": 4.2,
       "volatility": 12.0,
       "min_return": -12.0,
       "max_return": 15.0
     },
-    "UserAsset2": {
+    "UserAsset": {
       "return": 0.0,
       "volatility": 0.0,
       "min_return": 0.0,
@@ -57,8 +57,8 @@
       { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
       { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
       { "name": "Cash", "allocation": 25.0, "ter": 0.0 },
-      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
-      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
+      { "name": "IlMattone", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset", "allocation": 0.0, "ter": 0.25 }
     ],
     "Conservative": [
       { "name": "Stocks", "allocation": 40.0, "ter": 0.2 },
@@ -67,8 +67,8 @@
       { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
       { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
       { "name": "Cash", "allocation": 20.0, "ter": 0.0 },
-      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
-      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
+      { "name": "IlMattone", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset", "allocation": 0.0, "ter": 0.25 }
     ],
     "Moderate": [
       { "name": "Stocks", "allocation": 60.0, "ter": 0.2 },
@@ -77,8 +77,8 @@
       { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
       { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
       { "name": "Cash", "allocation": 10.0, "ter": 0.0 },
-      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
-      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
+      { "name": "IlMattone", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset", "allocation": 0.0, "ter": 0.25 }
     ],
     "Aggressive": [
       { "name": "Stocks", "allocation": 80.0, "ter": 0.2 },
@@ -87,8 +87,8 @@
       { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
       { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
       { "name": "Cash", "allocation": 0.0, "ter": 0.0 },
-      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
-      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
+      { "name": "IlMattone", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset", "allocation": 0.0, "ter": 0.25 }
     ],  
     "Dynamic": [
       { "name": "Stocks", "allocation": 70.0, "ter": 0.2 },
@@ -97,8 +97,8 @@
       { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
       { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
       { "name": "Cash", "allocation": 5.0, "ter": 0.0 },
-      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
-      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
+      { "name": "IlMattone", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset", "allocation": 0.0, "ter": 0.25 }
     ],  
     "StrategicEquityGold": [
       { "name": "Stocks", "allocation": 70.0, "ter": 0.2 },
@@ -107,8 +107,8 @@
       { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
       { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
       { "name": "Cash", "allocation": 0.0, "ter": 0.0 },
-      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
-      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
+      { "name": "IlMattone", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset", "allocation": 0.0, "ter": 0.25 }
     ],
     "Diversified": [
       { "name": "Stocks", "allocation": 25.0, "ter": 0.2 },
@@ -117,8 +117,8 @@
       { "name": "REIT", "allocation": 15.0, "ter": 0.3 },
       { "name": "Commodities", "allocation": 10.0, "ter": 0.4 },
       { "name": "Cash", "allocation": 10.0, "ter": 0.0 },
-      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
-      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
+      { "name": "IlMattone", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset", "allocation": 0.0, "ter": 0.25 }
     ],
     "NoAllocation": [
       { "name": "Stocks", "allocation": 0.0, "ter": 0.2 },
@@ -127,10 +127,11 @@
       { "name": "REIT", "allocation": 0.0, "ter": 0.3 },
       { "name": "Commodities", "allocation": 0.0, "ter": 0.4 },
       { "name": "Cash", "allocation": 0.0, "ter": 0.0 },
-      { "name": "UserAsset1", "allocation": 0.0, "ter": 0.25 },
-      { "name": "UserAsset2", "allocation": 0.0, "ter": 0.25 }
+      { "name": "IlMattone", "allocation": 0.0, "ter": 0.25 },
+      { "name": "UserAsset", "allocation": 0.0, "ter": 0.25 }
     ]
   }
 
 }
+
 
