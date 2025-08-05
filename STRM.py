@@ -1,6 +1,6 @@
 """
 Monte Carlo Investment Simulator - Main Application
-Refactored modular version with separate accumulation and retirement portfolios
+Updated with capital gains tax support
 """
 
 import streamlit as st
@@ -45,7 +45,7 @@ def main():
     with st.sidebar:
         st.header(get_text('simulation_parameters', lang))
         
-        # General parameters
+        # General parameters (now includes capital gains tax rate)
         params = UIComponents.render_general_parameters(lang)
     
     # Main area - Portfolio Configuration
@@ -221,7 +221,7 @@ def main():
             progress_bar = st.progress(0)
             status_text = st.empty()
             
-            # Run simulation with separate portfolios
+            # Run simulation with separate portfolios and capital gains tax
             with st.spinner(get_text('simulation_progress', lang)):
                 results = simulator.run_simulation(
                     active_accumulation_assets,
@@ -232,7 +232,8 @@ def main():
                     params['annual_contribution'], 
                     params['adjust_contribution_inflation'], 
                     params['inflation'] / 100, 
-                    params['withdrawal'], 
+                    params['withdrawal'],
+                    params['capital_gains_tax_rate'],  # NEW: capital gains tax rate
                     params['n_simulations'],
                     progress_bar, 
                     status_text, 
