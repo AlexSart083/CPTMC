@@ -85,18 +85,46 @@ class UIComponents:
         return params
     
     @staticmethod
-    def render_profile_selector(asset_profiles, lang):
-        """Render investment profile selector"""
-        st.subheader(get_text('investment_profile', lang))
+    def render_same_portfolio_toggle(lang):
+        """Render the toggle for using same portfolio for both phases"""
+        use_same = st.checkbox(
+            get_text('use_same_portfolio', lang),
+            value=st.session_state.use_same_portfolio,
+            help=get_text('use_same_portfolio_help', lang),
+            key='same_portfolio_toggle'
+        )
+        
+        # Handle toggle change
+        if use_same != st.session_state.use_same_portfolio:
+            st.session_state.use_same_portfolio = use_same
+            if use_same:
+                from portfolio_manager import PortfolioManager
+                PortfolioManager.sync_retirement_to_accumulation()
+            st.rerun()
+        
+        return use_same
+    
+    @staticmethod
+    def render_profile_selector(asset_profiles, lang, phase='accumulation'):
+        """Render investment profile selector for specific phase"""
         profile_names = get_profile_names(lang)
         profile_keys = list(asset_profiles.keys())
         profile_display_names = [profile_names.get(key, key) for key in profile_keys]
         
+        if phase == 'accumulation':
+            title = get_text('accumulation_profile', lang)
+            key = 'accumulation_profile_selector'
+            default_index = 2  # Moderate
+        else:
+            title = get_text('retirement_profile', lang)
+            key = 'retirement_profile_selector'
+            default_index = 1  # Conservative
+        
         selected_profile_display = st.selectbox(
-            get_text('select_profile', lang), 
+            title, 
             profile_display_names, 
-            index=2,
-            key='profile_selector'
+            index=default_index,
+            key=key
         )
         
         # Get the actual profile key
@@ -104,8 +132,8 @@ class UIComponents:
         return selected_profile
     
     @staticmethod
-    def render_asset_editor(assets_data, lang):
-        """Render asset allocation editor"""
+    def render_asset_editor(assets_data, lang, phase='accumulation'):
+        """Render asset allocation editor for specific phase"""
         asset_names = get_asset_names(lang)
         
         # Initialize edit mode if it doesn't exist
@@ -116,6 +144,8 @@ class UIComponents:
         
         for i, asset in enumerate(assets_data):
             display_name = asset_names.get(asset['name'], asset['name'])
+            edit_key = f"edit_{phase}_{i}"
+            
             with st.expander(f"📈 {display_name}", expanded=False):
                 
                 # Always editable fields: Allocation and TER
@@ -125,7 +155,7 @@ class UIComponents:
                     alloc = st.number_input(
                         get_text('allocation_percent', lang), 
                         value=asset['allocation'], 
-                        key=f"alloc_{i}", 
+                        key=f"alloc_{phase}_{i}", 
                         step=1.0, 
                         format="%.2f", 
                         min_value=0.0, 
@@ -136,7 +166,7 @@ class UIComponents:
                     ter = st.number_input(
                         get_text('ter_percent', lang), 
                         value=asset['ter'], 
-                        key=f"ter_{i}", 
+                        key=f"ter_{phase}_{i}", 
                         step=0.01, 
                         format="%.3f", 
                         min_value=0.0, 
@@ -148,11 +178,10 @@ class UIComponents:
                 asset['ter'] = ter
                 
                 # Edit button for other parameters
-                edit_key = f"edit_{i}"
                 if edit_key not in st.session_state.edit_mode:
                     st.session_state.edit_mode[edit_key] = False
                 
-                if st.button(get_text('edit_parameters', lang), key=f"edit_btn_{i}"):
+                if st.button(get_text('edit_parameters', lang), key=f"edit_btn_{phase}_{i}"):
                     st.session_state.edit_mode[edit_key] = not st.session_state.edit_mode[edit_key]
                 
                 # Fields editable only in edit mode
@@ -164,14 +193,14 @@ class UIComponents:
                         ret = st.number_input(
                             get_text('return_percent', lang), 
                             value=asset['return'], 
-                            key=f"return_{i}", 
+                            key=f"return_{phase}_{i}", 
                             step=0.1, 
                             format="%.2f"
                         )
                         vol = st.number_input(
                             get_text('volatility_percent', lang), 
                             value=asset['volatility'], 
-                            key=f"vol_{i}", 
+                            key=f"vol_{phase}_{i}", 
                             step=0.1, 
                             format="%.2f", 
                             min_value=0.0
@@ -181,14 +210,14 @@ class UIComponents:
                         min_ret = st.number_input(
                             get_text('min_return_percent', lang), 
                             value=asset['min_return'], 
-                            key=f"min_{i}", 
+                            key=f"min_{phase}_{i}", 
                             step=1.0, 
                             format="%.2f"
                         )
                         max_ret = st.number_input(
                             get_text('max_return_percent', lang), 
                             value=asset['max_return'], 
-                            key=f"max_{i}", 
+                            key=f"max_{phase}_{i}", 
                             step=1.0, 
                             format="%.2f"
                         )
@@ -223,19 +252,19 @@ class UIComponents:
         return updated_assets
     
     @staticmethod
-    def render_allocation_controls(lang):
-        """Render allocation control buttons"""
+    def render_allocation_controls(lang, phase='accumulation'):
+        """Render allocation control buttons for specific phase"""
         col_reset, col_balance = st.columns(2)
         
         reset_clicked = False
         balance_clicked = False
         
         with col_reset:
-            if st.button(get_text('reset_allocations', lang)):
+            if st.button(get_text('reset_allocations', lang), key=f"reset_{phase}"):
                 reset_clicked = True
         
         with col_balance:
-            if st.button(get_text('balance_allocations', lang)):
+            if st.button(get_text('balance_allocations', lang), key=f"balance_{phase}"):
                 balance_clicked = True
         
         return reset_clicked, balance_clicked
@@ -251,9 +280,14 @@ class UIComponents:
             return True
     
     @staticmethod
-    def render_allocation_chart(assets_data, lang):
-        """Render allocation pie chart"""
-        st.subheader(get_text('allocation_chart', lang))
+    def render_allocation_chart(assets_data, lang, phase='accumulation'):
+        """Render allocation pie chart for specific phase"""
+        if phase == 'accumulation':
+            title = get_text('accumulation_chart', lang)
+        else:
+            title = get_text('retirement_chart', lang)
+        
+        st.subheader(title)
         
         # Filter only assets with allocation > 0 for the chart
         active_assets = [asset for asset in assets_data if asset['allocation'] > 0]
@@ -276,9 +310,14 @@ class UIComponents:
             st.info(get_text('no_asset_selected', lang))
     
     @staticmethod
-    def render_asset_summary(assets_data, lang):
-        """Render asset summary table"""
-        st.subheader(get_text('asset_summary', lang))
+    def render_asset_summary(assets_data, lang, phase='accumulation'):
+        """Render asset summary table for specific phase"""
+        if phase == 'accumulation':
+            title = get_text('accumulation_summary', lang)
+        else:
+            title = get_text('retirement_summary', lang)
+        
+        st.subheader(title)
         
         # Show only assets with allocation > 0 in the summary table
         active_assets_df = pd.DataFrame([asset for asset in assets_data if asset['allocation'] > 0])
