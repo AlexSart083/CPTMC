@@ -246,8 +246,10 @@ def main():
                 total_deposited, 
                 params['n_simulations'], 
                 params['years_to_retirement'], 
-                params['years_retired'], 
-                lang
+                params['years_retired'],
+                params['capital_gains_tax_rate'],  # Added tax rate
+                params['withdrawal'],              # Added nominal withdrawal
+                lang                               # Language parameter
             )
     
     # Footer
