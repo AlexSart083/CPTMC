@@ -1,5 +1,5 @@
 """
-Updated UI components with capital gains tax parameter
+Updated UI components with capital gains tax parameter and unique chart keys
 """
 
 import streamlit as st
@@ -291,7 +291,7 @@ class UIComponents:
     
     @staticmethod
     def render_allocation_chart(assets_data, lang, phase='accumulation'):
-        """Render allocation pie chart for specific phase"""
+        """Render allocation pie chart for specific phase with unique key"""
         if phase == 'accumulation':
             title = get_text('accumulation_chart', lang)
         else:
@@ -315,7 +315,8 @@ class UIComponents:
                 title=get_text('portfolio_distribution', lang)
             )
             fig_pie.update_layout(height=400)
-            st.plotly_chart(fig_pie, use_container_width=True)
+            # FIX: Add unique key based on phase to avoid duplicate ID error
+            st.plotly_chart(fig_pie, use_container_width=True, key=f"pie_chart_{phase}")
         else:
             st.info(get_text('no_asset_selected', lang))
     
