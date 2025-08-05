@@ -68,9 +68,9 @@ class PortfolioManager:
                 st.session_state.current_accumulation_assets = loaded_assets
         
         if 'current_retirement_assets' not in st.session_state or not st.session_state.current_retirement_assets:
-            if st.session_state.use_same_portfolio:
+            if st.session_state.use_same_portfolio and 'current_accumulation_assets' in st.session_state:
                 # Use same assets as accumulation
-                st.session_state.current_retirement_assets = st.session_state.current_accumulation_assets.copy()
+                st.session_state.current_retirement_assets = [asset.copy() for asset in st.session_state.current_accumulation_assets]
             else:
                 loaded_assets = config_manager.get_profile_data(retirement_profile)
                 if loaded_assets:
@@ -79,9 +79,12 @@ class PortfolioManager:
     @staticmethod
     def sync_retirement_to_accumulation():
         """Sync retirement portfolio to match accumulation when using same portfolio"""
-        if st.session_state.use_same_portfolio and st.session_state.current_accumulation_assets:
+        if (st.session_state.use_same_portfolio and 
+            'current_accumulation_assets' in st.session_state and 
+            st.session_state.current_accumulation_assets):
             st.session_state.current_retirement_assets = [asset.copy() for asset in st.session_state.current_accumulation_assets]
-            st.session_state.last_selected_retirement_profile = st.session_state.last_selected_accumulation_profile
+            if 'last_selected_accumulation_profile' in st.session_state:
+                st.session_state.last_selected_retirement_profile = st.session_state.last_selected_accumulation_profile
     
     @staticmethod
     def reset_allocations(phase='accumulation'):
