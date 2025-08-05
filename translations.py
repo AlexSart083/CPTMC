@@ -310,8 +310,8 @@ def get_asset_names(lang='en'):
             'REIT': 'REIT',
             'Commodities': 'Commodities',
             'Cash': 'Cash',
-            'UserAsset1': 'User Custom 1',
-            'UserAsset2': 'User Custom 2'
+            'IlMattone': 'The Brick',
+            'UserAsset': 'User Custom'
         },
         'it': {
             'Stocks': 'Azioni',
@@ -320,8 +320,9 @@ def get_asset_names(lang='en'):
             'REIT': 'Immobiliare',
             'Commodities': 'Materie Prime',
             'Cash': 'Liquidità',
-            'UserAsset1': 'Asset Custom 1',
-            'UserAsset2': 'Asset Custom 2'
+            'IlMattone': 'Il Mattone',
+            'UserAsset': 'Asset Custom'
         }
     }
     return assets.get(lang, assets['en'])
+
