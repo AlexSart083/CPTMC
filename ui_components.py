@@ -97,9 +97,11 @@ class UIComponents:
         # Handle toggle change
         if use_same != st.session_state.use_same_portfolio:
             st.session_state.use_same_portfolio = use_same
-            if use_same:
-                from portfolio_manager import PortfolioManager
-                PortfolioManager.sync_retirement_to_accumulation()
+            # Don't import here - let the main app handle the sync
+            if use_same and 'current_accumulation_assets' in st.session_state:
+                # Sync retirement to accumulation directly
+                st.session_state.current_retirement_assets = [asset.copy() for asset in st.session_state.current_accumulation_assets]
+                st.session_state.last_selected_retirement_profile = st.session_state.last_selected_accumulation_profile
             st.rerun()
         
         return use_same
