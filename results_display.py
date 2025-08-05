@@ -72,7 +72,10 @@ class ResultsDisplay:
         else:
             st.info(f"""
             **📊 Tax Impact Analysis (Median Case):**
-            - No capital gains tax applied (losses or break-even scenario)
+            - Total Deposited (Nominal): €{total_deposited:,.0f}
+            - Portfolio Value (Nominal): €{median_acc_nominal:,.0f}
+            - **No capital gains** (Portfolio ≤ Deposited Amount)
+            - **No capital gains tax applied** ✅
             - Annual Withdrawal: €{nominal_withdrawal:,.0f} (no tax impact)
             """)
         
@@ -97,10 +100,15 @@ class ResultsDisplay:
         # Calculate real withdrawal statistics based on accumulation percentiles
         # For each accumulation percentile, calculate the corresponding withdrawal
         def calculate_withdrawal_for_accumulation(acc_nominal, total_deposited, withdrawal, tax_rate):
-            capital_gains = max(0, acc_nominal - total_deposited)
-            capital_gains_pct = capital_gains / acc_nominal if acc_nominal > 0 else 0
-            effective_tax_rate = (tax_rate / 100) * capital_gains_pct
-            return withdrawal * (1 - effective_tax_rate)
+            if acc_nominal <= total_deposited:
+                # No capital gains, no tax
+                return withdrawal
+            else:
+                # There are capital gains, apply tax
+                capital_gains = acc_nominal - total_deposited
+                capital_gains_pct = capital_gains / acc_nominal
+                effective_tax_rate = (tax_rate / 100) * capital_gains_pct
+                return withdrawal * (1 - effective_tax_rate)
         
         real_withdrawal_25th = calculate_withdrawal_for_accumulation(
             acc_25th_nominal, total_deposited, nominal_withdrawal, capital_gains_tax_rate)
