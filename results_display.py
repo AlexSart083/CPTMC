@@ -230,10 +230,10 @@ class ResultsDisplay:
                                     f"{acc_75th_nom:,.0f}", f"{avg_acc_nom:,.0f}"],
                 'Real Withdrawal (€)': [f"{real_withdrawal_50th:,.0f}", f"{real_withdrawal_25th:,.0f}", 
                                        f"{real_withdrawal_75th:,.0f}", f"{avg_real_withdrawal:,.0f}"],
-                'Tax Impact (€)': [f"{nominal_withdrawal - real_withdrawal_50th:,.0f}", 
-                                  f"{nominal_withdrawal - real_withdrawal_25th:,.0f}",
-                                  f"{nominal_withdrawal - real_withdrawal_75th:,.0f}", 
-                                  f"{nominal_withdrawal - avg_real_withdrawal:,.0f}"]
+                'Tax Impact (%)': [f"{((nominal_withdrawal - real_withdrawal_50th) / nominal_withdrawal * 100):.2f}%", 
+                                  f"{((nominal_withdrawal - real_withdrawal_25th) / nominal_withdrawal * 100):.2f}%",
+                                  f"{((nominal_withdrawal - real_withdrawal_75th) / nominal_withdrawal * 100):.2f}%", 
+                                  f"{((nominal_withdrawal - avg_real_withdrawal) / nominal_withdrawal * 100):.2f}%"]
             }
             st.table(pd.DataFrame(withdrawal_data))
     
