@@ -12,15 +12,16 @@ class MonteCarloSimulator:
     def __init__(self):
         self.results = None
     
-    def run_simulation(self, assets_data, initial_amount, years_to_retirement, 
+    def run_simulation(self, accumulation_assets, retirement_assets, initial_amount, years_to_retirement, 
                       years_retired, annual_contribution, adjust_contribution_inflation,
                       inflation, withdrawal, n_simulations, progress_bar=None, 
                       status_text=None, lang='en'):
         """
-        Run Monte Carlo simulation for investment portfolio
+        Run Monte Carlo simulation for investment portfolio with separate accumulation and retirement phases
         
         Args:
-            assets_data: List of asset dictionaries with allocation, return, volatility, etc.
+            accumulation_assets: List of asset dictionaries for accumulation phase
+            retirement_assets: List of asset dictionaries for retirement phase
             initial_amount: Initial investment amount
             years_to_retirement: Years in accumulation phase
             years_retired: Years in retirement phase
@@ -37,12 +38,21 @@ class MonteCarloSimulator:
             Dictionary with simulation results
         """
         
-        mean_returns = [asset['return'] / 100 for asset in assets_data]
-        volatilities = [asset['volatility'] / 100 for asset in assets_data]
-        allocations = [asset['allocation'] / 100 for asset in assets_data]
-        min_returns = [asset['min_return'] / 100 for asset in assets_data]
-        max_returns = [asset['max_return'] / 100 for asset in assets_data]
-        ters = [asset['ter'] / 100 for asset in assets_data]
+        # Prepare accumulation phase data
+        acc_mean_returns = [asset['return'] / 100 for asset in accumulation_assets]
+        acc_volatilities = [asset['volatility'] / 100 for asset in accumulation_assets]
+        acc_allocations = [asset['allocation'] / 100 for asset in accumulation_assets]
+        acc_min_returns = [asset['min_return'] / 100 for asset in accumulation_assets]
+        acc_max_returns = [asset['max_return'] / 100 for asset in accumulation_assets]
+        acc_ters = [asset['ter'] / 100 for asset in accumulation_assets]
+        
+        # Prepare retirement phase data
+        ret_mean_returns = [asset['return'] / 100 for asset in retirement_assets]
+        ret_volatilities = [asset['volatility'] / 100 for asset in retirement_assets]
+        ret_allocations = [asset['allocation'] / 100 for asset in retirement_assets]
+        ret_min_returns = [asset['min_return'] / 100 for asset in retirement_assets]
+        ret_max_returns = [asset['max_return'] / 100 for asset in retirement_assets]
+        ret_ters = [asset['ter'] / 100 for asset in retirement_assets]
         
         accumulation_balances = []
         accumulation_balances_nominal = []
@@ -55,9 +65,10 @@ class MonteCarloSimulator:
                 if status_text:
                     status_text.text(get_text('simulation_step', lang).format(sim + 1, n_simulations))
             
-            # Run single simulation
+            # Run single simulation with separate portfolios
             result = self._run_single_simulation(
-                mean_returns, volatilities, allocations, min_returns, max_returns, ters,
+                acc_mean_returns, acc_volatilities, acc_allocations, acc_min_returns, acc_max_returns, acc_ters,
+                ret_mean_returns, ret_volatilities, ret_allocations, ret_min_returns, ret_max_returns, ret_ters,
                 initial_amount, years_to_retirement, years_retired,
                 annual_contribution, adjust_contribution_inflation, inflation, withdrawal
             )
@@ -80,24 +91,26 @@ class MonteCarloSimulator:
         
         return self.results
     
-    def _run_single_simulation(self, mean_returns, volatilities, allocations, 
-                              min_returns, max_returns, ters, initial_amount,
-                              years_to_retirement, years_retired, annual_contribution,
-                              adjust_contribution_inflation, inflation, withdrawal):
-        """Run a single Monte Carlo simulation"""
+    def _run_single_simulation(self, acc_mean_returns, acc_volatilities, acc_allocations, 
+                              acc_min_returns, acc_max_returns, acc_ters,
+                              ret_mean_returns, ret_volatilities, ret_allocations,
+                              ret_min_returns, ret_max_returns, ret_ters,
+                              initial_amount, years_to_retirement, years_retired, 
+                              annual_contribution, adjust_contribution_inflation, inflation, withdrawal):
+        """Run a single Monte Carlo simulation with separate accumulation and retirement portfolios"""
         
         balance_nominal = initial_amount
         current_contribution = annual_contribution
         
-        # Accumulation phase - calculate everything in NOMINAL terms
+        # Accumulation phase - use accumulation portfolio
         for year in range(int(years_to_retirement)):
-            annual_returns = [np.random.normal(mean_returns[i], volatilities[i]) 
-                            for i in range(len(mean_returns))]
-            capped_returns = [max(min(annual_returns[i], max_returns[i]), min_returns[i]) 
-                            for i in range(len(mean_returns))]
+            annual_returns = [np.random.normal(acc_mean_returns[i], acc_volatilities[i]) 
+                            for i in range(len(acc_mean_returns))]
+            capped_returns = [max(min(annual_returns[i], acc_max_returns[i]), acc_min_returns[i]) 
+                            for i in range(len(acc_mean_returns))]
             # Apply TER (subtract fees from returns)
-            net_returns = [capped_returns[i] - ters[i] for i in range(len(capped_returns))]
-            annual_return_nominal = sum(net_returns[i] * allocations[i] 
+            net_returns = [capped_returns[i] - acc_ters[i] for i in range(len(capped_returns))]
+            annual_return_nominal = sum(net_returns[i] * acc_allocations[i] 
                                       for i in range(len(net_returns)))
             
             # Calculate nominal balance
@@ -115,16 +128,16 @@ class MonteCarloSimulator:
         balance_real = balance_nominal / ((1 + inflation) ** years_to_retirement)
         accumulation_real = balance_real
         
-        # Retirement phase - use REAL balance and REAL returns
+        # Retirement phase - use retirement portfolio
         balance = balance_real  # Start retirement with real balance
         for year in range(int(years_retired)):
-            annual_returns = [np.random.normal(mean_returns[i], volatilities[i]) 
-                            for i in range(len(mean_returns))]
-            capped_returns = [max(min(annual_returns[i], max_returns[i]), min_returns[i]) 
-                            for i in range(len(mean_returns))]
+            annual_returns = [np.random.normal(ret_mean_returns[i], ret_volatilities[i]) 
+                            for i in range(len(ret_mean_returns))]
+            capped_returns = [max(min(annual_returns[i], ret_max_returns[i]), ret_min_returns[i]) 
+                            for i in range(len(ret_mean_returns))]
             # Apply TER (subtract fees from returns)
-            net_returns = [capped_returns[i] - ters[i] for i in range(len(capped_returns))]
-            annual_return_nominal = sum(net_returns[i] * allocations[i] 
+            net_returns = [capped_returns[i] - ret_ters[i] for i in range(len(capped_returns))]
+            annual_return_nominal = sum(net_returns[i] * ret_allocations[i] 
                                       for i in range(len(net_returns)))
             
             # Calculate real return for retirement phase
