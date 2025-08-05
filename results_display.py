@@ -38,7 +38,7 @@ class ResultsDisplay:
     
     @staticmethod
     def show_results(results, total_deposited, n_simulations, years_to_retirement, 
-                    years_retired, lang):
+                    years_retired, capital_gains_tax_rate, nominal_withdrawal, lang):
         """Display comprehensive simulation results including real withdrawal amounts"""
         st.markdown("---")
         st.header(get_text('simulation_results', lang))
@@ -47,6 +47,34 @@ class ResultsDisplay:
         accumulation_balances_nominal = results['accumulation_nominal']
         final_results = results['final']
         real_withdrawals = results.get('real_withdrawal', [])
+        
+        # Calculate tax impact info
+        median_acc_nominal = np.percentile(accumulation_balances_nominal, 50)
+        median_real_withdrawal = np.percentile(real_withdrawals, 50) if real_withdrawals else 0
+        
+        # Show tax calculation info
+        if median_acc_nominal > total_deposited:
+            capital_gains_nominal = median_acc_nominal - total_deposited
+            capital_gains_percentage = capital_gains_nominal / median_acc_nominal
+            effective_tax_rate = (capital_gains_tax_rate / 100) * capital_gains_percentage
+            
+            st.info(f"""
+            **📊 Tax Impact Analysis (Median Case):**
+            - Total Deposited (Nominal): €{total_deposited:,.0f}
+            - Portfolio Value (Nominal): €{median_acc_nominal:,.0f}
+            - Capital Gains: €{capital_gains_nominal:,.0f} ({capital_gains_percentage:.1%})
+            - Capital Gains Tax Rate: {capital_gains_tax_rate:.1f}%
+            - Effective Tax Rate on Withdrawal: {effective_tax_rate:.2%}
+            - Nominal Annual Withdrawal: €{nominal_withdrawal:,.0f}
+            - Real Annual Withdrawal (After Tax): €{real_withdrawal_50th:,.0f}
+            - Annual Tax Impact: €{nominal_withdrawal - real_withdrawal_50th:,.0f}
+            """)
+        else:
+            st.info(f"""
+            **📊 Tax Impact Analysis (Median Case):**
+            - No capital gains tax applied (losses or break-even scenario)
+            - Annual Withdrawal: €{nominal_withdrawal:,.0f} (no tax impact)
+            """)
         
         # Calculate statistics for real values (inflation-adjusted)
         avg_accumulation = np.mean(accumulation_balances)
@@ -66,14 +94,22 @@ class ResultsDisplay:
         final_75th = np.percentile(final_results, 75)
         success_rate = sum(r > 0 for r in final_results) / n_simulations * 100
         
-        # Calculate real withdrawal statistics
-        if real_withdrawals:
-            avg_real_withdrawal = np.mean(real_withdrawals)
-            real_withdrawal_25th = np.percentile(real_withdrawals, 25)
-            real_withdrawal_50th = np.percentile(real_withdrawals, 50)
-            real_withdrawal_75th = np.percentile(real_withdrawals, 75)
-        else:
-            avg_real_withdrawal = real_withdrawal_25th = real_withdrawal_50th = real_withdrawal_75th = 0
+        # Calculate real withdrawal statistics based on accumulation percentiles
+        # For each accumulation percentile, calculate the corresponding withdrawal
+        def calculate_withdrawal_for_accumulation(acc_nominal, total_deposited, withdrawal, tax_rate):
+            capital_gains = max(0, acc_nominal - total_deposited)
+            capital_gains_pct = capital_gains / acc_nominal if acc_nominal > 0 else 0
+            effective_tax_rate = (tax_rate / 100) * capital_gains_pct
+            return withdrawal * (1 - effective_tax_rate)
+        
+        real_withdrawal_25th = calculate_withdrawal_for_accumulation(
+            acc_25th_nominal, total_deposited, nominal_withdrawal, capital_gains_tax_rate)
+        real_withdrawal_50th = calculate_withdrawal_for_accumulation(
+            acc_50th_nominal, total_deposited, nominal_withdrawal, capital_gains_tax_rate)
+        real_withdrawal_75th = calculate_withdrawal_for_accumulation(
+            acc_75th_nominal, total_deposited, nominal_withdrawal, capital_gains_tax_rate)
+        avg_real_withdrawal = calculate_withdrawal_for_accumulation(
+            avg_accumulation_nominal, total_deposited, nominal_withdrawal, capital_gains_tax_rate)
         
         # Calculate CAGR for accumulation phase (nominal)
         acc_cagr_50th_nominal = ResultsDisplay.calculate_cagr(acc_50th_nominal, total_deposited, years_to_retirement)
@@ -185,8 +221,14 @@ class ResultsDisplay:
             st.subheader(get_text('real_withdrawal_amount', lang))
             withdrawal_data = {
                 get_text('percentile', lang): [get_text('median', lang), '25th', '75th', get_text('average', lang)], 
-                get_text('value_euro', lang): [f"{real_withdrawal_50th:,.0f}", f"{real_withdrawal_25th:,.0f}", 
-                                             f"{real_withdrawal_75th:,.0f}", f"{avg_real_withdrawal:,.0f}"]
+                'Accumulation (€)': [f"{acc_50th_nominal:,.0f}", f"{acc_25th_nominal:,.0f}", 
+                                    f"{acc_75th_nominal:,.0f}", f"{avg_accumulation_nominal:,.0f}"],
+                'Real Withdrawal (€)': [f"{real_withdrawal_50th:,.0f}", f"{real_withdrawal_25th:,.0f}", 
+                                       f"{real_withdrawal_75th:,.0f}", f"{avg_real_withdrawal:,.0f}"],
+                'Tax Impact (€)': [f"{nominal_withdrawal - real_withdrawal_50th:,.0f}", 
+                                  f"{nominal_withdrawal - real_withdrawal_25th:,.0f}",
+                                  f"{nominal_withdrawal - real_withdrawal_75th:,.0f}", 
+                                  f"{nominal_withdrawal - avg_real_withdrawal:,.0f}"]
             }
             st.table(pd.DataFrame(withdrawal_data))
     
