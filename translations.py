@@ -35,9 +35,17 @@ TRANSLATIONS = {
         'inflation': 'Annual inflation (%)',
         'withdrawal': 'Annual withdrawal in retirement (€)',
         'n_simulations': 'Number of simulations',
-        # Portfolio configuration
+        
+        # Portfolio configuration - NEW SECTIONS
         'portfolio_config': '💼 Portfolio Configuration',
+        'accumulation_portfolio': '📈 Accumulation Phase Portfolio',
+        'retirement_portfolio': '🏖️ Retirement Phase Portfolio',
+        'use_same_portfolio': '🔗 Use same portfolio for both phases',
+        'use_same_portfolio_help': 'If checked, the same portfolio allocation will be used for both accumulation and retirement phases.',
+        
         'investment_profile': '🎯 Investment Profile',
+        'accumulation_profile': '🎯 Accumulation Profile',
+        'retirement_profile': '🎯 Retirement Profile',
         'select_profile': 'Select profile:',
         'load_profile': '🔄 Load Selected Profile',
         'allocation_percent': 'Allocation (%)',
@@ -59,15 +67,23 @@ TRANSLATIONS = {
         
         # Charts and tables
         'allocation_chart': '📈 Allocation Chart',
+        'accumulation_chart': '📈 Accumulation Phase Chart',
+        'retirement_chart': '🏖️ Retirement Phase Chart',
         'portfolio_distribution': 'Portfolio Distribution',
         'no_asset_selected': 'No asset selected',
         'asset_summary': '📋 Asset Summary',
+        'accumulation_summary': '📋 Accumulation Assets',
+        'retirement_summary': '📋 Retirement Assets',
         'no_active_assets': 'No active assets',
         
         # Simulation
         'run_simulation': '🚀 **RUN SIMULATION**',
         'select_assets_error': '❌ Select at least one asset with allocation > 0!',
+        'select_accumulation_assets_error': '❌ Select at least one asset with allocation > 0 for accumulation phase!',
+        'select_retirement_assets_error': '❌ Select at least one asset with allocation > 0 for retirement phase!',
         'fix_allocations_error': '❌ Fix allocations first!',
+        'fix_accumulation_allocations_error': '❌ Fix accumulation phase allocations first!',
+        'fix_retirement_allocations_error': '❌ Fix retirement phase allocations first!',
         'simulation_progress': '🔄 Simulation in progress...',
         'simulation_step': 'Simulation {} of {}',
         'simulation_completed': '✅ Simulation completed!',
@@ -141,9 +157,17 @@ TRANSLATIONS = {
         'inflation': 'Inflazione annuale (%)',
         'withdrawal': 'Prelievo annuale in pensione (€)',
         'n_simulations': 'Numero di simulazioni',
-        # Portfolio configuration
+        
+        # Portfolio configuration - NEW SECTIONS
         'portfolio_config': '💼 Configurazione Portafoglio',
+        'accumulation_portfolio': '📈 Portafoglio Fase di Accumulo',
+        'retirement_portfolio': '🏖️ Portafoglio Fase Pensionistica',
+        'use_same_portfolio': '🔗 Usa stesso portafoglio per entrambe le fasi',
+        'use_same_portfolio_help': 'Se selezionato, la stessa allocazione di portafoglio sarà utilizzata sia per la fase di accumulo che per quella pensionistica.',
+        
         'investment_profile': '🎯 Profilo di Investimento',
+        'accumulation_profile': '🎯 Profilo Accumulo',
+        'retirement_profile': '🎯 Profilo Pensione',
         'select_profile': 'Seleziona profilo:',
         'load_profile': '🔄 Carica Profilo Selezionato',
         'allocation_percent': 'Allocazione (%)',
@@ -165,15 +189,23 @@ TRANSLATIONS = {
         
         # Charts and tables
         'allocation_chart': '📈 Grafico Allocazione',
+        'accumulation_chart': '📈 Grafico Fase Accumulo',
+        'retirement_chart': '🏖️ Grafico Fase Pensione',
         'portfolio_distribution': 'Distribuzione Portafoglio',
         'no_asset_selected': 'Nessun asset selezionato',
         'asset_summary': '📋 Riepilogo Asset',
+        'accumulation_summary': '📋 Asset Accumulo',
+        'retirement_summary': '📋 Asset Pensione',
         'no_active_assets': 'Nessun asset attivo',
         
         # Simulation
         'run_simulation': '🚀 **AVVIA SIMULAZIONE**',
         'select_assets_error': '❌ Seleziona almeno un asset con allocazione > 0!',
+        'select_accumulation_assets_error': '❌ Seleziona almeno un asset con allocazione > 0 per la fase di accumulo!',
+        'select_retirement_assets_error': '❌ Seleziona almeno un asset con allocazione > 0 per la fase pensionistica!',
         'fix_allocations_error': '❌ Correggi prima le allocazioni!',
+        'fix_accumulation_allocations_error': '❌ Correggi prima le allocazioni della fase di accumulo!',
+        'fix_retirement_allocations_error': '❌ Correggi prima le allocazioni della fase pensionistica!',
         'simulation_progress': '🔄 Simulazione in corso...',
         'simulation_step': 'Simulazione {} di {}',
         'simulation_completed': '✅ Simulazione completata!',
