@@ -1,5 +1,5 @@
 """
-Updated results display components with real withdrawal amount
+Updated results display components with real withdrawal amount and proper tax handling
 """
 
 import streamlit as st
@@ -46,38 +46,6 @@ class ResultsDisplay:
         accumulation_balances = results['accumulation']
         accumulation_balances_nominal = results['accumulation_nominal']
         final_results = results['final']
-        real_withdrawals = results.get('real_withdrawal', [])
-        
-        # Calculate tax impact info
-        median_acc_nominal = np.percentile(accumulation_balances_nominal, 50)
-        median_real_withdrawal = np.percentile(real_withdrawals, 50) if real_withdrawals else 0
-        
-        # Show tax calculation info
-        if median_acc_nominal > total_deposited:
-            capital_gains_nominal = median_acc_nominal - total_deposited
-            capital_gains_percentage = capital_gains_nominal / median_acc_nominal
-            effective_tax_rate = (capital_gains_tax_rate / 100) * capital_gains_percentage
-            
-            st.info(f"""
-            **📊 Tax Impact Analysis (Median Case):**
-            - Total Deposited (Nominal): €{total_deposited:,.0f}
-            - Portfolio Value (Nominal): €{median_acc_nominal:,.0f}
-            - Capital Gains: €{capital_gains_nominal:,.0f} ({capital_gains_percentage:.1%})
-            - Capital Gains Tax Rate: {capital_gains_tax_rate:.1f}%
-            - Effective Tax Rate on Withdrawal: {effective_tax_rate:.2%}
-            - Nominal Annual Withdrawal: €{nominal_withdrawal:,.0f}
-            - Real Annual Withdrawal (After Tax): €{real_withdrawal_50th:,.0f}
-            - Annual Tax Impact: €{nominal_withdrawal - real_withdrawal_50th:,.0f}
-            """)
-        else:
-            st.info(f"""
-            **📊 Tax Impact Analysis (Median Case):**
-            - Total Deposited (Nominal): €{total_deposited:,.0f}
-            - Portfolio Value (Nominal): €{median_acc_nominal:,.0f}
-            - **No capital gains** (Portfolio ≤ Deposited Amount)
-            - **No capital gains tax applied** ✅
-            - Annual Withdrawal: €{nominal_withdrawal:,.0f} (no tax impact)
-            """)
         
         # Calculate statistics for real values (inflation-adjusted)
         avg_accumulation = np.mean(accumulation_balances)
@@ -119,6 +87,34 @@ class ResultsDisplay:
         avg_real_withdrawal = calculate_withdrawal_for_accumulation(
             avg_accumulation_nominal, total_deposited, nominal_withdrawal, capital_gains_tax_rate)
         
+        # Show tax calculation info
+        median_acc_nominal = acc_50th_nominal
+        if median_acc_nominal > total_deposited:
+            capital_gains_nominal = median_acc_nominal - total_deposited
+            capital_gains_percentage = capital_gains_nominal / median_acc_nominal
+            effective_tax_rate = (capital_gains_tax_rate / 100) * capital_gains_percentage
+            
+            st.info(f"""
+            **📊 Tax Impact Analysis (Median Case):**
+            - Total Deposited (Nominal): €{total_deposited:,.0f}
+            - Portfolio Value (Nominal): €{median_acc_nominal:,.0f}
+            - Capital Gains: €{capital_gains_nominal:,.0f} ({capital_gains_percentage:.1%})
+            - Capital Gains Tax Rate: {capital_gains_tax_rate:.1f}%
+            - Effective Tax Rate on Withdrawal: {effective_tax_rate:.2%}
+            - Nominal Annual Withdrawal: €{nominal_withdrawal:,.0f}
+            - Real Annual Withdrawal (After Tax): €{real_withdrawal_50th:,.0f}
+            - Annual Tax Impact: €{nominal_withdrawal - real_withdrawal_50th:,.0f}
+            """)
+        else:
+            st.info(f"""
+            **📊 Tax Impact Analysis (Median Case):**
+            - Total Deposited (Nominal): €{total_deposited:,.0f}
+            - Portfolio Value (Nominal): €{median_acc_nominal:,.0f}
+            - **No capital gains** (Portfolio ≤ Deposited Amount)
+            - **No capital gains tax applied** ✅
+            - Annual Withdrawal: €{nominal_withdrawal:,.0f} (no tax impact)
+            """)
+        
         # Calculate CAGR for accumulation phase (nominal)
         acc_cagr_50th_nominal = ResultsDisplay.calculate_cagr(acc_50th_nominal, total_deposited, years_to_retirement)
         acc_cagr_25th_nominal = ResultsDisplay.calculate_cagr(acc_25th_nominal, total_deposited, years_to_retirement)
@@ -153,13 +149,13 @@ class ResultsDisplay:
             final_50th, final_25th, final_75th, avg_final,
             final_cagr_50th, final_cagr_25th, final_cagr_75th, final_cagr_avg,
             real_withdrawal_50th, real_withdrawal_25th, real_withdrawal_75th, avg_real_withdrawal,
-            lang
+            acc_25th_nominal, acc_50th_nominal, acc_75th_nominal, avg_accumulation_nominal,
+            nominal_withdrawal, lang
         )
         
         # Display histograms
         ResultsDisplay._show_histograms(
-            accumulation_balances_nominal, accumulation_balances, final_results, 
-            real_withdrawals, lang
+            accumulation_balances_nominal, accumulation_balances, final_results, lang
         )
         
         # Display success message
@@ -190,7 +186,8 @@ class ResultsDisplay:
                              final_50th, final_25th, final_75th, avg_final,
                              final_cagr_50th, final_cagr_25th, final_cagr_75th, final_cagr_avg,
                              real_withdrawal_50th, real_withdrawal_25th, real_withdrawal_75th, avg_real_withdrawal,
-                             lang):
+                             acc_25th_nom, acc_50th_nom, acc_75th_nom, avg_acc_nom,
+                             nominal_withdrawal, lang):
         """Display detailed statistics tables including real withdrawal amounts"""
         col1, col2 = st.columns(2)
         
@@ -229,8 +226,8 @@ class ResultsDisplay:
             st.subheader(get_text('real_withdrawal_amount', lang))
             withdrawal_data = {
                 get_text('percentile', lang): [get_text('median', lang), '25th', '75th', get_text('average', lang)], 
-                'Accumulation (€)': [f"{acc_50th_nominal:,.0f}", f"{acc_25th_nominal:,.0f}", 
-                                    f"{acc_75th_nominal:,.0f}", f"{avg_accumulation_nominal:,.0f}"],
+                'Accumulation (€)': [f"{acc_50th_nom:,.0f}", f"{acc_25th_nom:,.0f}", 
+                                    f"{acc_75th_nom:,.0f}", f"{avg_acc_nom:,.0f}"],
                 'Real Withdrawal (€)': [f"{real_withdrawal_50th:,.0f}", f"{real_withdrawal_25th:,.0f}", 
                                        f"{real_withdrawal_75th:,.0f}", f"{avg_real_withdrawal:,.0f}"],
                 'Tax Impact (€)': [f"{nominal_withdrawal - real_withdrawal_50th:,.0f}", 
@@ -241,9 +238,8 @@ class ResultsDisplay:
             st.table(pd.DataFrame(withdrawal_data))
     
     @staticmethod
-    def _show_histograms(accumulation_balances_nominal, accumulation_balances, final_results, 
-                        real_withdrawals, lang):
-        """Display distribution histograms including real withdrawals"""
+    def _show_histograms(accumulation_balances_nominal, accumulation_balances, final_results, lang):
+        """Display distribution histograms"""
         col1, col2 = st.columns(2)
         
         with col1:
@@ -274,16 +270,6 @@ class ResultsDisplay:
             fig_final.update_xaxes(title=get_text('value_euro', lang))
             fig_final.update_yaxes(title=get_text('frequency', lang))
             st.plotly_chart(fig_final, use_container_width=True)
-            
-            if real_withdrawals:
-                fig_withdrawal = px.histogram(
-                    x=real_withdrawals, 
-                    nbins=50, 
-                    title=get_text('real_withdrawal_amount', lang)
-                )
-                fig_withdrawal.update_xaxes(title=get_text('value_euro', lang))
-                fig_withdrawal.update_yaxes(title=get_text('frequency', lang))
-                st.plotly_chart(fig_withdrawal, use_container_width=True)
     
     @staticmethod
     def _show_success_message(success_rate, lang):
