@@ -1,5 +1,5 @@
 """
-Reusable UI components for the Monte Carlo Investment Simulator
+Updated UI components with capital gains tax parameter
 """
 
 import streamlit as st
@@ -10,7 +10,7 @@ from translations import get_text, get_profile_names, get_asset_names
 
 
 class UIComponents:
-    """Collection of reusable UI components"""
+    """Collection of reusable UI components with tax support"""
     
     @staticmethod
     def render_language_selector(lang):
@@ -44,7 +44,7 @@ class UIComponents:
     
     @staticmethod
     def render_general_parameters(lang):
-        """Render general parameters in sidebar"""
+        """Render general parameters in sidebar including tax rate"""
         st.subheader(get_text('general_parameters', lang))
         
         params = {}
@@ -77,6 +77,14 @@ class UIComponents:
             get_text('withdrawal', lang), 
             value=12000.0, min_value=0.0, step=500.0
         )
+        
+        # NEW: Capital gains tax rate parameter
+        params['capital_gains_tax_rate'] = st.number_input(
+            get_text('capital_gains_tax_rate', lang), 
+            value=26.0, min_value=0.0, max_value=100.0, step=0.1, format="%.1f",
+            help=get_text('capital_gains_tax_help', lang)
+        )
+        
         params['n_simulations'] = st.selectbox(
             get_text('n_simulations', lang), 
             [1000, 5000, 10000], index=2
