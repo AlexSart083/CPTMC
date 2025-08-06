@@ -283,9 +283,10 @@ def get_profile_names(lang='en'):
             'Moderate': 'Moderate', 
             'Dynamic': 'Dynamic',
             'Aggressive': 'Aggressive',
-            'StrategicEquityGold': 'Strategic Equity-Gold',
+            'StrategicAccumulation': 'Growth Dynamic',
             'Diversified': 'Diversified',
-            'NoAllocation': 'No Allocation'
+            'StrategicDecumulation': 'Income Dynamic',
+            'UserDefined': 'User Defined'
         },
         'it': {
             'Protective': 'Protettivo',
@@ -293,9 +294,10 @@ def get_profile_names(lang='en'):
             'Moderate': 'Moderato',
             'Dynamic': 'Dinamico', 
             'Aggressive': 'Aggressivo',
-            'StrategicEquityGold': 'Strategico Equity-Oro',
+            'StrategicAccumulation': 'Crescita Dinamica',
             'Diversified': 'Diversificato',
-            'NoAllocation': 'Nessuna Allocazione'
+            'StrategicDecumulation': 'Rendita Dinamica',            
+            'UserDefined': 'Allocazione Utente'
         }
     }
     return profiles.get(lang, profiles['en'])
@@ -325,4 +327,5 @@ def get_asset_names(lang='en'):
         }
     }
     return assets.get(lang, assets['en'])
+
 
