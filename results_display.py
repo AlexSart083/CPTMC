@@ -1,5 +1,5 @@
 """
-Updated results display components with real withdrawal amount and proper tax handling
+Updated results display components with real withdrawal amount, proper tax handling, and after-tax portfolio value
 """
 
 import streamlit as st
@@ -87,7 +87,7 @@ class ResultsDisplay:
         avg_real_withdrawal = calculate_withdrawal_for_accumulation(
             avg_accumulation_nominal, total_deposited, nominal_withdrawal, capital_gains_tax_rate)
         
-        # Show tax calculation info with gross withdrawal needed
+        # Show tax calculation info with gross withdrawal needed AND after-tax portfolio value
         median_acc_nominal = acc_50th_nominal
         if median_acc_nominal > total_deposited:
             capital_gains_nominal = median_acc_nominal - total_deposited
@@ -96,12 +96,18 @@ class ResultsDisplay:
             gross_withdrawal_needed = nominal_withdrawal / (1 - effective_tax_rate)
             tax_impact_percent = ((gross_withdrawal_needed - nominal_withdrawal) / nominal_withdrawal) * 100
             
+            # NEW: Calculate after-tax portfolio value (if sold completely)
+            capital_gains_tax_amount = capital_gains_nominal * (capital_gains_tax_rate / 100)
+            after_tax_portfolio_value = median_acc_nominal - capital_gains_tax_amount
+            
             st.info(f"""
             **📊 Tax Impact Analysis (Median Case):**
             - Total Deposited (Nominal): €{total_deposited:,.0f}
             - Portfolio Value (Nominal): €{median_acc_nominal:,.0f}
             - Capital Gains: €{capital_gains_nominal:,.0f} ({capital_gains_percentage:.1%})
             - Capital Gains Tax Rate: {capital_gains_tax_rate:.1f}%
+            - Capital Gains Tax Amount: €{capital_gains_tax_amount:,.0f}
+            - **After-Tax Portfolio Value (if sold)**: €{after_tax_portfolio_value:,.0f}
             - Effective Tax Rate on Withdrawal: {effective_tax_rate:.2%}
             - **Target Annual Withdrawal (Net)**: €{nominal_withdrawal:,.0f}
             - **Gross Withdrawal Needed**: €{gross_withdrawal_needed:,.0f}
@@ -112,6 +118,7 @@ class ResultsDisplay:
             **📊 Tax Impact Analysis (Median Case):**
             - Total Deposited (Nominal): €{total_deposited:,.0f}
             - Portfolio Value (Nominal): €{median_acc_nominal:,.0f}
+            - **After-Tax Portfolio Value (if sold)**: €{median_acc_nominal:,.0f}
             - **No capital gains** (Portfolio ≤ Deposited Amount)
             - **No capital gains tax applied** ✅
             - Annual Withdrawal: €{nominal_withdrawal:,.0f} (no additional amount needed)
