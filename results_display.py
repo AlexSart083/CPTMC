@@ -110,44 +110,69 @@ class ResultsDisplay:
     
     @staticmethod
     def _show_enhanced_tax_analysis(tax_analysis, nominal_withdrawal, capital_gains_tax_rate, lang):
-        """Display comprehensive enhanced tax impact analysis"""
+        """Display comprehensive enhanced tax impact analysis with sanity checks"""
         st.subheader("💰 Analisi Impatto Fiscale Dettagliata" if lang == 'it' else "💰 Detailed Tax Impact Analysis")
+        
+        # SANITY CHECK: Verify tax calculations are reasonable
+        tax_stats = tax_analysis.get('total_taxes_statistics', {})
+        if tax_stats:
+            max_taxes = tax_stats.get('max', 0)
+            median_taxes = tax_stats.get('median', 0)
+            
+            # Rough estimate: 25 years * €12k withdrawal * 26% max rate = ~€78k max reasonable
+            rough_max_reasonable = 25 * nominal_withdrawal * (capital_gains_tax_rate / 100)
+            
+            if median_taxes > rough_max_reasonable:
+                st.error(f"""
+                ⚠️ **ERRORE NEI CALCOLI FISCALI RILEVATO**
+                - Tasse mediane calcolate: €{median_taxes:,.0f}
+                - Massimo teorico ragionevole: €{rough_max_reasonable:,.0f}
+                - Il sistema di calcolo fiscale presenta un errore. Utilizzare il sistema semplificato.
+                """)
+                return
         
         # Create columns for different tax metrics
         col1, col2, col3 = st.columns(3)
         
         with col1:
             st.subheader("📊 Tasse Totali" if lang == 'it' else "📊 Total Taxes")
-            tax_stats = tax_analysis['total_taxes_statistics']
             
-            st.metric("Mediana", f"€{tax_stats['median']:,.0f}")
-            st.metric("Media", f"€{tax_stats['mean']:,.0f}")
-            st.metric("Min - Max", f"€{tax_stats['min']:,.0f} - €{tax_stats['max']:,.0f}")
+            st.metric("Mediana", f"€{tax_stats.get('median', 0):,.0f}")
+            st.metric("Media", f"€{tax_stats.get('mean', 0):,.0f}")
+            st.metric("Min - Max", f"€{tax_stats.get('min', 0):,.0f} - €{tax_stats.get('max', 0):,.0f}")
         
         with col2:
             st.subheader("📈 Aliquota Effettiva" if lang == 'it' else "📈 Effective Tax Rate")
-            rate_stats = tax_analysis['effective_tax_rate_statistics']
+            rate_stats = tax_analysis.get('effective_tax_rate_statistics', {})
             
-            st.metric("Mediana", f"{rate_stats['median']:.2f}%")
-            st.metric("Media", f"{rate_stats['mean']:.2f}%")
-            st.metric("Range", f"{rate_stats['min']:.2f}% - {rate_stats['max']:.2f}%")
+            st.metric("Mediana", f"{rate_stats.get('median', 0):.2f}%")
+            st.metric("Media", f"{rate_stats.get('mean', 0):.2f}%")
+            st.metric("Range", f"{rate_stats.get('min', 0):.2f}% - {rate_stats.get('max', 0):.2f}%")
         
         with col3:
             st.subheader("⚖️ Distribuzione Carico Fiscale" if lang == 'it' else "⚖️ Tax Burden Distribution")
-            burden_stats = tax_analysis['tax_burden_analysis']
+            burden_stats = tax_analysis.get('tax_burden_analysis', {})
             
-            st.metric("Alta Tassazione (>20%)", f"{burden_stats['percentage_high_tax']:.1f}%")
-            st.metric("Bassa Tassazione (<5%)", f"{burden_stats['percentage_low_tax']:.1f}%")
+            st.metric("Alta Tassazione (>20%)", f"{burden_stats.get('percentage_high_tax', 0):.1f}%")
+            st.metric("Bassa Tassazione (<5%)", f"{burden_stats.get('percentage_low_tax', 0):.1f}%")
         
-        # Tax efficiency insights
-        efficiency_savings = max(0, (capital_gains_tax_rate - rate_stats['mean']) / capital_gains_tax_rate * 100)
-        st.info(f"""
-        **💡 Insights Fiscali:**
-        - **Aliquota nominale**: {capital_gains_tax_rate:.1f}% sui capital gains
-        - **Aliquota effettiva media**: {rate_stats['mean']:.2f}% sui prelievi totali
-        - **Efficienza fiscale**: {efficiency_savings:.1f}% di risparmio rispetto alla tassazione piena
-        - **Impatto sui prelievi**: La tassazione riduce i prelievi netti del {rate_stats['mean']:.1f}% in media
-        """)
+        # Tax efficiency insights with sanity check
+        mean_rate = rate_stats.get('mean', 0)
+        if mean_rate <= capital_gains_tax_rate:  # Sanity check
+            efficiency_savings = max(0, (capital_gains_tax_rate - mean_rate) / capital_gains_tax_rate * 100)
+            st.info(f"""
+            **💡 Insights Fiscali:**
+            - **Aliquota nominale**: {capital_gains_tax_rate:.1f}% sui capital gains
+            - **Aliquota effettiva media**: {mean_rate:.2f}% sui prelievi totali
+            - **Efficienza fiscale**: {efficiency_savings:.1f}% di risparmio rispetto alla tassazione piena
+            - **Impatto sui prelievi**: La tassazione riduce i prelievi netti del {mean_rate:.1f}% in media
+            - **Spiegazione**: L'aliquota effettiva è più bassa perché le tasse si applicano solo ai capital gains, non all'intero prelievo
+            """)
+        else:
+            st.warning(f"""
+            ⚠️ **Possibile errore nei calcoli**: L'aliquota effettiva ({mean_rate:.2f}%) è superiore all'aliquota nominale ({capital_gains_tax_rate:.1f}%).
+            Questo non dovrebbe accadere. Verificare i calcoli fiscali.
+            """)
     
     @staticmethod
     def _show_traditional_tax_analysis(results, total_deposited, nominal_withdrawal, capital_gains_tax_rate, lang):
