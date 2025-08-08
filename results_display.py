@@ -297,10 +297,7 @@ class ResultsDisplay:
                 return
                 
             final_real = stats['final_real']
-            
-            # DEBUGGING: Add debug info to understand what's happening
-            st.caption(f"Debug: Min={final_real['p25']:.0f}, Median={final_real['median']:.0f}, Max={final_real['p75']:.0f}")
-            
+                        
             data = {
                 ('Percentile' if lang == 'en' else 'Percentile'): ['Mediana', '25°', '75°', 'Media'],
                 ('Valore (€)' if lang == 'it' else 'Value (€)'): [
