@@ -1,5 +1,5 @@
 """
-Enhanced Monte Carlo simulation engine with detailed capital gains taxation - FIXED
+Enhanced Monte Carlo simulation engine with detailed capital gains taxation - SIMPLIFIED
 """
 
 import numpy as np
@@ -8,11 +8,11 @@ from translations import get_text
 
 
 class MonteCarloSimulator:
-    """Monte Carlo simulation engine with detailed capital gains tax tracking"""
+    """Monte Carlo simulation engine with simplified tax analysis"""
     
     def __init__(self):
         self.results = None
-        self.use_enhanced_tax = True  # Flag to enable enhanced tax calculation
+        self.use_enhanced_tax = True  # Always use enhanced tax calculation
     
     def run_simulation(self, accumulation_assets, retirement_assets, initial_amount, years_to_retirement, 
                       years_retired, annual_contribution, adjust_contribution_inflation,
@@ -42,8 +42,8 @@ class MonteCarloSimulator:
         accumulation_balances = []
         accumulation_balances_nominal = []
         final_results = []
-        detailed_tax_results = []  # New: detailed tax information
-        real_withdrawal_amounts = []  # Keep for compatibility
+        detailed_tax_results = []
+        real_withdrawal_amounts = []
         
         for sim in range(n_simulations):
             # Update progress
@@ -52,30 +52,19 @@ class MonteCarloSimulator:
                 if status_text:
                     status_text.text(get_text('simulation_step', lang).format(sim + 1, n_simulations))
             
-            # Choose simulation method based on flag
-            if self.use_enhanced_tax:
-                result = self._run_single_simulation_with_detailed_tax(
-                    acc_mean_returns, acc_volatilities, acc_allocations, acc_min_returns, acc_max_returns, acc_ters,
-                    ret_mean_returns, ret_volatilities, ret_allocations, ret_min_returns, ret_max_returns, ret_ters,
-                    initial_amount, years_to_retirement, years_retired,
-                    annual_contribution, adjust_contribution_inflation, inflation, withdrawal, 
-                    capital_gains_tax_rate
-                )
-                detailed_tax_results.append(result['tax_details'])
-            else:
-                # Fallback to simple method for compatibility
-                result = self._run_single_simulation_with_simple_tax(
-                    acc_mean_returns, acc_volatilities, acc_allocations, acc_min_returns, acc_max_returns, acc_ters,
-                    ret_mean_returns, ret_volatilities, ret_allocations, ret_min_returns, ret_max_returns, ret_ters,
-                    initial_amount, years_to_retirement, years_retired,
-                    annual_contribution, adjust_contribution_inflation, inflation, withdrawal, 
-                    capital_gains_tax_rate
-                )
-                detailed_tax_results.append({})  # Empty tax details for simple method
+            # Run single simulation with detailed tax calculation
+            result = self._run_single_simulation_with_detailed_tax(
+                acc_mean_returns, acc_volatilities, acc_allocations, acc_min_returns, acc_max_returns, acc_ters,
+                ret_mean_returns, ret_volatilities, ret_allocations, ret_min_returns, ret_max_returns, ret_ters,
+                initial_amount, years_to_retirement, years_retired,
+                annual_contribution, adjust_contribution_inflation, inflation, withdrawal, 
+                capital_gains_tax_rate
+            )
             
             accumulation_balances.append(result['accumulation_real'])
             accumulation_balances_nominal.append(result['accumulation_nominal'])
             final_results.append(result['final'])
+            detailed_tax_results.append(result['tax_details'])
             real_withdrawal_amounts.append(result.get('real_withdrawal', withdrawal))
         
         # Update final progress
@@ -89,7 +78,7 @@ class MonteCarloSimulator:
             'accumulation_nominal': accumulation_balances_nominal,
             'final': final_results,
             'real_withdrawal': real_withdrawal_amounts,
-            'tax_details': detailed_tax_results  # New: detailed tax information
+            'tax_details': detailed_tax_results
         }
         
         return self.results
@@ -101,7 +90,7 @@ class MonteCarloSimulator:
                                                initial_amount, years_to_retirement, years_retired, 
                                                annual_contribution, adjust_contribution_inflation, 
                                                inflation, withdrawal, capital_gains_tax_rate):
-        """Run a single simulation with detailed capital gains tax calculation - CORRECTED"""
+        """Run a single simulation with detailed capital gains tax calculation"""
         
         try:
             from tax_engine import EnhancedTaxEngine
@@ -149,7 +138,7 @@ class MonteCarloSimulator:
         portfolio_status = tax_engine.get_portfolio_status()
         accumulation_nominal = portfolio_status['total_portfolio_value']
         
-        # Convert to real value
+        # Convert to real value (adjusted for inflation during accumulation)
         balance_real = accumulation_nominal / ((1 + inflation) ** years_to_retirement)
         accumulation_real = balance_real
         
@@ -169,7 +158,7 @@ class MonteCarloSimulator:
             annual_return_nominal = sum(net_returns[i] * ret_allocations[i] 
                                       for i in range(len(net_returns)))
             
-            # Calculate real return
+            # Calculate real return (adjusted for inflation)
             annual_return_real = annual_return_nominal - inflation
             
             # Apply returns to portfolio
@@ -206,17 +195,12 @@ class MonteCarloSimulator:
         # Calculate average real withdrawal for compatibility
         avg_real_withdrawal = np.mean(annual_net_withdrawals) if annual_net_withdrawals else withdrawal
         
-        # Prepare detailed tax information
+        # Prepare simplified tax information (only essential data)
         tax_details = {
             'total_contributions': final_status['total_contributions'],
             'total_withdrawals': final_status['total_withdrawals'],
             'total_taxes_paid': final_status['total_taxes_paid'],
             'total_capital_gains_realized': final_status.get('total_capital_gains_realized', 0),
-            'annual_taxes': annual_taxes_paid,
-            'annual_net_withdrawals': annual_net_withdrawals,
-            'annual_gross_withdrawals': annual_gross_withdrawals,
-            'annual_capital_gains': annual_capital_gains,
-            'final_unrealized_gains': final_status['unrealized_capital_gains'],
             'average_annual_tax': np.mean(annual_taxes_paid) if annual_taxes_paid else 0,
             'total_years_with_withdrawals': len(annual_taxes_paid)
         }
@@ -225,7 +209,7 @@ class MonteCarloSimulator:
             'accumulation_nominal': accumulation_nominal,
             'accumulation_real': accumulation_real,
             'final': final_portfolio_value,
-            'real_withdrawal': avg_real_withdrawal,  # For compatibility
+            'real_withdrawal': avg_real_withdrawal,
             'tax_details': tax_details
         }
     
@@ -236,7 +220,7 @@ class MonteCarloSimulator:
                                               initial_amount, years_to_retirement, years_retired, 
                                               annual_contribution, adjust_contribution_inflation, 
                                               inflation, withdrawal, capital_gains_tax_rate):
-        """Run a single simulation with simplified capital gains tax calculation (original method)"""
+        """Run a single simulation with simplified capital gains tax calculation (fallback method)"""
         
         balance_nominal = initial_amount
         total_deposited = initial_amount
@@ -303,7 +287,8 @@ class MonteCarloSimulator:
             'accumulation_nominal': accumulation_nominal,
             'accumulation_real': accumulation_real,
             'final': balance,
-            'real_withdrawal': real_withdrawal
+            'real_withdrawal': real_withdrawal,
+            'tax_details': {}  # Empty for simple method
         }
     
     def calculate_success_rate(self):
@@ -332,39 +317,13 @@ class MonteCarloSimulator:
                     'p90': np.percentile(data, 90)
                 }
         
-        # Calculate tax statistics if available
-        if self.use_enhanced_tax and 'tax_details' in self.results:
-            tax_data = self.results['tax_details']
-            
-            # Filter out empty tax details
-            valid_tax_data = [detail for detail in tax_data if detail]
-            
-            if valid_tax_data:
-                total_taxes = [detail['total_taxes_paid'] for detail in valid_tax_data]
-                avg_annual_taxes = [detail['average_annual_tax'] for detail in valid_tax_data]
-                
-                stats['tax_statistics'] = {
-                    'total_taxes_paid': {
-                        'mean': np.mean(total_taxes),
-                        'median': np.percentile(total_taxes, 50),
-                        'p25': np.percentile(total_taxes, 25),
-                        'p75': np.percentile(total_taxes, 75)
-                    },
-                    'average_annual_tax': {
-                        'mean': np.mean(avg_annual_taxes),
-                        'median': np.percentile(avg_annual_taxes, 50),
-                        'p25': np.percentile(avg_annual_taxes, 25),
-                        'p75': np.percentile(avg_annual_taxes, 75)
-                    }
-                }
-        
         stats['success_rate'] = self.calculate_success_rate()
         
         return stats
     
     def get_tax_analysis(self) -> Dict:
-        """Get detailed tax analysis from simulation results"""
-        if not self.results or 'tax_details' not in self.results or not self.use_enhanced_tax:
+        """Get simplified tax analysis from simulation results"""
+        if not self.results or 'tax_details' not in self.results:
             return {}
         
         tax_data = self.results['tax_details']
@@ -375,9 +334,8 @@ class MonteCarloSimulator:
         if not valid_tax_data:
             return {}
         
-        # Calculate comprehensive tax statistics
+        # Calculate basic tax statistics (simplified)
         total_taxes_paid = [detail['total_taxes_paid'] for detail in valid_tax_data]
-        total_contributions = [detail['total_contributions'] for detail in valid_tax_data]
         total_withdrawals = [detail['total_withdrawals'] for detail in valid_tax_data]
         
         # Calculate effective tax rates
@@ -403,11 +361,5 @@ class MonteCarloSimulator:
                 'min': np.min(effective_tax_rates),
                 'max': np.max(effective_tax_rates),
                 'std': np.std(effective_tax_rates)
-            },
-            'tax_burden_analysis': {
-                'scenarios_with_high_tax': sum(1 for rate in effective_tax_rates if rate > 20),
-                'scenarios_with_low_tax': sum(1 for rate in effective_tax_rates if rate < 5),
-                'percentage_high_tax': (sum(1 for rate in effective_tax_rates if rate > 20) / len(effective_tax_rates)) * 100,
-                'percentage_low_tax': (sum(1 for rate in effective_tax_rates if rate < 5) / len(effective_tax_rates)) * 100
             }
         }
