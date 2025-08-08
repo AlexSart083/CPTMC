@@ -152,3 +152,290 @@ def main():
             
             # Allocation controls
             reset_clicked, balance_clicked = UIComponents.render_allocation_controls(lang, 'accumulation')
+            
+            if reset_clicked:
+                PortfolioManager.reset_allocations('accumulation')
+            
+            if balance_clicked:
+                PortfolioManager.balance_allocations('accumulation')
+            
+            # Show allocation status
+            total_allocation = PortfolioManager.get_total_allocation(accumulation_assets_data)
+            allocation_valid = UIComponents.render_allocation_status(total_allocation, lang)
+        
+        with col2:
+            # Allocation chart and summary for accumulation (same for both phases)
+            UIComponents.render_allocation_chart(accumulation_assets_data, lang, 'accumulation')
+            UIComponents.render_asset_summary(accumulation_assets_data, lang, 'accumulation')
+            
+            # Info about retirement phase using same portfolio
+            st.info(f"🏖️ {get_text('retirement_portfolio', lang)}: {get_text('use_same_portfolio', lang)}")
+        
+        # Use same data for retirement
+        retirement_assets_data = accumulation_assets_data
+        
+    else:
+        # Separate portfolio configurations
+        tab1, tab2 = st.tabs([
+            f"📈 {get_text('accumulation_portfolio', lang)}", 
+            f"🏖️ {get_text('retirement_portfolio', lang)}"
+        ])
+        
+        with tab1:
+            col1, col2 = st.columns([1, 1])
+            
+            with col1:
+                # Investment profile selector for accumulation
+                selected_accumulation_profile = UIComponents.render_profile_selector(
+                    config_manager.asset_profiles, lang, 'accumulation'
+                )
+                
+                # Handle profile loading
+                PortfolioManager.load_accumulation_profile(config_manager, selected_accumulation_profile)
+                PortfolioManager.initialize_default_profiles(
+                    config_manager, selected_accumulation_profile, 'Conservative'
+                )
+                
+                # Asset editor for accumulation
+                accumulation_assets_data = UIComponents.render_asset_editor(
+                    st.session_state.current_accumulation_assets, lang, 'accumulation'
+                )
+                
+                # Update session state with UI changes
+                PortfolioManager.update_assets_from_ui(accumulation_assets_data, 'accumulation')
+                
+                # Allocation controls
+                reset_clicked_acc, balance_clicked_acc = UIComponents.render_allocation_controls(lang, 'accumulation')
+                
+                if reset_clicked_acc:
+                    PortfolioManager.reset_allocations('accumulation')
+                
+                if balance_clicked_acc:
+                    PortfolioManager.balance_allocations('accumulation')
+                
+                # Show allocation status
+                total_allocation_acc = PortfolioManager.get_total_allocation(accumulation_assets_data)
+                allocation_valid_acc = UIComponents.render_allocation_status(total_allocation_acc, lang)
+            
+            with col2:
+                # Allocation chart and summary for accumulation
+                UIComponents.render_allocation_chart(accumulation_assets_data, lang, 'accumulation')
+                UIComponents.render_asset_summary(accumulation_assets_data, lang, 'accumulation')
+        
+        with tab2:
+            col1, col2 = st.columns([1, 1])
+            
+            with col1:
+                # Investment profile selector for retirement
+                selected_retirement_profile = UIComponents.render_profile_selector(
+                    config_manager.asset_profiles, lang, 'retirement'
+                )
+                
+                # Handle profile loading
+                PortfolioManager.load_retirement_profile(config_manager, selected_retirement_profile)
+                
+                # Asset editor for retirement
+                retirement_assets_data = UIComponents.render_asset_editor(
+                    st.session_state.current_retirement_assets, lang, 'retirement'
+                )
+                
+                # Update session state with UI changes
+                PortfolioManager.update_assets_from_ui(retirement_assets_data, 'retirement')
+                
+                # Allocation controls
+                reset_clicked_ret, balance_clicked_ret = UIComponents.render_allocation_controls(lang, 'retirement')
+                
+                if reset_clicked_ret:
+                    PortfolioManager.reset_allocations('retirement')
+                
+                if balance_clicked_ret:
+                    PortfolioManager.balance_allocations('retirement')
+                
+                # Show allocation status
+                total_allocation_ret = PortfolioManager.get_total_allocation(retirement_assets_data)
+                allocation_valid_ret = UIComponents.render_allocation_status(total_allocation_ret, lang)
+            
+            with col2:
+                # Allocation chart and summary for retirement
+                UIComponents.render_allocation_chart(retirement_assets_data, lang, 'retirement')
+                UIComponents.render_asset_summary(retirement_assets_data, lang, 'retirement')
+    
+    st.markdown("---")
+    
+    # Run simulation button and enhanced simulation logic
+    if UIComponents.render_run_simulation_button(lang):
+        # Get the correct data based on portfolio configuration
+        if use_same_portfolio:
+            final_accumulation_data = accumulation_assets_data
+            final_retirement_data = accumulation_assets_data  # Same as accumulation
+        else:
+            final_accumulation_data = accumulation_assets_data
+            final_retirement_data = retirement_assets_data
+        
+        # Validate inputs
+        is_valid, active_accumulation_assets, active_retirement_assets = PortfolioManager.validate_simulation_inputs(
+            final_accumulation_data, final_retirement_data, lang
+        )
+        
+        if is_valid:
+            # Calculate total deposited
+            total_deposited = ResultsDisplay.calculate_total_deposited(
+                params['initial_amount'], 
+                params['annual_contribution'], 
+                params['years_to_retirement'],
+                params['adjust_contribution_inflation'], 
+                params['inflation']
+            )
+            
+            # Setup progress tracking
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            # Run enhanced simulation
+            with st.spinner(get_text('simulation_progress', lang)):
+                results = simulator.run_simulation(
+                    active_accumulation_assets,
+                    active_retirement_assets,
+                    params['initial_amount'], 
+                    params['years_to_retirement'], 
+                    params['years_retired'],
+                    params['annual_contribution'], 
+                    params['adjust_contribution_inflation'], 
+                    params['inflation'] / 100, 
+                    params['withdrawal'],
+                    params['capital_gains_tax_rate'],
+                    params['n_simulations'],
+                    progress_bar, 
+                    status_text, 
+                    lang
+                )
+            
+            # Display enhanced results with detailed tax analysis
+            ResultsDisplay.show_results(
+                results, 
+                simulator,  # Pass simulator for advanced analysis
+                total_deposited, 
+                params['n_simulations'], 
+                params['years_to_retirement'], 
+                params['years_retired'],
+                params['capital_gains_tax_rate'],
+                params['withdrawal'],
+                lang
+            )
+            
+            # Optional: Compare tax scenarios if enabled
+            if simulator.use_enhanced_tax and 'enable_tax_scenarios' in locals() and enable_tax_scenarios and 'tax_rates_to_compare' in locals() and tax_rates_to_compare:
+                st.markdown("---")
+                st.subheader("🔍 Confronto Scenari Fiscali" if lang == 'it' else "🔍 Tax Scenario Comparison")
+                
+                comparison_results = {}
+                scenario_simulators = {}
+                
+                for tax_rate in tax_rates_to_compare:
+                    if tax_rate != params['capital_gains_tax_rate']:
+                        with st.spinner(f"Simulazione con aliquota {tax_rate}%..." if lang == 'it' else f"Simulation with {tax_rate}% tax rate..."):
+                            comparison_sim = MonteCarloSimulator()
+                            comparison_sim.use_enhanced_tax = True
+                            
+                            comp_results = comparison_sim.run_simulation(
+                                active_accumulation_assets,
+                                active_retirement_assets,
+                                params['initial_amount'], 
+                                params['years_to_retirement'], 
+                                params['years_retired'],
+                                params['annual_contribution'], 
+                                params['adjust_contribution_inflation'], 
+                                params['inflation'] / 100, 
+                                params['withdrawal'],
+                                tax_rate,  # Different tax rate
+                                1000,  # Fewer simulations for comparison
+                                lang=lang
+                            )
+                            comparison_results[tax_rate] = comp_results
+                            scenario_simulators[tax_rate] = comparison_sim
+                
+                # Display comparison table
+                if comparison_results:
+                    comp_data = []
+                    original_stats = simulator.get_statistics()
+                    original_tax_analysis = simulator.get_tax_analysis()
+                    
+                    # Add original scenario
+                    original_effective_rate = original_tax_analysis.get('effective_tax_rate_statistics', {}).get('mean', 0) if original_tax_analysis else 0
+                    comp_data.append({
+                        'Aliquota Fiscale (%)': params['capital_gains_tax_rate'],
+                        'Valore Finale Mediano (€)': f"{original_stats['final']['median']:,.0f}",
+                        'Tasso di Successo (%)': f"{original_stats['success_rate']:.1f}%",
+                        'Aliquota Effettiva Media (%)': f"{original_effective_rate:.2f}%",
+                        'Tasse Totali Mediane (€)': f"{original_tax_analysis.get('total_taxes_statistics', {}).get('median', 0):,.0f}" if original_tax_analysis else "N/A"
+                    })
+                    
+                    # Add comparison scenarios
+                    for tax_rate, comp_results in comparison_results.items():
+                        comp_sim = scenario_simulators[tax_rate]
+                        comp_stats = comp_sim.get_statistics()
+                        comp_tax_analysis = comp_sim.get_tax_analysis()
+                        
+                        comp_effective_rate = comp_tax_analysis.get('effective_tax_rate_statistics', {}).get('mean', 0) if comp_tax_analysis else 0
+                        comp_data.append({
+                            'Aliquota Fiscale (%)': tax_rate,
+                            'Valore Finale Mediano (€)': f"{comp_stats['final']['median']:,.0f}",
+                            'Tasso di Successo (%)': f"{comp_stats['success_rate']:.1f}%",
+                            'Aliquota Effettiva Media (%)': f"{comp_effective_rate:.2f}%",
+                            'Tasse Totali Mediane (€)': f"{comp_tax_analysis.get('total_taxes_statistics', {}).get('median', 0):,.0f}" if comp_tax_analysis else "N/A"
+                        })
+                    
+                    st.table(pd.DataFrame(comp_data))
+                    
+                    # Create comparison chart
+                    import plotly.express as px
+                    
+                    chart_data = []
+                    for row in comp_data:
+                        chart_data.append({
+                            'Aliquota': f"{row['Aliquota Fiscale (%)']}%",
+                            'Valore Finale': float(row['Valore Finale Mediano (€)'].replace('€', '').replace(',', '')),
+                            'Tasso Successo': float(row['Tasso di Successo (%)'].replace('%', ''))
+                        })
+                    
+                    chart_df = pd.DataFrame(chart_data)
+                    
+                    col_chart1, col_chart2 = st.columns(2)
+                    
+                    with col_chart1:
+                        fig_value = px.bar(
+                            chart_df, 
+                            x='Aliquota', 
+                            y='Valore Finale',
+                            title="Valore Finale Mediano per Aliquota Fiscale" if lang == 'it' else "Median Final Value by Tax Rate"
+                        )
+                        st.plotly_chart(fig_value, use_container_width=True)
+                    
+                    with col_chart2:
+                        fig_success = px.bar(
+                            chart_df, 
+                            x='Aliquota', 
+                            y='Tasso Successo',
+                            title="Tasso di Successo per Aliquota Fiscale" if lang == 'it' else "Success Rate by Tax Rate"
+                        )
+                        st.plotly_chart(fig_success, use_container_width=True)
+                    
+                    # Key insights
+                    st.info(f"""
+                    **💡 Insights dal Confronto Fiscale:**
+                    - Differenza massima nel valore finale mediano: €{max(row['Valore Finale'] for row in chart_data) - min(row['Valore Finale'] for row in chart_data):,.0f}
+                    - Variazione nel tasso di successo: {max(row['Tasso Successo'] for row in chart_data) - min(row['Tasso Successo'] for row in chart_data):.1f} punti percentuali
+                    - L'aliquota fiscale ha un impatto significativo sui risultati a lungo termine
+                    """ if lang == 'it' else f"""
+                    **💡 Tax Comparison Insights:**
+                    - Maximum difference in median final value: €{max(row['Valore Finale'] for row in chart_data) - min(row['Valore Finale'] for row in chart_data):,.0f}
+                    - Success rate variation: {max(row['Tasso Successo'] for row in chart_data) - min(row['Tasso Successo'] for row in chart_data):.1f} percentage points
+                    - Tax rate has significant impact on long-term results
+                    """)
+    
+    # Footer
+    UIComponents.render_footer(lang)
+
+
+if __name__ == "__main__":
+    main()
