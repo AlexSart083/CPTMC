@@ -1,5 +1,5 @@
 """
-Enhanced Monte Carlo simulation engine with detailed capital gains taxation
+Enhanced Monte Carlo simulation engine with detailed capital gains taxation - FIXED
 """
 
 import numpy as np
@@ -58,59 +58,7 @@ class MonteCarloSimulator:
                     acc_mean_returns, acc_volatilities, acc_allocations, acc_min_returns, acc_max_returns, acc_ters,
                     ret_mean_returns, ret_volatilities, ret_allocations, ret_min_returns, ret_max_returns, ret_ters,
                     initial_amount, years_to_retirement, years_retired,
-                    annual_gross_withdrawals.append(withdrawal_result['gross_withdrawal'])
-            annual_net_withdrawals.append(withdrawal_result['net_withdrawal'])
-            annual_taxes_paid.append(withdrawal_result['taxes_owed'])
-            annual_capital_gains.append(withdrawal_result['capital_gains'])
-            
-            # DEBUGGING: Check for unreasonable values
-            if withdrawal_result['taxes_owed'] > withdrawal_result['gross_withdrawal']:
-                print(f"ERROR: Taxes ({withdrawal_result['taxes_owed']:.2f}) > Withdrawal ({withdrawal_result['gross_withdrawal']:.2f})")
-                print(f"Capital gains: {withdrawal_result['capital_gains']:.2f}, Tax rate: {capital_gains_tax_rate}%")
-            
-            # Check if portfolio is depleted after withdrawal
-            final_status = tax_engine.get_portfolio_status()
-            if final_status['total_portfolio_value'] <= 0:
-                break
-        
-        # Get final portfolio status
-        final_status = tax_engine.get_portfolio_status()
-        final_portfolio_value = final_status['total_portfolio_value']
-        
-        # Calculate average real withdrawal for compatibility
-        avg_real_withdrawal = np.mean(annual_net_withdrawals) if annual_net_withdrawals else withdrawal
-        
-        # Sanity checks
-        total_taxes = sum(annual_taxes_paid)
-        total_gains = sum(annual_capital_gains)
-        
-        # CORRECTED: Ensure taxes don't exceed reasonable bounds
-        max_reasonable_taxes = total_gains * (capital_gains_tax_rate / 100)
-        if total_taxes > max_reasonable_taxes * 1.1:  # 10% tolerance
-            print(f"WARNING: Total taxes ({total_taxes:.0f}) seem high for gains ({total_gains:.0f})")
-        
-        # Prepare detailed tax information
-        tax_details = {
-            'total_contributions': final_status['total_contributions'],
-            'total_withdrawals': final_status['total_withdrawals'],
-            'total_taxes_paid': final_status['total_taxes_paid'],
-            'total_capital_gains_realized': final_status.get('total_capital_gains_realized', 0),
-            'annual_taxes': annual_taxes_paid,
-            'annual_net_withdrawals': annual_net_withdrawals,
-            'annual_gross_withdrawals': annual_gross_withdrawals,
-            'annual_capital_gains': annual_capital_gains,
-            'final_unrealized_gains': final_status['unrealized_capital_gains'],
-            'average_annual_tax': np.mean(annual_taxes_paid) if annual_taxes_paid else 0,
-            'total_years_with_withdrawals': len(annual_taxes_paid)
-        }
-        
-        return {
-            'accumulation_nominal': accumulation_nominal,
-            'accumulation_real': accumulation_real,
-            'final': final_portfolio_value,
-            'real_withdrawal': avg_real_withdrawal,  # For compatibility
-            'tax_details': tax_details
-        }contribution, adjust_contribution_inflation, inflation, withdrawal, 
+                    annual_contribution, adjust_contribution_inflation, inflation, withdrawal, 
                     capital_gains_tax_rate
                 )
                 detailed_tax_results.append(result['tax_details'])
@@ -246,11 +194,6 @@ class MonteCarloSimulator:
             annual_taxes_paid.append(withdrawal_result['taxes_owed'])
             annual_capital_gains.append(withdrawal_result['capital_gains'])
             
-            # DEBUGGING: Check for unreasonable values
-            if withdrawal_result['taxes_owed'] > withdrawal_result['gross_withdrawal']:
-                print(f"ERROR: Taxes ({withdrawal_result['taxes_owed']:.2f}) > Withdrawal ({withdrawal_result['gross_withdrawal']:.2f})")
-                print(f"Capital gains: {withdrawal_result['capital_gains']:.2f}, Tax rate: {capital_gains_tax_rate}%")
-            
             # Check if portfolio is depleted after withdrawal
             final_status = tax_engine.get_portfolio_status()
             if final_status['total_portfolio_value'] <= 0:
@@ -263,15 +206,6 @@ class MonteCarloSimulator:
         # Calculate average real withdrawal for compatibility
         avg_real_withdrawal = np.mean(annual_net_withdrawals) if annual_net_withdrawals else withdrawal
         
-        # Sanity checks
-        total_taxes = sum(annual_taxes_paid)
-        total_gains = sum(annual_capital_gains)
-        
-        # CORRECTED: Ensure taxes don't exceed reasonable bounds
-        max_reasonable_taxes = total_gains * (capital_gains_tax_rate / 100)
-        if total_taxes > max_reasonable_taxes * 1.1:  # 10% tolerance
-            print(f"WARNING: Total taxes ({total_taxes:.0f}) seem high for gains ({total_gains:.0f})")
-        
         # Prepare detailed tax information
         tax_details = {
             'total_contributions': final_status['total_contributions'],
@@ -282,41 +216,6 @@ class MonteCarloSimulator:
             'annual_net_withdrawals': annual_net_withdrawals,
             'annual_gross_withdrawals': annual_gross_withdrawals,
             'annual_capital_gains': annual_capital_gains,
-            'final_unrealized_gains': final_status['unrealized_capital_gains'],
-            'average_annual_tax': np.mean(annual_taxes_paid) if annual_taxes_paid else 0,
-            'total_years_with_withdrawals': len(annual_taxes_paid)
-        }
-        
-        return {
-            'accumulation_nominal': accumulation_nominal,
-            'accumulation_real': accumulation_real,
-            'final': final_portfolio_value,
-            'real_withdrawal': avg_real_withdrawal,  # For compatibility
-            'tax_details': tax_details
-        }gross_withdrawals.append(withdrawal_result['gross_withdrawal'])
-            annual_net_withdrawals.append(withdrawal_result['net_withdrawal'])
-            annual_taxes_paid.append(withdrawal_result['taxes_owed'])
-            
-            # Check if portfolio is depleted
-            current_portfolio_status = tax_engine.get_portfolio_status()
-            if current_portfolio_status['total_portfolio_value'] <= 0:
-                break
-        
-        # Get final portfolio status
-        final_status = tax_engine.get_portfolio_status()
-        final_portfolio_value = final_status['total_portfolio_value']
-        
-        # Calculate average real withdrawal for compatibility
-        avg_real_withdrawal = np.mean(annual_net_withdrawals) if annual_net_withdrawals else withdrawal
-        
-        # Prepare detailed tax information
-        tax_details = {
-            'total_contributions': final_status['total_contributions'],
-            'total_withdrawals': final_status['total_withdrawals'],
-            'total_taxes_paid': final_status['total_taxes_paid'],
-            'annual_taxes': annual_taxes_paid,
-            'annual_net_withdrawals': annual_net_withdrawals,
-            'annual_gross_withdrawals': annual_gross_withdrawals,
             'final_unrealized_gains': final_status['unrealized_capital_gains'],
             'average_annual_tax': np.mean(annual_taxes_paid) if annual_taxes_paid else 0,
             'total_years_with_withdrawals': len(annual_taxes_paid)
