@@ -285,6 +285,12 @@ class ResultsDisplay:
         
         with col4:
             st.subheader("🏁 Finali (Reali)" if lang == 'it' else "🏁 Final (Real)")
+            
+            # Check if final_real exists in stats, if not create it
+            if 'final_real' not in stats:
+                st.warning("⚠️ Dati valori finali reali non disponibili" if lang == 'it' else "⚠️ Real final values data not available")
+                return
+                
             final_real = stats['final_real']
             
             data = {
@@ -353,7 +359,11 @@ class ResultsDisplay:
                 st.plotly_chart(fig_final_real, use_container_width=True)
         
         with tab2:
-            # Scatter plots for nominal values only
+            # Scatter plots for nominal values only - with data validation
+            if len(accumulation_nominal) == 0 or len(final_nominal) == 0:
+                st.warning("⚠️ Dati insufficienti per i grafici di correlazione" if lang == 'it' else "⚠️ Insufficient data for correlation charts")
+                return
+                
             col1, col2 = st.columns(2)
             
             with col1:
@@ -371,9 +381,15 @@ class ResultsDisplay:
                 fig_scatter_acc_final.update_traces(marker=dict(size=4))
                 st.plotly_chart(fig_scatter_acc_final, use_container_width=True)
                 
-                # Add correlation coefficient
-                correlation_acc_final = np.corrcoef(accumulation_nominal, final_nominal)[0, 1]
-                st.info(f"**Correlazione**: {correlation_acc_final:.3f}")
+                # Add correlation coefficient with validation
+                try:
+                    correlation_acc_final = np.corrcoef(accumulation_nominal, final_nominal)[0, 1]
+                    if np.isnan(correlation_acc_final):
+                        st.info("**Correlazione**: Non calcolabile (varianza zero)")
+                    else:
+                        st.info(f"**Correlazione**: {correlation_acc_final:.3f}")
+                except:
+                    st.info("**Correlazione**: Non calcolabile")
             
             with col2:
                 # Enhanced scatter plot with color gradient based on accumulation value
@@ -451,17 +467,36 @@ class ResultsDisplay:
                 fig_scatter_nom_real.update_traces(marker=dict(size=4))
                 st.plotly_chart(fig_scatter_nom_real, use_container_width=True)
                 
-                # Show inflation impact statistics
-                inflation_impact = np.mean([(nom - real) / nom * 100 for nom, real in zip(final_nominal, final_real)])
-                st.info(f"""
-                **Impatto Inflazione Media**: {inflation_impact:.1f}%
+                # Show inflation impact statistics with zero-division protection
+                valid_pairs = [(nom, real) for nom, real in zip(final_nominal, final_real) if nom > 0]
                 
-                I valori reali sono mediamente il {100-inflation_impact:.1f}% dei valori nominali
-                """ if lang == 'it' else f"""
-                **Average Inflation Impact**: {inflation_impact:.1f}%
-                
-                Real values are on average {100-inflation_impact:.1f}% of nominal values
-                """)
+                if valid_pairs:
+                    inflation_impact = np.mean([(nom - real) / nom * 100 for nom, real in valid_pairs])
+                    avg_real_percentage = 100 - inflation_impact
+                    
+                    st.info(f"""
+                    **Impatto Inflazione Media**: {inflation_impact:.1f}%
+                    
+                    I valori reali sono mediamente il {avg_real_percentage:.1f}% dei valori nominali
+                    
+                    *Calcolato su {len(valid_pairs)} scenari con portafoglio residuo > 0*
+                    """ if lang == 'it' else f"""
+                    **Average Inflation Impact**: {inflation_impact:.1f}%
+                    
+                    Real values are on average {avg_real_percentage:.1f}% of nominal values
+                    
+                    *Calculated on {len(valid_pairs)} scenarios with remaining portfolio > 0*
+                    """)
+                else:
+                    st.warning("""
+                    **⚠️ Attenzione**: Tutti gli scenari hanno portafoglio esaurito (valore finale = 0)
+                    
+                    Impossibile calcolare l'impatto inflazione
+                    """ if lang == 'it' else """
+                    **⚠️ Warning**: All scenarios have depleted portfolio (final value = 0)
+                    
+                    Cannot calculate inflation impact
+                    """)
     
     @staticmethod
     def _show_success_message(success_rate, lang):
