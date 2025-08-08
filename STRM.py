@@ -1,6 +1,6 @@
 """
 Monte Carlo Investment Simulator - Main Application
-Updated with capital gains tax support
+Updated with enhanced capital gains tax support
 """
 
 import streamlit as st
@@ -37,8 +37,42 @@ def main():
     # Main header
     st.title(get_text('main_title', lang))
     
-    # Disclaimers section
+    # Enhanced disclaimers section
     UIComponents.render_disclaimers(lang)
+    
+    # Add tax methodology explanation
+    with st.expander("💰 Metodologia di Calcolo Tasse" if lang == 'it' else "💰 Tax Calculation Methodology"):
+        if lang == 'it':
+            st.markdown("""
+            **🔍 Come vengono calcolate le tasse sui capital gains:**
+            
+            1. **Tracciamento Accurato**: Sistema avanzato che traccia ogni contributo con la sua base di costo
+            2. **Calcolo Proporzionale**: I prelievi vengono allocati proporzionalmente tra tutti i lotti fiscali
+            3. **Tassazione Realizzata**: Le tasse si applicano solo sui capital gains realizzati durante i prelievi
+            4. **Simulazione Anno per Anno**: Ogni anno di pensione viene calcolato individualmente
+            
+            **📊 Vantaggi del sistema migliorato:**
+            - ✅ Precisione fiscale quasi professionale
+            - ✅ Analisi dettagliata della distribuzione del carico fiscale
+            - ✅ Calcolo automatico dell'importo lordo necessario per i prelievi netti
+            - ✅ Insights avanzati sull'efficienza fiscale del portafoglio
+            """)
+        else:
+            st.markdown("""
+            **🔍 How capital gains taxes are calculated:**
+            
+            1. **Accurate Tracking**: Advanced system that tracks each contribution with its cost basis
+            2. **Proportional Calculation**: Withdrawals are allocated proportionally across all tax lots
+            3. **Realized Taxation**: Taxes apply only on capital gains realized during withdrawals
+            4. **Year-by-Year Simulation**: Each retirement year is calculated individually
+            
+            **📊 Advantages of the improved system:**
+            - ✅ Near-professional tax precision
+            - ✅ Detailed tax burden distribution analysis
+            - ✅ Automatic calculation of gross amount needed for net withdrawals
+            - ✅ Advanced insights on portfolio tax efficiency
+            """)
+    
     st.markdown("---")
     
     # Sidebar for parameters
@@ -47,6 +81,42 @@ def main():
         
         # General parameters (now includes capital gains tax rate)
         params = UIComponents.render_general_parameters(lang)
+        
+        # Add advanced tax options
+        with st.expander("⚙️ Opzioni Fiscali Avanzate" if lang == 'it' else "⚙️ Advanced Tax Options"):
+            
+            # Enable/disable enhanced tax calculation
+            use_enhanced_tax = st.checkbox(
+                "Usa Calcolo Fiscale Avanzato" if lang == 'it' else "Use Enhanced Tax Calculation",
+                value=True,
+                help="Attiva il sistema di calcolo fiscale dettagliato con tracciamento dei lotti" if lang == 'it'
+                     else "Enable detailed tax calculation system with lot tracking"
+            )
+            
+            # Update simulator setting
+            simulator.use_enhanced_tax = use_enhanced_tax
+            
+            if use_enhanced_tax:
+                st.success("✅ Sistema fiscale avanzato attivo" if lang == 'it' else "✅ Advanced tax system enabled")
+                
+                # Multiple tax scenarios comparison
+                enable_tax_scenarios = st.checkbox(
+                    "Confronta Scenari Fiscali" if lang == 'it' else "Compare Tax Scenarios",
+                    value=False,
+                    help="Confronta risultati con diverse aliquote fiscali" if lang == 'it'
+                         else "Compare results with different tax rates"
+                )
+                
+                if enable_tax_scenarios:
+                    tax_rates_to_compare = st.multiselect(
+                        "Aliquote da Confrontare (%)" if lang == 'it' else "Tax Rates to Compare (%)",
+                        [0, 12.5, 20, 26, 30, 35],
+                        default=[20, 26],
+                        help="Seleziona diverse aliquote per il confronto" if lang == 'it'
+                             else "Select different rates for comparison"
+                    )
+            else:
+                st.info("ℹ️ Utilizzo del sistema fiscale semplificato" if lang == 'it' else "ℹ️ Using simplified tax system")
     
     # Main area - Portfolio Configuration
     st.subheader(get_text('portfolio_config', lang))
@@ -82,179 +152,3 @@ def main():
             
             # Allocation controls
             reset_clicked, balance_clicked = UIComponents.render_allocation_controls(lang, 'accumulation')
-            
-            if reset_clicked:
-                PortfolioManager.reset_allocations('accumulation')
-            
-            if balance_clicked:
-                PortfolioManager.balance_allocations('accumulation')
-            
-            # Show allocation status
-            total_allocation = PortfolioManager.get_total_allocation(accumulation_assets_data)
-            allocation_valid = UIComponents.render_allocation_status(total_allocation, lang)
-        
-        with col2:
-            # Allocation chart and summary for accumulation (same for both phases)
-            UIComponents.render_allocation_chart(accumulation_assets_data, lang, 'accumulation')
-            UIComponents.render_asset_summary(accumulation_assets_data, lang, 'accumulation')
-            
-            # Info about retirement phase using same portfolio
-            st.info(f"🏖️ {get_text('retirement_portfolio', lang)}: {get_text('use_same_portfolio', lang)}")
-        
-        # Use same data for retirement
-        retirement_assets_data = accumulation_assets_data
-        
-    else:
-        # Separate portfolio configurations
-        tab1, tab2 = st.tabs([
-            f"📈 {get_text('accumulation_portfolio', lang)}", 
-            f"🏖️ {get_text('retirement_portfolio', lang)}"
-        ])
-        
-        with tab1:
-            col1, col2 = st.columns([1, 1])
-            
-            with col1:
-                # Investment profile selector for accumulation
-                selected_accumulation_profile = UIComponents.render_profile_selector(
-                    config_manager.asset_profiles, lang, 'accumulation'
-                )
-                
-                # Handle profile loading
-                PortfolioManager.load_accumulation_profile(config_manager, selected_accumulation_profile)
-                PortfolioManager.initialize_default_profiles(
-                    config_manager, selected_accumulation_profile, 'Conservative'
-                )
-                
-                # Asset editor for accumulation
-                accumulation_assets_data = UIComponents.render_asset_editor(
-                    st.session_state.current_accumulation_assets, lang, 'accumulation'
-                )
-                
-                # Update session state with UI changes
-                PortfolioManager.update_assets_from_ui(accumulation_assets_data, 'accumulation')
-                
-                # Allocation controls
-                reset_clicked_acc, balance_clicked_acc = UIComponents.render_allocation_controls(lang, 'accumulation')
-                
-                if reset_clicked_acc:
-                    PortfolioManager.reset_allocations('accumulation')
-                
-                if balance_clicked_acc:
-                    PortfolioManager.balance_allocations('accumulation')
-                
-                # Show allocation status
-                total_allocation_acc = PortfolioManager.get_total_allocation(accumulation_assets_data)
-                allocation_valid_acc = UIComponents.render_allocation_status(total_allocation_acc, lang)
-            
-            with col2:
-                # Allocation chart and summary for accumulation
-                UIComponents.render_allocation_chart(accumulation_assets_data, lang, 'accumulation')
-                UIComponents.render_asset_summary(accumulation_assets_data, lang, 'accumulation')
-        
-        with tab2:
-            col1, col2 = st.columns([1, 1])
-            
-            with col1:
-                # Investment profile selector for retirement
-                selected_retirement_profile = UIComponents.render_profile_selector(
-                    config_manager.asset_profiles, lang, 'retirement'
-                )
-                
-                # Handle profile loading
-                PortfolioManager.load_retirement_profile(config_manager, selected_retirement_profile)
-                
-                # Asset editor for retirement
-                retirement_assets_data = UIComponents.render_asset_editor(
-                    st.session_state.current_retirement_assets, lang, 'retirement'
-                )
-                
-                # Update session state with UI changes
-                PortfolioManager.update_assets_from_ui(retirement_assets_data, 'retirement')
-                
-                # Allocation controls
-                reset_clicked_ret, balance_clicked_ret = UIComponents.render_allocation_controls(lang, 'retirement')
-                
-                if reset_clicked_ret:
-                    PortfolioManager.reset_allocations('retirement')
-                
-                if balance_clicked_ret:
-                    PortfolioManager.balance_allocations('retirement')
-                
-                # Show allocation status
-                total_allocation_ret = PortfolioManager.get_total_allocation(retirement_assets_data)
-                allocation_valid_ret = UIComponents.render_allocation_status(total_allocation_ret, lang)
-            
-            with col2:
-                # Allocation chart and summary for retirement
-                UIComponents.render_allocation_chart(retirement_assets_data, lang, 'retirement')
-                UIComponents.render_asset_summary(retirement_assets_data, lang, 'retirement')
-    
-    st.markdown("---")
-    
-    # Run simulation button and logic
-    if UIComponents.render_run_simulation_button(lang):
-        # Get the correct data based on portfolio configuration
-        if use_same_portfolio:
-            final_accumulation_data = accumulation_assets_data
-            final_retirement_data = accumulation_assets_data  # Same as accumulation
-        else:
-            final_accumulation_data = accumulation_assets_data
-            final_retirement_data = retirement_assets_data
-        
-        # Validate inputs
-        is_valid, active_accumulation_assets, active_retirement_assets = PortfolioManager.validate_simulation_inputs(
-            final_accumulation_data, final_retirement_data, lang
-        )
-        
-        if is_valid:
-            # Calculate total deposited
-            total_deposited = ResultsDisplay.calculate_total_deposited(
-                params['initial_amount'], 
-                params['annual_contribution'], 
-                params['years_to_retirement'],
-                params['adjust_contribution_inflation'], 
-                params['inflation']
-            )
-            
-            # Setup progress tracking
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            
-            # Run simulation with separate portfolios and capital gains tax
-            with st.spinner(get_text('simulation_progress', lang)):
-                results = simulator.run_simulation(
-                    active_accumulation_assets,
-                    active_retirement_assets,
-                    params['initial_amount'], 
-                    params['years_to_retirement'], 
-                    params['years_retired'],
-                    params['annual_contribution'], 
-                    params['adjust_contribution_inflation'], 
-                    params['inflation'] / 100, 
-                    params['withdrawal'],
-                    params['capital_gains_tax_rate'],  # NEW: capital gains tax rate
-                    params['n_simulations'],
-                    progress_bar, 
-                    status_text, 
-                    lang
-                )
-            
-            # Display results
-            ResultsDisplay.show_results(
-                results, 
-                total_deposited, 
-                params['n_simulations'], 
-                params['years_to_retirement'], 
-                params['years_retired'],
-                params['capital_gains_tax_rate'],  # Added tax rate
-                params['withdrawal'],              # Added nominal withdrawal
-                lang                               # Language parameter
-            )
-    
-    # Footer
-    UIComponents.render_footer(lang)
-
-
-if __name__ == "__main__":
-    main()
