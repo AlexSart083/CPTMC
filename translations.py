@@ -1,5 +1,5 @@
 """
-Updated translations with capital gains tax support
+Updated translations with enhanced chart and analysis support
 """
 
 TRANSLATIONS = {
@@ -113,6 +113,24 @@ TRANSLATIONS = {
         'distribution_accumulation_nominal': 'Distribution of End-of-Accumulation Values (Without Inflation)',
         'distribution_final': 'Distribution of Final Values (With Inflation)',
         'frequency': 'Frequency',
+        
+        # Enhanced chart labels
+        'distribution_charts_title': '📈 Distribution and Correlation Charts',
+        'distributions_tab': '📊 Distributions',
+        'correlations_tab': '🔗 Correlations (Nominal)',
+        'comparison_tab': '📈 Nominal vs Real Comparison',
+        'accumulation_nominal_dist': 'Accumulation Values Distribution (Nominal)',
+        'accumulation_real_dist': 'Accumulation Values Distribution (Real)',
+        'final_nominal_dist': 'Final Values Distribution (Nominal)',
+        'final_real_dist': 'Final Values Distribution (Real)',
+        'accumulation_final_correlation': 'Accumulation vs Final Correlation (Nominal)',
+        'accumulation_final_heatmap': 'Heat Map: Accumulation → Final (Nominal)',
+        'final_values_comparison': 'Final Values Comparison: Nominal vs Real',
+        'final_values_correlation': 'Final Values Correlation: Real vs Nominal',
+        'correlation_label': '**Correlation**',
+        'inflation_impact_label': '**Average Inflation Impact**',
+        'inflation_impact_text': 'Real values are on average {:.1f}% of nominal values',
+        'one_to_one_line': '1:1 Line',
         
         # Success messages
         'excellent_success': '🎉 Excellent! With {:.1f}% probability of success, you can now watch the construction sites from Monte Carlo',
@@ -239,6 +257,24 @@ TRANSLATIONS = {
         'distribution_final': 'Distribuzione dei Valori Finali (Con Inflazione)',
         'frequency': 'Frequenza',
         
+        # Enhanced chart labels
+        'distribution_charts_title': '📈 Grafici di Distribuzione e Correlazione',
+        'distributions_tab': '📊 Distribuzioni',
+        'correlations_tab': '🔗 Correlazioni (Nominali)',
+        'comparison_tab': '📈 Confronto Nominali vs Reali',
+        'accumulation_nominal_dist': 'Distribuzione Valori Accumulo (Nominale)',
+        'accumulation_real_dist': 'Distribuzione Valori Accumulo (Reale)',
+        'final_nominal_dist': 'Distribuzione Valori Finali (Nominali)',
+        'final_real_dist': 'Distribuzione Valori Finali (Reali)',
+        'accumulation_final_correlation': 'Correlazione Accumulo vs Finale (Nominale)',
+        'accumulation_final_heatmap': 'Mappa di Calore: Accumulo → Finale (Nominale)',
+        'final_values_comparison': 'Confronto Valori Finali: Nominali vs Reali',
+        'final_values_correlation': 'Correlazione Valori Finali: Reali vs Nominali',
+        'correlation_label': '**Correlazione**',
+        'inflation_impact_label': '**Impatto Inflazione Media**',
+        'inflation_impact_text': 'I valori reali sono mediamente il {:.1f}% dei valori nominali',
+        'one_to_one_line': 'Linea 1:1',
+        
         # Success messages
         'excellent_success': '🎉 Eccellente! Con {:.1f}% di probabilità di successo, ora puoi guardare i cantieri da Monte Carlo',
         'fair_success': '⚠️ Discreto. Con {:.1f}% di tasso di successo, potresti dover considerare il tonno in scatola.',
@@ -313,7 +349,9 @@ def get_asset_names(lang='en'):
             'Commodities': 'Commodities',
             'Cash': 'Cash',
             'IlMattone': 'The Brick',
-            'UserAsset': 'User Custom'
+            'UserAsset': 'User Custom',
+            'UserAsset1': 'User Asset 1',
+            'UserAsset2': 'User Asset 2'
         },
         'it': {
             'Stocks': 'Azioni',
@@ -323,9 +361,9 @@ def get_asset_names(lang='en'):
             'Commodities': 'Materie Prime',
             'Cash': 'Liquidità',
             'IlMattone': 'Il Mattone',
-            'UserAsset': 'Asset Custom'
+            'UserAsset': 'Asset Custom',
+            'UserAsset1': 'Asset Utente 1',
+            'UserAsset2': 'Asset Utente 2'
         }
     }
     return assets.get(lang, assets['en'])
-
-
