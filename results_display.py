@@ -1,5 +1,6 @@
 """
 Enhanced results display components with simplified tax analysis and new chart types
+FIXED VERSION - Corrected final real values calculation
 """
 
 import streamlit as st
@@ -48,8 +49,14 @@ class ResultsDisplay:
         accumulation_balances_nominal = results['accumulation_nominal']
         final_results = results['final']
         
-        # Calculate final results in real terms (adjusted for inflation)
-        total_inflation_factor = (1 + inflation_rate) ** (years_to_retirement + years_retired)
+        # FIXED: Calculate final results in real terms (adjusted for inflation)
+        # The inflation_rate is passed as percentage (e.g., 2.5), so we need to divide by 100
+        inflation_decimal = inflation_rate / 100 if inflation_rate > 1 else inflation_rate
+        
+        # Total inflation factor over the entire period (accumulation + retirement)
+        total_inflation_factor = (1 + inflation_decimal) ** (years_to_retirement + years_retired)
+        
+        # Convert final results to real terms
         final_results_real = [value / total_inflation_factor for value in final_results]
         
         # Get statistics
@@ -80,8 +87,6 @@ class ResultsDisplay:
         ResultsDisplay._show_enhanced_detailed_statistics(
             stats, years_to_retirement, years_retired, total_deposited, inflation_rate, lang
         )
-        
-        # REMOVED: Detailed tax statistics section completely
         
         # Display enhanced charts with scatter plots and real/nominal final values
         ResultsDisplay._show_enhanced_charts_with_scatter(
@@ -292,6 +297,9 @@ class ResultsDisplay:
                 return
                 
             final_real = stats['final_real']
+            
+            # DEBUGGING: Add debug info to understand what's happening
+            st.caption(f"Debug: Min={final_real['p25']:.0f}, Median={final_real['median']:.0f}, Max={final_real['p75']:.0f}")
             
             data = {
                 ('Percentile' if lang == 'en' else 'Percentile'): ['Mediana', '25°', '75°', 'Media'],
