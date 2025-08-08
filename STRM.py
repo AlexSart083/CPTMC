@@ -1,6 +1,6 @@
 """
 Monte Carlo Investment Simulator - Main Application
-Updated with enhanced capital gains tax support
+Modified version with simplified tax analysis and enhanced charts
 """
 
 import streamlit as st
@@ -82,41 +82,9 @@ def main():
         # General parameters (now includes capital gains tax rate)
         params = UIComponents.render_general_parameters(lang)
         
-        # Add advanced tax options
-        with st.expander("⚙️ Opzioni Fiscali Avanzate" if lang == 'it' else "⚙️ Advanced Tax Options"):
-            
-            # Enable/disable enhanced tax calculation
-            use_enhanced_tax = st.checkbox(
-                "Usa Calcolo Fiscale Avanzato" if lang == 'it' else "Use Enhanced Tax Calculation",
-                value=True,
-                help="Attiva il sistema di calcolo fiscale dettagliato con tracciamento dei lotti" if lang == 'it'
-                     else "Enable detailed tax calculation system with lot tracking"
-            )
-            
-            # Update simulator setting
-            simulator.use_enhanced_tax = use_enhanced_tax
-            
-            if use_enhanced_tax:
-                st.success("✅ Sistema fiscale avanzato attivo" if lang == 'it' else "✅ Advanced tax system enabled")
-                
-                # Multiple tax scenarios comparison
-                enable_tax_scenarios = st.checkbox(
-                    "Confronta Scenari Fiscali" if lang == 'it' else "Compare Tax Scenarios",
-                    value=False,
-                    help="Confronta risultati con diverse aliquote fiscali" if lang == 'it'
-                         else "Compare results with different tax rates"
-                )
-                
-                if enable_tax_scenarios:
-                    tax_rates_to_compare = st.multiselect(
-                        "Aliquote da Confrontare (%)" if lang == 'it' else "Tax Rates to Compare (%)",
-                        [0, 12.5, 20, 26, 30, 35],
-                        default=[20, 26],
-                        help="Seleziona diverse aliquote per il confronto" if lang == 'it'
-                             else "Select different rates for comparison"
-                    )
-            else:
-                st.info("ℹ️ Utilizzo del sistema fiscale semplificato" if lang == 'it' else "ℹ️ Using simplified tax system")
+        # REMOVED: Advanced tax options section completely
+        # The enhanced tax calculation is always enabled, no comparison scenarios
+        simulator.use_enhanced_tax = True
     
     # Main area - Portfolio Configuration
     st.subheader(get_text('portfolio_config', lang))
@@ -262,7 +230,7 @@ def main():
     
     st.markdown("---")
     
-    # Run simulation button and enhanced simulation logic
+    # Run simulation button and simplified simulation logic
     if UIComponents.render_run_simulation_button(lang):
         # Get the correct data based on portfolio configuration
         if use_same_portfolio:
@@ -291,7 +259,7 @@ def main():
             progress_bar = st.progress(0)
             status_text = st.empty()
             
-            # Run enhanced simulation
+            # Run simplified simulation (no tax comparison scenarios)
             with st.spinner(get_text('simulation_progress', lang)):
                 results = simulator.run_simulation(
                     active_accumulation_assets,
@@ -310,128 +278,19 @@ def main():
                     lang
                 )
             
-            # Display enhanced results with detailed tax analysis
+            # Display simplified results (no detailed tax statistics, no tax comparison)
             ResultsDisplay.show_results(
                 results, 
-                simulator,  # Pass simulator for advanced analysis
+                simulator,
                 total_deposited, 
                 params['n_simulations'], 
                 params['years_to_retirement'], 
                 params['years_retired'],
                 params['capital_gains_tax_rate'],
                 params['withdrawal'],
+                params['inflation'],  # Added inflation parameter
                 lang
             )
-            
-            # Optional: Compare tax scenarios if enabled
-            if simulator.use_enhanced_tax and 'enable_tax_scenarios' in locals() and enable_tax_scenarios and 'tax_rates_to_compare' in locals() and tax_rates_to_compare:
-                st.markdown("---")
-                st.subheader("🔍 Confronto Scenari Fiscali" if lang == 'it' else "🔍 Tax Scenario Comparison")
-                
-                comparison_results = {}
-                scenario_simulators = {}
-                
-                for tax_rate in tax_rates_to_compare:
-                    if tax_rate != params['capital_gains_tax_rate']:
-                        with st.spinner(f"Simulazione con aliquota {tax_rate}%..." if lang == 'it' else f"Simulation with {tax_rate}% tax rate..."):
-                            comparison_sim = MonteCarloSimulator()
-                            comparison_sim.use_enhanced_tax = True
-                            
-                            comp_results = comparison_sim.run_simulation(
-                                active_accumulation_assets,
-                                active_retirement_assets,
-                                params['initial_amount'], 
-                                params['years_to_retirement'], 
-                                params['years_retired'],
-                                params['annual_contribution'], 
-                                params['adjust_contribution_inflation'], 
-                                params['inflation'] / 100, 
-                                params['withdrawal'],
-                                tax_rate,  # Different tax rate
-                                1000,  # Fewer simulations for comparison
-                                lang=lang
-                            )
-                            comparison_results[tax_rate] = comp_results
-                            scenario_simulators[tax_rate] = comparison_sim
-                
-                # Display comparison table
-                if comparison_results:
-                    comp_data = []
-                    original_stats = simulator.get_statistics()
-                    original_tax_analysis = simulator.get_tax_analysis()
-                    
-                    # Add original scenario
-                    original_effective_rate = original_tax_analysis.get('effective_tax_rate_statistics', {}).get('mean', 0) if original_tax_analysis else 0
-                    comp_data.append({
-                        'Aliquota Fiscale (%)': params['capital_gains_tax_rate'],
-                        'Valore Finale Mediano (€)': f"{original_stats['final']['median']:,.0f}",
-                        'Tasso di Successo (%)': f"{original_stats['success_rate']:.1f}%",
-                        'Aliquota Effettiva Media (%)': f"{original_effective_rate:.2f}%",
-                        'Tasse Totali Mediane (€)': f"{original_tax_analysis.get('total_taxes_statistics', {}).get('median', 0):,.0f}" if original_tax_analysis else "N/A"
-                    })
-                    
-                    # Add comparison scenarios
-                    for tax_rate, comp_results in comparison_results.items():
-                        comp_sim = scenario_simulators[tax_rate]
-                        comp_stats = comp_sim.get_statistics()
-                        comp_tax_analysis = comp_sim.get_tax_analysis()
-                        
-                        comp_effective_rate = comp_tax_analysis.get('effective_tax_rate_statistics', {}).get('mean', 0) if comp_tax_analysis else 0
-                        comp_data.append({
-                            'Aliquota Fiscale (%)': tax_rate,
-                            'Valore Finale Mediano (€)': f"{comp_stats['final']['median']:,.0f}",
-                            'Tasso di Successo (%)': f"{comp_stats['success_rate']:.1f}%",
-                            'Aliquota Effettiva Media (%)': f"{comp_effective_rate:.2f}%",
-                            'Tasse Totali Mediane (€)': f"{comp_tax_analysis.get('total_taxes_statistics', {}).get('median', 0):,.0f}" if comp_tax_analysis else "N/A"
-                        })
-                    
-                    st.table(pd.DataFrame(comp_data))
-                    
-                    # Create comparison chart
-                    import plotly.express as px
-                    
-                    chart_data = []
-                    for row in comp_data:
-                        chart_data.append({
-                            'Aliquota': f"{row['Aliquota Fiscale (%)']}%",
-                            'Valore Finale': float(row['Valore Finale Mediano (€)'].replace('€', '').replace(',', '')),
-                            'Tasso Successo': float(row['Tasso di Successo (%)'].replace('%', ''))
-                        })
-                    
-                    chart_df = pd.DataFrame(chart_data)
-                    
-                    col_chart1, col_chart2 = st.columns(2)
-                    
-                    with col_chart1:
-                        fig_value = px.bar(
-                            chart_df, 
-                            x='Aliquota', 
-                            y='Valore Finale',
-                            title="Valore Finale Mediano per Aliquota Fiscale" if lang == 'it' else "Median Final Value by Tax Rate"
-                        )
-                        st.plotly_chart(fig_value, use_container_width=True)
-                    
-                    with col_chart2:
-                        fig_success = px.bar(
-                            chart_df, 
-                            x='Aliquota', 
-                            y='Tasso Successo',
-                            title="Tasso di Successo per Aliquota Fiscale" if lang == 'it' else "Success Rate by Tax Rate"
-                        )
-                        st.plotly_chart(fig_success, use_container_width=True)
-                    
-                    # Key insights
-                    st.info(f"""
-                    **💡 Insights dal Confronto Fiscale:**
-                    - Differenza massima nel valore finale mediano: €{max(row['Valore Finale'] for row in chart_data) - min(row['Valore Finale'] for row in chart_data):,.0f}
-                    - Variazione nel tasso di successo: {max(row['Tasso Successo'] for row in chart_data) - min(row['Tasso Successo'] for row in chart_data):.1f} punti percentuali
-                    - L'aliquota fiscale ha un impatto significativo sui risultati a lungo termine
-                    """ if lang == 'it' else f"""
-                    **💡 Tax Comparison Insights:**
-                    - Maximum difference in median final value: €{max(row['Valore Finale'] for row in chart_data) - min(row['Valore Finale'] for row in chart_data):,.0f}
-                    - Success rate variation: {max(row['Tasso Successo'] for row in chart_data) - min(row['Tasso Successo'] for row in chart_data):.1f} percentage points
-                    - Tax rate has significant impact on long-term results
-                    """)
     
     # Footer
     UIComponents.render_footer(lang)
