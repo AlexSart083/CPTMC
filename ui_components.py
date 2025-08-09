@@ -1,5 +1,5 @@
 """
-Updated UI components with capital gains tax parameter and unique chart keys
+Updated UI components with enhanced disclaimers about long-term focus, return assumptions, and correlation limitations
 """
 
 import streamlit as st
@@ -10,7 +10,7 @@ from translations import get_text, get_profile_names, get_asset_names
 
 
 class UIComponents:
-    """Collection of reusable UI components with tax support"""
+    """Collection of reusable UI components with enhanced disclaimers"""
     
     @staticmethod
     def render_language_selector(lang):
@@ -33,11 +33,26 @@ class UIComponents:
     
     @staticmethod
     def render_disclaimers(lang):
-        """Render disclaimers section"""
+        """Render enhanced disclaimers section with long-term focus, return assumptions, and correlation limitations"""
         with st.expander(get_text('disclaimers_header', lang)):
+            # Educational purpose disclaimer
             st.markdown(get_text('educational_disclaimer', lang))
             st.markdown(get_text('educational_text', lang))
             st.markdown(get_text('app_explanation', lang))
+            
+            # NEW: Long-term investment focus
+            st.markdown(get_text('long_term_disclaimer', lang))
+            st.markdown(get_text('long_term_text', lang))
+            
+            # NEW: Asset return assumptions
+            st.markdown(get_text('returns_disclaimer', lang))
+            st.markdown(get_text('returns_text', lang))
+            
+            # NEW: Asset correlation limitations
+            st.markdown(get_text('correlation_disclaimer', lang))
+            st.markdown(get_text('correlation_text', lang))
+            
+            # Data information
             st.markdown(get_text('data_info', lang))
             st.markdown(get_text('data_text', lang))
             st.markdown("---")
@@ -78,7 +93,7 @@ class UIComponents:
             value=12000.0, min_value=0.0, step=500.0
         )
         
-        # NEW: Capital gains tax rate parameter
+        # Capital gains tax rate parameter
         params['capital_gains_tax_rate'] = st.number_input(
             get_text('capital_gains_tax_rate', lang), 
             value=26.0, min_value=0.0, max_value=100.0, step=0.1, format="%.1f",
@@ -315,7 +330,7 @@ class UIComponents:
                 title=get_text('portfolio_distribution', lang)
             )
             fig_pie.update_layout(height=400)
-            # FIX: Add unique key based on phase to avoid duplicate ID error
+            # Add unique key based on phase to avoid duplicate ID error
             st.plotly_chart(fig_pie, use_container_width=True, key=f"pie_chart_{phase}")
         else:
             st.info(get_text('no_asset_selected', lang))
