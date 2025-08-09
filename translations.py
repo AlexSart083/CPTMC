@@ -1,5 +1,5 @@
 """
-Updated translations with enhanced chart and analysis support
+Updated translations with enhanced disclaimers about long-term focus, return assumptions, and correlation limitations
 """
 
 TRANSLATIONS = {
@@ -9,7 +9,7 @@ TRANSLATIONS = {
         'main_title': '🏗️ Monte Carlo Simulation for Retirement Planning',
         'language_selector': 'Language',
         
-        # Disclaimers
+        # Enhanced disclaimers
         'disclaimers_header': 'ℹ️ **Important Information & Disclaimers**',
         'educational_disclaimer': '**Educational Purpose Disclaimer:**',
         'educational_text': 'This application is for educational purposes only and simulates purely theoretical scenarios based on simplified assumptions. Results should not be interpreted as real predictions nor as investment recommendations. No information provided constitutes financial, wealth or tax advice.',
@@ -21,6 +21,12 @@ TRANSLATIONS = {
             "of the plan and delivers an overview of possible outcomes while factoring in inflation, based on the "
             "performance simulations of the selected assets."
         ),
+        'long_term_disclaimer': '**Long-Term Investment Focus:**',
+        'long_term_text': 'This simulator is specifically designed for long-term investment planning (15+ years). Investment strategies for shorter time horizons may face different challenges and risks that are not adequately captured by this model. Short-term retirement planning requires different approaches and considerations.',
+        'returns_disclaimer': '**Asset Return Assumptions:**',
+        'returns_text': 'The default return parameters are examples based on realistic historical data that the developer considers reasonable. However, these are fully customizable by the user. All return assumptions should be carefully reviewed and adjusted based on your own research and expectations.',
+        'correlation_disclaimer': '**Asset Correlation Limitations:**',
+        'correlation_text': 'This simulation does not model correlations between different asset classes. Asset correlations are extremely difficult to parametrize accurately due to their dynamic nature and the numerous variables and unknowns involved. Each asset is simulated independently, which may not reflect real-world portfolio behavior during market stress events.',
         'data_info': '**Data Information:**',
         'data_text': 'The returns are based on global and european market data from the last 30 years. Data may be inaccurate or outdated and should be used for educational purposes only.',        
         
@@ -152,7 +158,7 @@ TRANSLATIONS = {
         'main_title': '🏗️ Simulazione Monte Carlo per la Pianificazione Pensionistica',
         'language_selector': 'Lingua',
 
-        # Disclaimers
+        # Enhanced disclaimers
         'disclaimers_header': 'ℹ️ **Informazioni Importanti e Disclaimer**',
         'educational_disclaimer': '**Disclaimer Scopo Educativo:**',
         'educational_text': 'Questa applicazione è solo a scopo educativo e simula scenari puramente teorici basati su assunzioni semplificate. I risultati non devono essere interpretati come previsioni reali né come raccomandazioni di investimento. Nessuna informazione fornita costituisce consulenza finanziaria, patrimoniale o fiscale.',
@@ -164,6 +170,12 @@ TRANSLATIONS = {
             "di successo del piano e fornisce una panoramica dei possibili risultati (outcome) tenendo conto "
             "dell'inflazione, basata sulle simulazioni delle performance degli asset selezionati."
         ),
+        'long_term_disclaimer': '**Focus su Investimenti a Lungo Termine:**',
+        'long_term_text': 'Questo simulatore è specificamente progettato per la pianificazione di investimenti a lungo termine (15+ anni). Le strategie di investimento per orizzonti temporali più brevi potrebbero affrontare sfide e rischi diversi che non sono adeguatamente catturati da questo modello. La pianificazione pensionistica a breve termine richiede approcci e considerazioni differenti.',
+        'returns_disclaimer': '**Assunzioni sui Rendimenti degli Asset:**',
+        'returns_text': 'I parametri di rendimento predefiniti sono esempi basati su dati storici realistici che lo sviluppatore considera ragionevoli. Tuttavia, questi sono completamente personalizzabili dall\'utente. Tutte le assunzioni sui rendimenti dovrebbero essere attentamente riviste e adattate in base alla propria ricerca e alle proprie aspettative.',
+        'correlation_disclaimer': '**Limitazioni sulla Correlazione tra Asset:**',
+        'correlation_text': 'Questa simulazione non modella le correlazioni tra le diverse classi di asset. Le correlazioni tra asset sono estremamente difficili da parametrizzare accuratamente a causa della loro natura dinamica e delle numerose variabili e incognite coinvolte. Ogni asset viene simulato indipendentemente, il che potrebbe non riflettere il comportamento reale del portafoglio durante eventi di stress di mercato.',
         'data_info': '**Informazioni sui Dati:**',
         'data_text': 'I rendimenti sono basati su dati di mercato globali ed europei degli ultimi 30 anni. I dati potrebbero essere imprecisi o obsoleti e dovrebbero essere utilizzati solo a scopo educativo.',
 
