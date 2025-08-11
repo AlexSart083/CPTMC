@@ -75,7 +75,7 @@ class ResultsDisplay:
         # Display key metrics
         ResultsDisplay._show_key_metrics(
             total_deposited, stats['accumulation']['median'], 
-            stats['final']['median'], stats['success_rate'], lang
+            stats['accumulation']['median'], stats['success_rate'], lang
         )
         
         # Display simplified tax impact analysis
