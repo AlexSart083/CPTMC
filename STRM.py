@@ -1,6 +1,6 @@
 """
 Monte Carlo Investment Simulator - Main Application
-Fixed version with proper error handling and portfolio management
+Complete version with correlation features
 """
 
 import streamlit as st
@@ -22,7 +22,7 @@ except ImportError:
     print("Correlation modules not available - running in legacy mode")
 
 def main():
-    """Main application function with proper error handling"""
+    """Main application function with correlation support"""
     # Initialize session state
     PortfolioManager.initialize_session_state()
     
@@ -31,6 +31,8 @@ def main():
         st.session_state.use_correlation = False
     if 'correlation_scenario' not in st.session_state:
         st.session_state.correlation_scenario = 'normal_times'
+    if 'show_correlation_settings' not in st.session_state:
+        st.session_state.show_correlation_settings = False
     
     lang = st.session_state.language
     
@@ -63,6 +65,9 @@ def main():
         st.stop()
     
     # Initialize simulator
+    correlation_enabled = False
+    correlation_matrix = None
+    
     try:
         if CORRELATION_AVAILABLE and enhanced_features and st.session_state.use_correlation:
             try:
@@ -96,6 +101,12 @@ def main():
                 2. **Matrice di Correlazione**: Ogni scenario ha una matrice di correlazione specifica che definisce le relazioni tra asset
                 3. **Scenari Multipli**: Supportiamo diversi scenari (mercati normali, crisi, asset indipendenti)
                 4. **Validazione Matematica**: Le matrici vengono validate per assicurare proprietà matematiche corrette
+                
+                **📊 Vantaggi del sistema con correlazione:**
+                - ✅ Simulazioni più realistiche dei mercati finanziari
+                - ✅ Migliore stima del rischio di portafoglio durante le crisi
+                - ✅ Analisi dell'efficacia della diversificazione
+                - ✅ Stress testing con scenari di alta correlazione
                 """)
             else:
                 st.markdown("""
@@ -105,6 +116,12 @@ def main():
                 2. **Correlation Matrix**: Each scenario has a specific correlation matrix defining asset relationships
                 3. **Multiple Scenarios**: Support for different scenarios (normal markets, crises, independent assets)
                 4. **Mathematical Validation**: Matrices are validated to ensure correct mathematical properties
+                
+                **📊 Advantages of correlation system:**
+                - ✅ More realistic financial market simulations
+                - ✅ Better portfolio risk estimation during crises
+                - ✅ Analysis of diversification effectiveness
+                - ✅ Stress testing with high correlation scenarios
                 """)
     
     st.markdown("---")
@@ -116,7 +133,54 @@ def main():
         # General parameters
         params = UIComponents.render_general_parameters(lang)
         
+        # CORRELATION SETTINGS SECTION
+        if CORRELATION_AVAILABLE and enhanced_features:
+            st.markdown("---")
+            st.subheader("🔗 " + ("Correlazione Asset" if lang == 'it' else "Asset Correlation"))
+            
+            # Correlation toggle
+            try:
+                use_correlation = CorrelationUIComponents.render_correlation_toggle(lang)
+                st.session_state.use_correlation = use_correlation
+            except Exception as e:
+                st.error(f"Correlation UI error: {str(e)}")
+                use_correlation = False
+                st.session_state.use_correlation = False
+            
+            if use_correlation:
+                # Correlation scenario selector (simplified for sidebar)
+                correlation_scenarios = ['normal_times', 'crisis_times', 'independent', 'defensive', 'high_inflation']
+                scenario_names = {
+                    'normal_times': 'Mercati Normali' if lang == 'it' else 'Normal Markets',
+                    'crisis_times': 'Crisi Finanziaria' if lang == 'it' else 'Financial Crisis', 
+                    'independent': 'Asset Indipendenti' if lang == 'it' else 'Independent Assets',
+                    'defensive': 'Scenario Difensivo' if lang == 'it' else 'Defensive Scenario',
+                    'high_inflation': 'Alta Inflazione' if lang == 'it' else 'High Inflation'
+                }
+                
+                selected_scenario = st.selectbox(
+                    "📊 " + ("Scenario:" if lang == 'it' else "Scenario:"),
+                    correlation_scenarios,
+                    format_func=lambda x: scenario_names.get(x, x),
+                    index=0,
+                    key='correlation_scenario_sidebar'
+                )
+                
+                st.session_state.correlation_scenario = selected_scenario
+                
+                # Button to show advanced correlation settings
+                if st.button("⚙️ " + ("Impostazioni Avanzate" if lang == 'it' else "Advanced Settings")):
+                    st.session_state.show_correlation_settings = True
+        else:
+            if CORRELATION_AVAILABLE:
+                st.info("🔗 " + ("Correlazione disabilitata" if lang == 'it' else "Correlation disabled"))
+            else:
+                st.info("🔗 " + ("Funzionalità correlazione non disponibile" if lang == 'it' else "Correlation features not available"))
+        
         # Initialize default profiles
+        st.markdown("---")
+        st.subheader(get_text('portfolio_config', lang))
+        
         try:
             PortfolioManager.initialize_default_profiles(
                 config_manager, 
@@ -125,9 +189,6 @@ def main():
             )
         except Exception as e:
             st.error(f"Failed to initialize default profiles: {str(e)}")
-        
-        st.markdown("---")
-        st.subheader(get_text('portfolio_config', lang))
         
         # Toggle for using same portfolio
         use_same_portfolio = UIComponents.render_same_portfolio_toggle(lang)
@@ -149,6 +210,44 @@ def main():
             
             if st.button(get_text('load_profile', lang), key='load_ret_profile'):
                 PortfolioManager.load_retirement_profile(config_manager, retirement_profile)
+    
+    # ADVANCED CORRELATION SETTINGS (in main area)
+    if (CORRELATION_AVAILABLE and enhanced_features and 
+        st.session_state.get('show_correlation_settings', False)):
+        st.markdown("---")
+        
+        with st.expander("🔗 " + ("Impostazioni Correlazione Avanzate" if lang == 'it' else "Advanced Correlation Settings"), expanded=True):
+            try:
+                # Get correlation settings
+                scenario, correlation_matrix = CorrelationUIComponents.render_correlation_settings(config_manager, lang)
+                
+                # If using correlation, set up the simulator
+                if (st.session_state.use_correlation and 
+                    isinstance(simulator, CorrelatedMonteCarloSimulator)):
+                    # Get asset names for correlation matrix setup
+                    all_asset_names = list(config_manager.asset_characteristics.keys())
+                    simulator.set_correlation_matrix(all_asset_names, correlation_matrix)
+                    
+                    # Show correlation visualization
+                    CorrelationUIComponents.render_correlation_visualization(
+                        correlation_matrix, all_asset_names, lang
+                    )
+                    
+                    # Show correlation impact analysis
+                    CorrelationUIComponents.render_correlation_impact_analysis(lang)
+                
+            except Exception as e:
+                st.error(f"Correlation settings error: {str(e)}")
+                st.info("Using default correlation settings")
+            
+            # Button to hide correlation settings
+            col1, col2 = st.columns([1, 5])
+            with col1:
+                if st.button("❌ " + ("Chiudi" if lang == 'it' else "Close")):
+                    st.session_state.show_correlation_settings = False
+                    st.rerun()
+        
+        st.markdown("---")
     
     # Main area - Portfolio Configuration
     st.subheader(get_text('portfolio_config', lang))
@@ -283,6 +382,15 @@ def main():
             # Run simulation
             with st.spinner(get_text('simulation_progress', lang)):
                 try:
+                    # Setup correlation if enabled
+                    if (CORRELATION_AVAILABLE and enhanced_features and 
+                        st.session_state.use_correlation and correlation_enabled):
+                        # Get correlation matrix for active assets
+                        if correlation_matrix is not None:
+                            # Set correlation matrix in simulator
+                            all_asset_names = list(config_manager.asset_characteristics.keys())
+                            simulator.set_correlation_matrix(all_asset_names, correlation_matrix)
+                    
                     # Choose simulation method based on correlation setting
                     if (CORRELATION_AVAILABLE and enhanced_features and 
                         st.session_state.use_correlation and correlation_enabled and
@@ -354,7 +462,9 @@ def main():
                         scenario_names = {
                             'normal_times': 'Mercati Normali' if lang == 'it' else 'Normal Markets',
                             'crisis_times': 'Crisi Finanziaria' if lang == 'it' else 'Financial Crisis', 
-                            'independent': 'Asset Indipendenti' if lang == 'it' else 'Independent Assets'
+                            'independent': 'Asset Indipendenti' if lang == 'it' else 'Independent Assets',
+                            'defensive': 'Scenario Difensivo' if lang == 'it' else 'Defensive Scenario',
+                            'high_inflation': 'Alta Inflazione' if lang == 'it' else 'High Inflation'
                         }
                         scenario_name = scenario_names.get(st.session_state.correlation_scenario, st.session_state.correlation_scenario)
                         st.success(f"✅ " + ("Simulazione completata con correlazione" if lang == 'it' else "Simulation completed with correlation") + f" ({scenario_name})")
@@ -377,7 +487,8 @@ def main():
                     
                 except Exception as e:
                     st.error(f"Simulation error: {str(e)}")
-                    st.exception(e)
+                    import traceback
+                    st.text(traceback.format_exc())
     
     # Footer
     UIComponents.render_footer(lang)
