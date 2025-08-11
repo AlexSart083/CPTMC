@@ -1,5 +1,5 @@
 """
-Enhanced Configuration manager with correlation support
+Enhanced Configuration manager with correlation support - FIXED VERSION
 """
 
 import json
@@ -12,25 +12,33 @@ from translations import get_text
 class EnhancedConfigManager:
     """Enhanced configuration manager with correlation support"""
     
-    def __init__(self, config_file='config.json'):
+    def __init__(self, config_file='enhanced_config.json'):  # Default to enhanced config
         self.config_file = config_file
         self._asset_profiles = None
         self._asset_characteristics = None
         self._correlation_matrix = None
         self._correlation_scenarios = None
+        self._correlation_metadata = None
         self._load_config()
     
     def _load_config(self):
-        """Load configuration from JSON file"""
+        """Load configuration from JSON file with enhanced features"""
         if not os.path.exists(self.config_file):
-            lang = st.session_state.get('language', 'en')
-            st.error(get_text('config_not_found', lang).format(self.config_file))
-            st.stop()
+            # Try fallback to regular config.json
+            fallback_config = 'config.json'
+            if os.path.exists(fallback_config):
+                st.warning(f"Enhanced config '{self.config_file}' not found, using fallback '{fallback_config}'")
+                self.config_file = fallback_config
+            else:
+                lang = st.session_state.get('language', 'en')
+                st.error(get_text('config_not_found', lang).format(self.config_file))
+                st.stop()
         
         try:
             with open(self.config_file, 'r', encoding='utf-8') as f:
                 config = json.load(f)
             
+            # Load basic configuration
             self._asset_profiles = config['asset_profiles']
             self._asset_characteristics = config['asset_characteristics']
             
@@ -40,18 +48,28 @@ class EnhancedConfigManager:
                     'assets': config['correlation_matrix']['assets'],
                     'matrix': np.array(config['correlation_matrix']['matrix'])
                 }
+                print(f"✅ Loaded default correlation matrix for {len(self._correlation_matrix['assets'])} assets")
             
             if 'correlation_scenarios' in config:
                 self._correlation_scenarios = {}
                 for scenario_name, scenario_data in config['correlation_scenarios'].items():
                     self._correlation_scenarios[scenario_name] = {
-                        'description': scenario_data['description'],
+                        'description': scenario_data.get('description', f'Scenario: {scenario_name}'),
+                        'market_regime': scenario_data.get('market_regime', 'unknown'),
+                        'stress_level': scenario_data.get('stress_level', 'unknown'),
                         'matrix': np.array(scenario_data['matrix'])
                     }
+                print(f"✅ Loaded {len(self._correlation_scenarios)} correlation scenarios: {list(self._correlation_scenarios.keys())}")
+            
+            # Load correlation metadata if available
+            if 'correlation_metadata' in config:
+                self._correlation_metadata = config['correlation_metadata']
+                print("✅ Loaded correlation metadata")
             
         except Exception as e:
             lang = st.session_state.get('language', 'en')
             st.error(get_text('config_load_error', lang).format(str(e)))
+            print(f"❌ Config loading error: {str(e)}")
             st.stop()
     
     @property
@@ -73,6 +91,11 @@ class EnhancedConfigManager:
     def correlation_scenarios(self):
         """Get correlation scenarios"""
         return self._correlation_scenarios
+    
+    @property
+    def correlation_metadata(self):
+        """Get correlation metadata"""
+        return self._correlation_metadata
     
     def get_profile_data(self, profile_name):
         """Get data for a specific profile"""
@@ -118,25 +141,46 @@ class EnhancedConfigManager:
             numpy array with correlation matrix, or None if not available
         """
         if not self._correlation_scenarios or scenario not in self._correlation_scenarios:
+            print(f"⚠️ Scenario '{scenario}' not found in correlation scenarios")
             return None
         
         if not self._correlation_matrix or 'assets' not in self._correlation_matrix:
+            print("⚠️ No default correlation matrix available")
             return None
         
         # Get the full asset list from config
         config_assets = self._correlation_matrix['assets']
         scenario_matrix = self._correlation_scenarios[scenario]['matrix']
         
+        print(f"🔍 Looking for assets {asset_names} in config assets {config_assets}")
+        
         # Find indices for requested assets
         try:
             asset_indices = [config_assets.index(asset_name) for asset_name in asset_names]
-        except ValueError:
-            # Some assets not found in correlation matrix
+            print(f"✅ Found asset indices: {asset_indices}")
+        except ValueError as e:
+            print(f"❌ Some assets not found in correlation matrix: {e}")
             return None
         
         # Extract submatrix for requested assets
         submatrix = scenario_matrix[np.ix_(asset_indices, asset_indices)]
+        print(f"✅ Extracted {submatrix.shape} correlation submatrix for scenario '{scenario}'")
         return submatrix
+    
+    def get_correlation_scenario_info(self, scenario_name):
+        """Get detailed information about a correlation scenario"""
+        if not self._correlation_scenarios or scenario_name not in self._correlation_scenarios:
+            return None
+        
+        scenario = self._correlation_scenarios[scenario_name]
+        return {
+            'name': scenario_name,
+            'description': scenario['description'],
+            'market_regime': scenario.get('market_regime', 'unknown'),
+            'stress_level': scenario.get('stress_level', 'unknown'),
+            'matrix_shape': scenario['matrix'].shape,
+            'matrix': scenario['matrix']
+        }
     
     def get_default_correlation_matrix(self, asset_names):
         """
@@ -148,7 +192,21 @@ class EnhancedConfigManager:
         Returns:
             numpy array with default correlations
         """
-        # Default correlation values based on asset types
+        # Check if we can get it from the config first
+        if self._correlation_matrix and 'assets' in self._correlation_matrix:
+            config_assets = self._correlation_matrix['assets']
+            default_matrix = self._correlation_matrix['matrix']
+            
+            # Try to extract submatrix for requested assets
+            try:
+                asset_indices = [config_assets.index(asset_name) for asset_name in asset_names]
+                submatrix = default_matrix[np.ix_(asset_indices, asset_indices)]
+                print(f"✅ Using config default correlation matrix for {asset_names}")
+                return submatrix
+            except ValueError:
+                print(f"⚠️ Some assets not in config, generating fallback correlation matrix")
+        
+        # Fallback: generate basic correlation matrix
         default_correlations = {
             ('Stocks', 'Bond'): -0.1,
             ('Stocks', 'Gold'): 0.1,
@@ -187,6 +245,7 @@ class EnhancedConfigManager:
                         else:
                             correlation_matrix[i, j] = 0.1
         
+        print(f"🔧 Generated fallback correlation matrix for {asset_names}")
         return correlation_matrix
     
     def save_custom_correlation_matrix(self, asset_names, correlation_matrix, scenario_name='custom'):
@@ -207,6 +266,7 @@ class EnhancedConfigManager:
             'matrix': correlation_matrix.tolist(),
             'description': f'Custom correlation scenario: {scenario_name}'
         }
+        print(f"💾 Saved custom correlation matrix '{scenario_name}' for assets {asset_names}")
     
     def get_available_correlation_scenarios(self):
         """Get list of available correlation scenarios"""
@@ -224,6 +284,7 @@ class EnhancedConfigManager:
         if 'independent' not in scenarios:
             scenarios.append('independent')
         
+        print(f"📋 Available correlation scenarios: {scenarios}")
         return scenarios
     
     def export_correlation_config(self, filename='custom_correlations.json'):
@@ -252,6 +313,7 @@ class EnhancedConfigManager:
         try:
             with open(filename, 'w', encoding='utf-8') as f:
                 json.dump(export_data, f, indent=2, ensure_ascii=False)
+            print(f"💾 Exported correlation config to {filename}")
             return True
         except Exception as e:
             st.error(f"Error exporting correlation config: {str(e)}")
@@ -275,6 +337,7 @@ class EnhancedConfigManager:
                         'assets': import_data.get('asset_list', [])
                     }
             
+            print(f"📂 Imported correlation config from {filename}")
             return True
         
         except Exception as e:
@@ -341,3 +404,24 @@ class EnhancedConfigManager:
             validation_results['errors'].append(f"Validation error: {str(e)}")
         
         return validation_results
+    
+    def has_correlation_support(self):
+        """Check if this config manager has correlation support"""
+        return self._correlation_scenarios is not None and len(self._correlation_scenarios) > 0
+    
+    def debug_correlation_info(self):
+        """Print debug information about correlation configuration"""
+        print("\n🔍 CORRELATION DEBUG INFO:")
+        print(f"📁 Config file: {self.config_file}")
+        print(f"🎯 Has correlation scenarios: {self._correlation_scenarios is not None}")
+        if self._correlation_scenarios:
+            print(f"📊 Number of scenarios: {len(self._correlation_scenarios)}")
+            print(f"📋 Scenario names: {list(self._correlation_scenarios.keys())}")
+        
+        print(f"🎯 Has correlation matrix: {self._correlation_matrix is not None}")
+        if self._correlation_matrix:
+            print(f"📊 Matrix shape: {self._correlation_matrix['matrix'].shape}")
+            print(f"📋 Assets: {self._correlation_matrix['assets']}")
+        
+        print(f"🎯 Has correlation metadata: {self._correlation_metadata is not None}")
+        print("=" * 50)
