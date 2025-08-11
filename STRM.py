@@ -1,11 +1,12 @@
 """
-Monte Carlo Investment Simulator - Main Application
-Modified version with simplified tax analysis and enhanced charts
+Monte Carlo Investment Simulator - Main Application with Correlation Support
+Enhanced version with asset correlation capabilities
 """
 
 import streamlit as st
-from config_manager import ConfigManager
-from simulation_engine import MonteCarloSimulator
+from enhanced_config_manager import EnhancedConfigManager  # Updated import
+from correlation_engine import CorrelatedMonteCarloSimulator  # New import
+from correlation_ui import CorrelationUIComponents  # New import
 from ui_components import UIComponents
 from results_display import ResultsDisplay
 from portfolio_manager import PortfolioManager
@@ -13,9 +14,15 @@ from translations import get_text
 
 
 def main():
-    """Main application function"""
+    """Main application function with correlation support"""
     # Initialize session state
     PortfolioManager.initialize_session_state()
+    
+    # Initialize correlation settings in session state
+    if 'use_correlation' not in st.session_state:
+        st.session_state.use_correlation = True
+    if 'correlation_scenario' not in st.session_state:
+        st.session_state.correlation_scenario = 'normal_times'
     
     lang = st.session_state.language
     
@@ -30,9 +37,16 @@ def main():
     # Language selector
     UIComponents.render_language_selector(lang)
     
-    # Initialize components
-    config_manager = ConfigManager()
-    simulator = MonteCarloSimulator()
+    # Initialize components with enhanced config manager
+    config_manager = EnhancedConfigManager()
+    
+    # Choose simulator based on correlation setting
+    if st.session_state.use_correlation:
+        simulator = CorrelatedMonteCarloSimulator()
+    else:
+        # Fallback to original simulator
+        from simulation_engine import MonteCarloSimulator
+        simulator = MonteCarloSimulator()
     
     # Main header
     st.title(get_text('main_title', lang))
@@ -40,37 +54,47 @@ def main():
     # Enhanced disclaimers section
     UIComponents.render_disclaimers(lang)
     
-    # Add tax methodology explanation
-    with st.expander("💰 Metodologia di Calcolo Tasse" if lang == 'it' else "💰 Tax Calculation Methodology"):
+    # NEW: Correlation methodology explanation
+    with st.expander("🔗 Metodologia Correlazione Asset" if lang == 'it' else "🔗 Asset Correlation Methodology"):
         if lang == 'it':
             st.markdown("""
-            **🔍 Come vengono calcolate le tasse sui capital gains:**
+            **🔍 Come vengono gestite le correlazioni tra asset:**
             
-            1. **Tracciamento Accurato**: Sistema avanzato che traccia ogni contributo con la sua base di costo
-            2. **Calcolo Proporzionale**: I prelievi vengono allocati proporzionalmente tra tutti i lotti fiscali
-            3. **Tassazione Realizzata**: Le tasse si applicano solo sui capital gains realizzati durante i prelievi
-            4. **Simulazione Anno per Anno**: Ogni anno di pensione viene calcolato individualmente
+            1. **Distribuzione Normale Multivariata**: Utilizziamo distribuzioni normali multivariate per generare rendimenti correlati
+            2. **Matrice di Correlazione**: Ogni scenario ha una matrice di correlazione specifica che definisce le relazioni tra asset
+            3. **Scenari Multipli**: Supportiamo diversi scenari (mercati normali, crisi, asset indipendenti)
+            4. **Validazione Matematica**: Le matrici vengono validate per assicurare proprietà matematiche corrette
             
-            **📊 Vantaggi del sistema migliorato:**
-            - ✅ Precisione fiscale quasi professionale
-            - ✅ Analisi dettagliata della distribuzione del carico fiscale
-            - ✅ Calcolo automatico dell'importo lordo necessario per i prelievi netti
-            - ✅ Insights avanzati sull'efficienza fiscale del portafoglio
+            **📊 Vantaggi del sistema con correlazione:**
+            - ✅ Simulazioni più realistiche dei mercati finanziari
+            - ✅ Migliore stima del rischio di portafoglio durante le crisi
+            - ✅ Analisi dell'efficacia della diversificazione
+            - ✅ Stress testing con scenari di alta correlazione
+            
+            **⚠️ Limitazioni:**
+            - Le correlazioni sono assunte costanti nel tempo
+            - I rendimenti seguono distribuzioni normali
+            - Eventi estremi potrebbero non essere completamente catturati
             """)
         else:
             st.markdown("""
-            **🔍 How capital gains taxes are calculated:**
+            **🔍 How asset correlations are managed:**
             
-            1. **Accurate Tracking**: Advanced system that tracks each contribution with its cost basis
-            2. **Proportional Calculation**: Withdrawals are allocated proportionally across all tax lots
-            3. **Realized Taxation**: Taxes apply only on capital gains realized during withdrawals
-            4. **Year-by-Year Simulation**: Each retirement year is calculated individually
+            1. **Multivariate Normal Distribution**: We use multivariate normal distributions to generate correlated returns
+            2. **Correlation Matrix**: Each scenario has a specific correlation matrix defining asset relationships
+            3. **Multiple Scenarios**: Support for different scenarios (normal markets, crises, independent assets)
+            4. **Mathematical Validation**: Matrices are validated to ensure correct mathematical properties
             
-            **📊 Advantages of the improved system:**
-            - ✅ Near-professional tax precision
-            - ✅ Detailed tax burden distribution analysis
-            - ✅ Automatic calculation of gross amount needed for net withdrawals
-            - ✅ Advanced insights on portfolio tax efficiency
+            **📊 Advantages of correlation system:**
+            - ✅ More realistic financial market simulations
+            - ✅ Better portfolio risk estimation during crises
+            - ✅ Analysis of diversification effectiveness
+            - ✅ Stress testing with high correlation scenarios
+            
+            **⚠️ Limitations:**
+            - Correlations are assumed constant over time
+            - Returns follow normal distributions
+            - Extreme events might not be fully captured
             """)
     
     st.markdown("---")
@@ -79,14 +103,69 @@ def main():
     with st.sidebar:
         st.header(get_text('simulation_parameters', lang))
         
-        # General parameters (now includes capital gains tax rate)
+        # General parameters
         params = UIComponents.render_general_parameters(lang)
         
-        # REMOVED: Advanced tax options section completely
-        # The enhanced tax calculation is always enabled, no comparison scenarios
-        simulator.use_enhanced_tax = True
+        # NEW: Correlation settings section
+        st.markdown("---")
+        
+        # Correlation toggle
+        use_correlation = CorrelationUIComponents.render_correlation_toggle(lang)
+        
+        if use_correlation:
+            # Correlation scenario selector (simplified for sidebar)
+            correlation_scenarios = ['normal_times', 'crisis_times', 'independent', 'custom']
+            scenario_names = {
+                'normal_times': 'Mercati Normali' if lang == 'it' else 'Normal Markets',
+                'crisis_times': 'Crisi Finanziaria' if lang == 'it' else 'Financial Crisis', 
+                'independent': 'Asset Indipendenti' if lang == 'it' else 'Independent Assets',
+                'custom': 'Personalizzata' if lang == 'it' else 'Custom'
+            }
+            
+            selected_scenario = st.selectbox(
+                "Scenario Correlazione:" if lang == 'it' else "Correlation Scenario:",
+                correlation_scenarios,
+                format_func=lambda x: scenario_names[x],
+                index=0,
+                key='correlation_scenario_sidebar'
+            )
+            
+            st.session_state.correlation_scenario = selected_scenario
+            
+            # Link to detailed correlation settings
+            if st.button("⚙️ " + ("Impostazioni Avanzate" if lang == 'it' else "Advanced Settings")):
+                st.session_state.show_correlation_settings = True
     
-    # Main area - Portfolio Configuration
+    # NEW: Advanced correlation settings (conditional display)
+    if st.session_state.get('show_correlation_settings', False):
+        st.markdown("---")
+        
+        # Detailed correlation settings
+        with st.expander("🔗 " + ("Impostazioni Correlazione Avanzate" if lang == 'it' else "Advanced Correlation Settings"), expanded=True):
+            scenario, correlation_matrix = CorrelationUIComponents.render_correlation_settings(config_manager, lang)
+            
+            # If using correlation, set up the simulator
+            if use_correlation and isinstance(simulator, CorrelatedMonteCarloSimulator):
+                # Get asset names for correlation matrix setup
+                all_asset_names = list(config_manager.asset_characteristics.keys())
+                simulator.set_correlation_matrix(all_asset_names, correlation_matrix)
+                
+                # Show correlation visualization
+                CorrelationUIComponents.render_correlation_visualization(
+                    correlation_matrix, all_asset_names, lang
+                )
+                
+                # Show correlation impact analysis
+                CorrelationUIComponents.render_correlation_impact_analysis(lang)
+            
+            # Button to hide correlation settings
+            if st.button("❌ " + ("Chiudi Impostazioni" if lang == 'it' else "Close Settings")):
+                st.session_state.show_correlation_settings = False
+                st.rerun()
+        
+        st.markdown("---")
+    
+    # Main area - Portfolio Configuration (unchanged)
     st.subheader(get_text('portfolio_config', lang))
     
     # Toggle for using same portfolio for both phases
@@ -99,7 +178,7 @@ def main():
         with col1:
             st.subheader(get_text('accumulation_portfolio', lang))
             
-            # Investment profile selector for accumulation (which will be used for both)
+            # Investment profile selector for accumulation
             selected_accumulation_profile = UIComponents.render_profile_selector(
                 config_manager.asset_profiles, lang, 'accumulation'
             )
@@ -132,7 +211,7 @@ def main():
             allocation_valid = UIComponents.render_allocation_status(total_allocation, lang)
         
         with col2:
-            # Allocation chart and summary for accumulation (same for both phases)
+            # Allocation chart and summary for accumulation
             UIComponents.render_allocation_chart(accumulation_assets_data, lang, 'accumulation')
             UIComponents.render_asset_summary(accumulation_assets_data, lang, 'accumulation')
             
@@ -143,7 +222,7 @@ def main():
         retirement_assets_data = accumulation_assets_data
         
     else:
-        # Separate portfolio configurations
+        # Separate portfolio configurations (same as original code)
         tab1, tab2 = st.tabs([
             f"📈 {get_text('accumulation_portfolio', lang)}", 
             f"🏖️ {get_text('retirement_portfolio', lang)}"
@@ -230,12 +309,12 @@ def main():
     
     st.markdown("---")
     
-    # Run simulation button and simplified simulation logic
+    # Run simulation button with enhanced logic
     if UIComponents.render_run_simulation_button(lang):
         # Get the correct data based on portfolio configuration
         if use_same_portfolio:
             final_accumulation_data = accumulation_assets_data
-            final_retirement_data = accumulation_assets_data  # Same as accumulation
+            final_retirement_data = accumulation_assets_data
         else:
             final_accumulation_data = accumulation_assets_data
             final_retirement_data = retirement_assets_data
@@ -259,26 +338,56 @@ def main():
             progress_bar = st.progress(0)
             status_text = st.empty()
             
-            # Run simplified simulation (no tax comparison scenarios)
+            # NEW: Choose simulation method based on correlation setting
             with st.spinner(get_text('simulation_progress', lang)):
-                results = simulator.run_simulation(
-                    active_accumulation_assets,
-                    active_retirement_assets,
-                    params['initial_amount'], 
-                    params['years_to_retirement'], 
-                    params['years_retired'],
-                    params['annual_contribution'], 
-                    params['adjust_contribution_inflation'], 
-                    params['inflation'] / 100, 
-                    params['withdrawal'],
-                    params['capital_gains_tax_rate'],
-                    params['n_simulations'],
-                    progress_bar, 
-                    status_text, 
-                    lang
-                )
+                if use_correlation and isinstance(simulator, CorrelatedMonteCarloSimulator):
+                    # Enhanced simulation with correlation
+                    results = simulator.run_simulation_with_correlation(
+                        active_accumulation_assets,
+                        active_retirement_assets,
+                        params['initial_amount'], 
+                        params['years_to_retirement'], 
+                        params['years_retired'],
+                        params['annual_contribution'], 
+                        params['adjust_contribution_inflation'], 
+                        params['inflation'] / 100, 
+                        params['withdrawal'],
+                        params['capital_gains_tax_rate'],
+                        params['n_simulations'],
+                        progress_bar, 
+                        status_text, 
+                        lang
+                    )
+                else:
+                    # Standard simulation without correlation
+                    results = simulator.run_simulation(
+                        active_accumulation_assets,
+                        active_retirement_assets,
+                        params['initial_amount'], 
+                        params['years_to_retirement'], 
+                        params['years_retired'],
+                        params['annual_contribution'], 
+                        params['adjust_contribution_inflation'], 
+                        params['inflation'] / 100, 
+                        params['withdrawal'],
+                        params['capital_gains_tax_rate'],
+                        params['n_simulations'],
+                        progress_bar, 
+                        status_text, 
+                        lang
+                    )
             
-            # Display simplified results (no detailed tax statistics, no tax comparison)
+            # Display results with correlation info
+            st.markdown("---")
+            
+            # NEW: Show simulation method used
+            if use_correlation:
+                scenario_name = scenario_names.get(st.session_state.correlation_scenario, st.session_state.correlation_scenario)
+                st.success(f"✅ " + ("Simulazione completata con correlazione" if lang == 'it' else "Simulation completed with correlation") + f" ({scenario_name})")
+            else:
+                st.info("ℹ️ " + ("Simulazione completata senza correlazione (asset indipendenti)" if lang == 'it' else "Simulation completed without correlation (independent assets)"))
+            
+            # Display results (same as original)
             ResultsDisplay.show_results(
                 results, 
                 simulator,
@@ -288,7 +397,7 @@ def main():
                 params['years_retired'],
                 params['capital_gains_tax_rate'],
                 params['withdrawal'],
-                params['inflation'],  # Added inflation parameter
+                params['inflation'],
                 lang
             )
     
