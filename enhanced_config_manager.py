@@ -1,384 +1,343 @@
 """
-UI Components for Correlation Management
+Enhanced Configuration manager with correlation support
 """
 
+import json
+import os
 import streamlit as st
-import pandas as pd
 import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from translations import get_text, get_asset_names
+from translations import get_text
 
 
-class CorrelationUIComponents:
-    """UI components for managing asset correlations"""
+class EnhancedConfigManager:
+    """Enhanced configuration manager with correlation support"""
     
-    @staticmethod
-    def render_correlation_settings(config_manager, lang):
-        """Render correlation settings section"""
-        st.subheader("🔗 " + ("Impostazioni Correlazione Asset" if lang == 'it' else "Asset Correlation Settings"))
+    def __init__(self, config_file='config.json'):
+        self.config_file = config_file
+        self._asset_profiles = None
+        self._asset_characteristics = None
+        self._correlation_matrix = None
+        self._correlation_scenarios = None
+        self._load_config()
+    
+    def _load_config(self):
+        """Load configuration from JSON file"""
+        if not os.path.exists(self.config_file):
+            lang = st.session_state.get('language', 'en')
+            st.error(get_text('config_not_found', lang).format(self.config_file))
+            st.stop()
         
-        # Correlation scenario selector
-        correlation_scenarios = ['normal_times', 'crisis_times', 'independent', 'custom']
-        scenario_names = {
-            'normal_times': 'Condizioni Normali' if lang == 'it' else 'Normal Times',
-            'crisis_times': 'Crisi Finanziaria' if lang == 'it' else 'Financial Crisis',
-            'independent': 'Asset Indipendenti' if lang == 'it' else 'Independent Assets',
-            'custom': 'Personalizzata' if lang == 'it' else 'Custom'
+        try:
+            with open(self.config_file, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            
+            self._asset_profiles = config['asset_profiles']
+            self._asset_characteristics = config['asset_characteristics']
+            
+            # Load correlation data if available
+            if 'correlation_matrix' in config:
+                self._correlation_matrix = {
+                    'assets': config['correlation_matrix']['assets'],
+                    'matrix': np.array(config['correlation_matrix']['matrix'])
+                }
+            
+            if 'correlation_scenarios' in config:
+                self._correlation_scenarios = {}
+                for scenario_name, scenario_data in config['correlation_scenarios'].items():
+                    self._correlation_scenarios[scenario_name] = {
+                        'description': scenario_data['description'],
+                        'matrix': np.array(scenario_data['matrix'])
+                    }
+            
+        except Exception as e:
+            lang = st.session_state.get('language', 'en')
+            st.error(get_text('config_load_error', lang).format(str(e)))
+            st.stop()
+    
+    @property
+    def asset_profiles(self):
+        """Get asset profiles"""
+        return self._asset_profiles
+    
+    @property
+    def asset_characteristics(self):
+        """Get asset characteristics"""
+        return self._asset_characteristics
+    
+    @property
+    def correlation_matrix(self):
+        """Get default correlation matrix"""
+        return self._correlation_matrix
+    
+    @property
+    def correlation_scenarios(self):
+        """Get correlation scenarios"""
+        return self._correlation_scenarios
+    
+    def get_profile_data(self, profile_name):
+        """Get data for a specific profile"""
+        if profile_name not in self._asset_profiles:
+            return None
+        
+        loaded_assets = []
+        for asset_profile in self._asset_profiles[profile_name]:
+            asset_name = asset_profile['name']
+            if asset_name in self._asset_characteristics:
+                characteristics = self._asset_characteristics[asset_name]
+                combined_asset = {
+                    'name': asset_name,
+                    'allocation': asset_profile['allocation'],
+                    'ter': asset_profile['ter'],
+                    'return': characteristics['return'],
+                    'volatility': characteristics['volatility'],
+                    'min_return': characteristics['min_return'],
+                    'max_return': characteristics['max_return']
+                }
+                loaded_assets.append(combined_asset)
+        
+        return loaded_assets
+    
+    def validate_allocations(self, assets_data):
+        """Validate that allocations sum to 100%"""
+        total_allocation = sum(asset['allocation'] for asset in assets_data)
+        return abs(total_allocation - 100.0) <= 0.01
+    
+    def get_active_assets(self, assets_data):
+        """Get only assets with allocation > 0"""
+        return [asset for asset in assets_data if asset['allocation'] > 0]
+    
+    def get_correlation_matrix_for_assets(self, asset_names, scenario='normal_times'):
+        """
+        Get correlation matrix for specific assets and scenario
+        
+        Args:
+            asset_names: List of asset names
+            scenario: Correlation scenario name
+            
+        Returns:
+            numpy array with correlation matrix, or None if not available
+        """
+        if not self._correlation_scenarios or scenario not in self._correlation_scenarios:
+            return None
+        
+        if not self._correlation_matrix or 'assets' not in self._correlation_matrix:
+            return None
+        
+        # Get the full asset list from config
+        config_assets = self._correlation_matrix['assets']
+        scenario_matrix = self._correlation_scenarios[scenario]['matrix']
+        
+        # Find indices for requested assets
+        try:
+            asset_indices = [config_assets.index(asset_name) for asset_name in asset_names]
+        except ValueError:
+            # Some assets not found in correlation matrix
+            return None
+        
+        # Extract submatrix for requested assets
+        submatrix = scenario_matrix[np.ix_(asset_indices, asset_indices)]
+        return submatrix
+    
+    def get_default_correlation_matrix(self, asset_names):
+        """
+        Generate default correlation matrix for given assets
+        
+        Args:
+            asset_names: List of asset names
+            
+        Returns:
+            numpy array with default correlations
+        """
+        # Default correlation values based on asset types
+        default_correlations = {
+            ('Stocks', 'Bond'): -0.1,
+            ('Stocks', 'Gold'): 0.1,
+            ('Stocks', 'REIT'): 0.7,
+            ('Stocks', 'Commodities'): 0.3,
+            ('Stocks', 'Cash'): 0.0,
+            ('Bond', 'Gold'): 0.2,
+            ('Bond', 'REIT'): 0.1,
+            ('Bond', 'Commodities'): 0.1,
+            ('Bond', 'Cash'): 0.3,
+            ('Gold', 'REIT'): 0.2,
+            ('Gold', 'Commodities'): 0.4,
+            ('Gold', 'Cash'): 0.1,
+            ('REIT', 'Commodities'): 0.3,
+            ('REIT', 'Cash'): 0.0,
+            ('Commodities', 'Cash'): 0.0,
         }
         
-        selected_scenario = st.selectbox(
-            "Scenario di Correlazione:" if lang == 'it' else "Correlation Scenario:",
-            correlation_scenarios,
-            format_func=lambda x: scenario_names[x],
-            index=0,
-            key='correlation_scenario'
-        )
-        
-        # Load correlation matrix based on scenario
-        if hasattr(config_manager, 'correlation_scenarios'):
-            correlation_config = config_manager.correlation_scenarios.get(selected_scenario)
-        else:
-            correlation_config = None
-        
-        if selected_scenario == 'custom' or correlation_config is None:
-            # Custom correlation matrix editor
-            st.info("⚠️ " + ("Modalità personalizzata - modifica la matrice di correlazione manualmente" 
-                           if lang == 'it' else "Custom mode - edit correlation matrix manually"))
-            correlation_matrix = CorrelationUIComponents._render_correlation_matrix_editor(config_manager, lang)
-        else:
-            # Show predefined scenario info
-            if correlation_config:
-                st.info(f"📋 {correlation_config.get('description', 'Scenario predefinito')}")
-                correlation_matrix = np.array(correlation_config['matrix'])
-            else:
-                # Fallback to identity matrix
-                asset_names = list(config_manager.asset_characteristics.keys())
-                correlation_matrix = np.eye(len(asset_names))
-        
-        return selected_scenario, correlation_matrix
-    
-    @staticmethod
-    def _render_correlation_matrix_editor(config_manager, lang):
-        """Render editable correlation matrix"""
-        asset_names = list(config_manager.asset_characteristics.keys())
-        translated_names = get_asset_names(lang)
-        display_names = [translated_names.get(name, name) for name in asset_names]
-        
         n_assets = len(asset_names)
+        correlation_matrix = np.eye(n_assets)
         
-        # Initialize correlation matrix in session state
-        if 'custom_correlation_matrix' not in st.session_state:
-            st.session_state.custom_correlation_matrix = np.eye(n_assets)
-        
-        correlation_matrix = st.session_state.custom_correlation_matrix
-        
-        st.markdown("**" + ("Matrice di Correlazione Personalizzata:" if lang == 'it' else "Custom Correlation Matrix:") + "**")
-        
-        # Create correlation matrix input
-        cols = st.columns(n_assets + 1)
-        
-        # Header row
-        cols[0].markdown("**Asset**")
-        for i, display_name in enumerate(display_names):
-            cols[i + 1].markdown(f"**{display_name[:8]}**")  # Truncate long names
-        
-        # Matrix input rows
-        for i in range(n_assets):
-            cols[0].markdown(f"**{display_names[i][:12]}**")
-            
-            for j in range(n_assets):
-                if i == j:
-                    # Diagonal elements are always 1
-                    cols[j + 1].markdown("1.00")
-                    correlation_matrix[i, j] = 1.0
-                elif i < j:
-                    # Upper triangle - editable
-                    corr_value = cols[j + 1].number_input(
-                        f"",
-                        value=float(correlation_matrix[i, j]),
-                        min_value=-1.0,
-                        max_value=1.0,
-                        step=0.01,
-                        format="%.2f",
-                        key=f"corr_{i}_{j}",
-                        label_visibility="collapsed"
-                    )
-                    correlation_matrix[i, j] = corr_value
-                    correlation_matrix[j, i] = corr_value  # Symmetric
-                else:
-                    # Lower triangle - show symmetric value
-                    cols[j + 1].markdown(f"{correlation_matrix[i, j]:.2f}")
-        
-        # Update session state
-        st.session_state.custom_correlation_matrix = correlation_matrix
-        
-        # Validation and reset buttons
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            if st.button("🔄 " + ("Reset Identità" if lang == 'it' else "Reset Identity")):
-                st.session_state.custom_correlation_matrix = np.eye(n_assets)
-                st.rerun()
-        
-        with col2:
-            if st.button("⚖️ " + ("Validazione Matrice" if lang == 'it' else "Validate Matrix")):
-                CorrelationUIComponents._validate_correlation_matrix(correlation_matrix, lang)
-        
-        with col3:
-            if st.button("📋 " + ("Carica Template" if lang == 'it' else "Load Template")):
-                CorrelationUIComponents._show_correlation_templates(lang)
+        for i, asset1 in enumerate(asset_names):
+            for j, asset2 in enumerate(asset_names):
+                if i != j:
+                    # Try both orders of asset pairs
+                    corr = default_correlations.get((asset1, asset2))
+                    if corr is None:
+                        corr = default_correlations.get((asset2, asset1))
+                    
+                    if corr is not None:
+                        correlation_matrix[i, j] = corr
+                    else:
+                        # Default correlation for unknown pairs
+                        if 'UserAsset' in asset1 or 'UserAsset' in asset2:
+                            correlation_matrix[i, j] = 0.2
+                        else:
+                            correlation_matrix[i, j] = 0.1
         
         return correlation_matrix
     
-    @staticmethod
-    def _validate_correlation_matrix(matrix, lang):
-        """Validate correlation matrix properties"""
+    def save_custom_correlation_matrix(self, asset_names, correlation_matrix, scenario_name='custom'):
+        """
+        Save custom correlation matrix to session state or config
+        
+        Args:
+            asset_names: List of asset names
+            correlation_matrix: numpy array with correlations
+            scenario_name: Name for the custom scenario
+        """
+        # Store in session state for current session
+        if 'custom_correlations' not in st.session_state:
+            st.session_state.custom_correlations = {}
+        
+        st.session_state.custom_correlations[scenario_name] = {
+            'assets': asset_names,
+            'matrix': correlation_matrix.tolist(),
+            'description': f'Custom correlation scenario: {scenario_name}'
+        }
+    
+    def get_available_correlation_scenarios(self):
+        """Get list of available correlation scenarios"""
+        scenarios = []
+        
+        # Add predefined scenarios
+        if self._correlation_scenarios:
+            scenarios.extend(list(self._correlation_scenarios.keys()))
+        
+        # Add custom scenarios from session state
+        if hasattr(st.session_state, 'custom_correlations'):
+            scenarios.extend([f"custom_{name}" for name in st.session_state.custom_correlations.keys()])
+        
+        # Always include independent scenario
+        if 'independent' not in scenarios:
+            scenarios.append('independent')
+        
+        return scenarios
+    
+    def export_correlation_config(self, filename='custom_correlations.json'):
+        """Export current correlation settings to JSON file"""
+        export_data = {
+            'correlation_scenarios': {},
+            'asset_list': list(self._asset_characteristics.keys()) if self._asset_characteristics else []
+        }
+        
+        # Add predefined scenarios
+        if self._correlation_scenarios:
+            for name, scenario in self._correlation_scenarios.items():
+                export_data['correlation_scenarios'][name] = {
+                    'description': scenario['description'],
+                    'matrix': scenario['matrix'].tolist()
+                }
+        
+        # Add custom scenarios from session state
+        if hasattr(st.session_state, 'custom_correlations'):
+            for name, scenario in st.session_state.custom_correlations.items():
+                export_data['correlation_scenarios'][f'custom_{name}'] = {
+                    'description': scenario['description'],
+                    'matrix': scenario['matrix']
+                }
+        
         try:
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(export_data, f, indent=2, ensure_ascii=False)
+            return True
+        except Exception as e:
+            st.error(f"Error exporting correlation config: {str(e)}")
+            return False
+    
+    def import_correlation_config(self, filename):
+        """Import correlation settings from JSON file"""
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                import_data = json.load(f)
+            
+            if 'correlation_scenarios' in import_data:
+                # Store imported scenarios in session state
+                if 'imported_correlations' not in st.session_state:
+                    st.session_state.imported_correlations = {}
+                
+                for name, scenario in import_data['correlation_scenarios'].items():
+                    st.session_state.imported_correlations[name] = {
+                        'description': scenario['description'],
+                        'matrix': np.array(scenario['matrix']),
+                        'assets': import_data.get('asset_list', [])
+                    }
+            
+            return True
+        
+        except Exception as e:
+            st.error(f"Error importing correlation config: {str(e)}")
+            return False
+    
+    def validate_correlation_matrix(self, matrix):
+        """
+        Validate correlation matrix properties
+        
+        Args:
+            matrix: numpy array to validate
+            
+        Returns:
+            dict with validation results
+        """
+        validation_results = {
+            'is_valid': True,
+            'errors': [],
+            'warnings': []
+        }
+        
+        try:
+            # Check if matrix is square
+            if matrix.shape[0] != matrix.shape[1]:
+                validation_results['is_valid'] = False
+                validation_results['errors'].append("Matrix is not square")
+                return validation_results
+            
             # Check if symmetric
-            is_symmetric = np.allclose(matrix, matrix.T)
+            if not np.allclose(matrix, matrix.T, rtol=1e-10):
+                validation_results['is_valid'] = False
+                validation_results['errors'].append("Matrix is not symmetric")
+            
+            # Check diagonal elements
+            if not np.allclose(np.diag(matrix), 1.0, rtol=1e-10):
+                validation_results['is_valid'] = False
+                validation_results['errors'].append("Diagonal elements are not 1.0")
+            
+            # Check correlation bounds
+            if not np.all((matrix >= -1.0) & (matrix <= 1.0)):
+                validation_results['is_valid'] = False
+                validation_results['errors'].append("Correlation values outside [-1, 1] range")
             
             # Check if positive semi-definite
             eigenvals = np.linalg.eigvals(matrix)
-            is_psd = np.all(eigenvals >= -1e-8)
+            if np.any(eigenvals < -1e-8):
+                validation_results['is_valid'] = False
+                validation_results['errors'].append("Matrix is not positive semi-definite")
             
-            # Check diagonal elements
-            diagonal_ones = np.allclose(np.diag(matrix), 1.0)
+            # Warnings for unusual correlations
+            upper_triangle = np.triu(matrix, k=1)
+            correlations = upper_triangle[upper_triangle != 0]
             
-            # Check correlation bounds
-            valid_bounds = np.all((matrix >= -1.0) & (matrix <= 1.0))
-            
-            if is_symmetric and is_psd and diagonal_ones and valid_bounds:
-                st.success("✅ " + ("Matrice di correlazione valida!" if lang == 'it' else "Valid correlation matrix!"))
-            else:
-                errors = []
-                if not is_symmetric:
-                    errors.append("Non simmetrica" if lang == 'it' else "Not symmetric")
-                if not is_psd:
-                    errors.append("Non semi-definita positiva" if lang == 'it' else "Not positive semi-definite")
-                if not diagonal_ones:
-                    errors.append("Diagonale non unitaria" if lang == 'it' else "Diagonal not unity")
-                if not valid_bounds:
-                    errors.append("Valori fuori range [-1,1]" if lang == 'it' else "Values outside [-1,1] range")
+            if len(correlations) > 0:
+                if np.any(np.abs(correlations) > 0.9):
+                    validation_results['warnings'].append("Some correlations are very high (>0.9)")
                 
-                st.error("❌ " + ("Errori nella matrice: " if lang == 'it' else "Matrix errors: ") + ", ".join(errors))
+                if np.mean(np.abs(correlations)) > 0.6:
+                    validation_results['warnings'].append("Average correlation is quite high")
         
         except Exception as e:
-            st.error("❌ " + ("Errore di validazione: " if lang == 'it' else "Validation error: ") + str(e))
-    
-    @staticmethod
-    def _show_correlation_templates(lang):
-        """Show correlation matrix templates"""
-        templates = {
-            'low_correlation': {
-                'name': 'Bassa Correlazione' if lang == 'it' else 'Low Correlation',
-                'description': 'Correlazioni tipiche in mercati normali' if lang == 'it' else 'Typical correlations in normal markets'
-            },
-            'high_correlation': {
-                'name': 'Alta Correlazione' if lang == 'it' else 'High Correlation',
-                'description': 'Correlazioni durante crisi finanziarie' if lang == 'it' else 'Correlations during financial crises'
-            },
-            'zero_correlation': {
-                'name': 'Zero Correlazione' if lang == 'it' else 'Zero Correlation',
-                'description': 'Asset completamente indipendenti' if lang == 'it' else 'Completely independent assets'
-            }
-        }
+            validation_results['is_valid'] = False
+            validation_results['errors'].append(f"Validation error: {str(e)}")
         
-        for template_key, template_info in templates.items():
-            if st.button(f"📋 {template_info['name']}"):
-                st.info(f"💡 {template_info['description']}")
-    
-    @staticmethod
-    def render_correlation_visualization(correlation_matrix, asset_names, lang):
-        """Render correlation matrix visualization"""
-        st.subheader("📈 " + ("Visualizzazione Matrice di Correlazione" if lang == 'it' else "Correlation Matrix Visualization"))
-        
-        translated_names = get_asset_names(lang)
-        display_names = [translated_names.get(name, name) for name in asset_names]
-        
-        # Create heatmap
-        fig = px.imshow(
-            correlation_matrix,
-            x=display_names,
-            y=display_names,
-            color_continuous_scale='RdBu',
-            aspect='auto',
-            title="Matrice di Correlazione Asset" if lang == 'it' else "Asset Correlation Matrix",
-            zmin=-1,
-            zmax=1
-        )
-        
-        # Add correlation values as text
-        fig.update_traces(
-            text=np.around(correlation_matrix, decimals=2),
-            texttemplate="%{text}",
-            textfont={"size": 10}
-        )
-        
-        fig.update_layout(
-            width=600,
-            height=500,
-            xaxis_title="Asset",
-            yaxis_title="Asset"
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Correlation statistics
-        CorrelationUIComponents._show_correlation_statistics(correlation_matrix, display_names, lang)
-    
-    @staticmethod
-    def _show_correlation_statistics(correlation_matrix, display_names, lang):
-        """Show correlation matrix statistics"""
-        st.subheader("📊 " + ("Statistiche di Correlazione" if lang == 'it' else "Correlation Statistics"))
-        
-        # Extract upper triangle (excluding diagonal)
-        upper_triangle = np.triu(correlation_matrix, k=1)
-        correlations = upper_triangle[upper_triangle != 0]
-        
-        if len(correlations) > 0:
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                st.metric(
-                    "Media" if lang == 'it' else "Average",
-                    f"{np.mean(correlations):.3f}"
-                )
-            
-            with col2:
-                st.metric(
-                    "Minimo" if lang == 'it' else "Minimum",
-                    f"{np.min(correlations):.3f}"
-                )
-            
-            with col3:
-                st.metric(
-                    "Massimo" if lang == 'it' else "Maximum",
-                    f"{np.max(correlations):.3f}"
-                )
-            
-            # Top correlations
-            st.markdown("**" + ("Top 5 Correlazioni:" if lang == 'it' else "Top 5 Correlations:") + "**")
-            
-            # Create pairs with correlations
-            pairs_data = []
-            n = len(display_names)
-            for i in range(n):
-                for j in range(i + 1, n):
-                    pairs_data.append({
-                        'Asset 1': display_names[i],
-                        'Asset 2': display_names[j],
-                        'Correlazione' if lang == 'it' else 'Correlation': correlation_matrix[i, j]
-                    })
-            
-            # Sort by absolute correlation
-            pairs_df = pd.DataFrame(pairs_data)
-            pairs_df['Abs_Corr'] = abs(pairs_df['Correlazione' if lang == 'it' else 'Correlation'])
-            top_pairs = pairs_df.nlargest(5, 'Abs_Corr').drop('Abs_Corr', axis=1)
-            
-            st.dataframe(top_pairs, use_container_width=True)
-    
-    @staticmethod
-    def render_correlation_impact_analysis(lang):
-        """Render analysis of correlation impact on portfolio"""
-        st.subheader("🎯 " + ("Analisi Impatto Correlazione" if lang == 'it' else "Correlation Impact Analysis"))
-        
-        # Explanation of correlation effects
-        if lang == 'it':
-            st.markdown("""
-            **Come la correlazione influenza il portafoglio:**
-            
-            📈 **Correlazione Positiva (0 < r < 1):**
-            - Gli asset si muovono nella stessa direzione
-            - Riduce l'efficacia della diversificazione
-            - Aumenta il rischio durante le crisi
-            
-            📉 **Correlazione Negativa (-1 < r < 0):**
-            - Gli asset si muovono in direzioni opposte
-            - Migliora la diversificazione
-            - Fornisce protezione naturale
-            
-            🔄 **Correlazione Zero (r = 0):**
-            - Movimenti completamente indipendenti
-            - Massima efficacia della diversificazione teorica
-            - Raramente osservato nella realtà
-            """)
-        else:
-            st.markdown("""
-            **How correlation affects your portfolio:**
-            
-            📈 **Positive Correlation (0 < r < 1):**
-            - Assets move in the same direction
-            - Reduces diversification effectiveness
-            - Increases risk during crises
-            
-            📉 **Negative Correlation (-1 < r < 0):**
-            - Assets move in opposite directions
-            - Improves diversification
-            - Provides natural protection
-            
-            🔄 **Zero Correlation (r = 0):**
-            - Completely independent movements
-            - Maximum theoretical diversification benefit
-            - Rarely observed in reality
-            """)
-        
-        # Correlation scenario comparison
-        st.markdown("**" + ("Confronto Scenari:" if lang == 'it' else "Scenario Comparison:") + "**")
-        
-        scenarios_info = {
-            'independent': {
-                'name': 'Asset Indipendenti' if lang == 'it' else 'Independent Assets',
-                'risk': 'Basso' if lang == 'it' else 'Low',
-                'diversification': 'Massima' if lang == 'it' else 'Maximum',
-                'reality': 'Teorico' if lang == 'it' else 'Theoretical'
-            },
-            'normal_times': {
-                'name': 'Mercati Normali' if lang == 'it' else 'Normal Markets',
-                'risk': 'Moderato' if lang == 'it' else 'Moderate',
-                'diversification': 'Buona' if lang == 'it' else 'Good',
-                'reality': 'Realistico' if lang == 'it' else 'Realistic'
-            },
-            'crisis_times': {
-                'name': 'Crisi Finanziaria' if lang == 'it' else 'Financial Crisis',
-                'risk': 'Alto' if lang == 'it' else 'High',
-                'diversification': 'Limitata' if lang == 'it' else 'Limited',
-                'reality': 'Stress Test' if lang == 'it' else 'Stress Test'
-            }
-        }
-        
-        comparison_df = pd.DataFrame(scenarios_info).T
-        comparison_df.index.name = 'Scenario'
-        
-        column_translations = {
-            'name': 'Nome' if lang == 'it' else 'Name',
-            'risk': 'Rischio Portfolio' if lang == 'it' else 'Portfolio Risk',
-            'diversification': 'Diversificazione' if lang == 'it' else 'Diversification',
-            'reality': 'Applicabilità' if lang == 'it' else 'Applicability'
-        }
-        
-        comparison_df.columns = [column_translations.get(col, col) for col in comparison_df.columns]
-        st.dataframe(comparison_df, use_container_width=True)
-    
-    @staticmethod
-    def render_correlation_toggle(lang):
-        """Render toggle to enable/disable correlation in simulation"""
-        st.subheader("⚙️ " + ("Impostazioni Simulazione" if lang == 'it' else "Simulation Settings"))
-        
-        use_correlation = st.checkbox(
-            "🔗 " + ("Abilita correlazione tra asset" if lang == 'it' else "Enable asset correlation"),
-            value=st.session_state.get('use_correlation', True),
-            help=("Se disabilitato, gli asset verranno simulati indipendentemente (comportamento attuale dell'app)" 
-                  if lang == 'it' else 
-                  "If disabled, assets will be simulated independently (current app behavior)"),
-            key='correlation_enabled'
-        )
-        
-        if use_correlation:
-            st.info("✅ " + ("La correlazione è abilitata - simulazione più realistica" 
-                           if lang == 'it' else "Correlation enabled - more realistic simulation"))
-        else:
-            st.warning("⚠️ " + ("Correlazione disabilitata - asset indipendenti" 
-                              if lang == 'it' else "Correlation disabled - independent assets"))
-        
-        return use_correlation
+        return validation_results
