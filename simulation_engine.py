@@ -149,7 +149,15 @@ class MonteCarloSimulator:
         accumulation_real = balance_real
         
         # NEW: Initialize withdrawal tracking for real withdrawal
-        current_withdrawal = base_withdrawal  # Start with user's input amount
+        # CORRECTED: If using real withdrawal, adjust base amount for inflation during accumulation
+        if use_real_withdrawal:
+            # The user's input (base_withdrawal) is in today's purchasing power
+            # At retirement, we need to adjust it for inflation during accumulation phase
+            current_withdrawal = base_withdrawal * ((1 + inflation) ** years_to_retirement)
+        else:
+            # Nominal withdrawal: use exact amount entered by user
+            current_withdrawal = base_withdrawal
+            
         total_real_withdrawals = 0
         withdrawal_count = 0
         
@@ -186,9 +194,9 @@ class MonteCarloSimulator:
             
             # NEW: Calculate withdrawal amount based on real vs nominal choice
             if use_real_withdrawal:
-                # REAL withdrawal: Adjust for inflation to maintain purchasing power
-                # Each year, increase withdrawal by inflation rate
-                if year > 0:  # Don't adjust in first year
+                # REAL withdrawal: Current withdrawal is already adjusted for accumulation inflation
+                # Now adjust for each additional year of retirement inflation
+                if year > 0:  # Don't adjust in first year (already adjusted for accumulation)
                     current_withdrawal *= (1 + inflation)
                 withdrawal_amount = current_withdrawal
             else:
@@ -293,7 +301,15 @@ class MonteCarloSimulator:
         effective_tax_rate = tax_rate_decimal * capital_gains_percentage
         
         # NEW: Initialize withdrawal for real/nominal handling
-        current_withdrawal = base_withdrawal
+        # CORRECTED: If using real withdrawal, adjust base amount for inflation during accumulation
+        if use_real_withdrawal:
+            # The user's input (base_withdrawal) is in today's purchasing power
+            # At retirement, we need to adjust it for inflation during accumulation phase
+            current_withdrawal = base_withdrawal * ((1 + inflation) ** years_to_retirement)
+        else:
+            # Nominal withdrawal: use exact amount entered by user
+            current_withdrawal = base_withdrawal
+            
         total_real_withdrawals = 0
         withdrawal_count = 0
         
@@ -316,8 +332,9 @@ class MonteCarloSimulator:
             
             # NEW: Calculate withdrawal amount based on real vs nominal choice
             if use_real_withdrawal:
-                # REAL withdrawal: Adjust for inflation to maintain purchasing power
-                if year > 0:  # Don't adjust in first year
+                # REAL withdrawal: Current withdrawal is already adjusted for accumulation inflation
+                # Now adjust for each additional year of retirement inflation
+                if year > 0:  # Don't adjust in first year (already adjusted for accumulation)
                     current_withdrawal *= (1 + inflation)
                 withdrawal_amount = current_withdrawal
             else:
