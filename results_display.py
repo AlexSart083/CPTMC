@@ -72,12 +72,12 @@ class ResultsDisplay:
         ResultsDisplay._show_key_metrics_with_withdrawal_info(
             total_deposited, stats['accumulation_nominal']['median'], 
             stats['final']['median'], stats['success_rate'], 
-            nominal_withdrawal, use_real_withdrawal, inflation_rate, years_retired, lang
+            nominal_withdrawal, use_real_withdrawal, inflation_rate, years_to_retirement, years_retired, lang
         )
         
         # NEW: Display detailed withdrawal analysis
         ResultsDisplay._show_detailed_withdrawal_analysis(
-            results, nominal_withdrawal, use_real_withdrawal, inflation_rate, years_retired, lang
+            results, nominal_withdrawal, use_real_withdrawal, inflation_rate, years_to_retirement, years_retired, lang
         )
         
         # Display simplified tax impact analysis
@@ -102,7 +102,7 @@ class ResultsDisplay:
     @staticmethod
     def _show_key_metrics_with_withdrawal_info(total_deposited, median_accumulation_nominal, 
                                              median_final_nominal, success_rate, nominal_withdrawal, 
-                                             use_real_withdrawal, inflation_rate, years_retired, lang):
+                                             use_real_withdrawal, inflation_rate, years_to_retirement, years_retired, lang):
         """Display key metrics with withdrawal information"""
         col1, col2, col3, col4 = st.columns(4)
         
@@ -218,7 +218,7 @@ class ResultsDisplay:
     
     @staticmethod
     def _show_detailed_withdrawal_analysis(results, base_withdrawal, use_real_withdrawal, 
-                                         inflation_rate, years_retired, lang):
+                                         inflation_rate, years_to_retirement, years_retired, lang):
         """Show detailed analysis of withdrawal strategy over time"""
         st.subheader("📊 " + ("Analisi Dettagliata Prelievi" if lang == 'it' else "Detailed Withdrawal Analysis"))
         
@@ -238,11 +238,14 @@ class ResultsDisplay:
             comparison_data = []
             for year in years_sample:
                 if use_real_withdrawal:
-                    nominal_amount = base_withdrawal * ((1 + inflation_rate/100) ** (year-1))
-                    real_value = base_withdrawal  # Constant purchasing power
+                    # CORRECTED: Start from retirement-adjusted amount
+                    initial_retirement_withdrawal = base_withdrawal * ((1 + inflation_rate/100) ** years_to_retirement)
+                    nominal_amount = initial_retirement_withdrawal * ((1 + inflation_rate/100) ** (year-1))
+                    real_value = base_withdrawal  # Constant purchasing power in today's terms
                 else:
                     nominal_amount = base_withdrawal  # Fixed amount
-                    real_value = base_withdrawal / ((1 + inflation_rate/100) ** (year-1))
+                    # CORRECTED: Calculate purchasing power loss including accumulation period
+                    real_value = base_withdrawal / ((1 + inflation_rate/100) ** (years_to_retirement + year - 1))
                 
                 comparison_data.append({
                     ('Anno' if lang == 'it' else 'Year'): year,
@@ -259,23 +262,26 @@ class ResultsDisplay:
             
             # Calculate total withdrawals over retirement period
             if use_real_withdrawal:
-                total_nominal_withdrawn = sum(base_withdrawal * ((1 + inflation_rate/100) ** year) 
+                # CORRECTED: Start from retirement-adjusted amount
+                initial_retirement_withdrawal = base_withdrawal * ((1 + inflation_rate/100) ** years_to_retirement)
+                total_nominal_withdrawn = sum(initial_retirement_withdrawal * ((1 + inflation_rate/100) ** year) 
                                             for year in range(int(years_retired)))
-                total_real_value = base_withdrawal * years_retired  # Constant purchasing power
+                total_real_value = base_withdrawal * years_retired  # Constant purchasing power in today's terms
                 
                 st.metric(
                     "Totale Prelevato (Nominale)" if lang == 'it' else "Total Withdrawn (Nominal)",
                     f"€{total_nominal_withdrawn:,.0f}"
                 )
                 st.metric(
-                    "Valore Reale Totale" if lang == 'it' else "Total Real Value",
+                    "Valore Reale Totale (Oggi)" if lang == 'it' else "Total Real Value (Today)",
                     f"€{total_real_value:,.0f}"
                 )
                 st.success("✅ " + ("Potere d'acquisto preservato" if lang == 'it' else "Purchasing power preserved"))
                 
             else:
                 total_nominal_withdrawn = base_withdrawal * years_retired
-                total_real_value = sum(base_withdrawal / ((1 + inflation_rate/100) ** year) 
+                # CORRECTED: Include accumulation period in purchasing power calculation
+                total_real_value = sum(base_withdrawal / ((1 + inflation_rate/100) ** (years_to_retirement + year)) 
                                      for year in range(int(years_retired)))
                 purchasing_power_erosion = (1 - total_real_value/total_nominal_withdrawn) * 100
                 
@@ -284,7 +290,7 @@ class ResultsDisplay:
                     f"€{total_nominal_withdrawn:,.0f}"
                 )
                 st.metric(
-                    "Valore Reale Totale" if lang == 'it' else "Total Real Value",
+                    "Valore Reale Totale (Oggi)" if lang == 'it' else "Total Real Value (Today)",
                     f"€{total_real_value:,.0f}"
                 )
                 st.error(f"📉 " + ("Erosione potere d'acquisto:" if lang == 'it' else "Purchasing power erosion:") + f" {purchasing_power_erosion:.1f}%")
