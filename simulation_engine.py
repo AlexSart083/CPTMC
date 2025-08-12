@@ -1,6 +1,6 @@
 """
-Enhanced Monte Carlo simulation engine with REAL withdrawal support - MODIFIED VERSION
-Implements inflation-adjusted withdrawal amounts that maintain purchasing power
+Enhanced Monte Carlo simulation engine with CORRECTED REAL withdrawal support
+FIXED VERSION - Eliminato il doppio aggiustamento per inflazione
 """
 
 import numpy as np
@@ -9,7 +9,7 @@ from translations import get_text
 
 
 class MonteCarloSimulator:
-    """Monte Carlo simulation engine with REAL withdrawal support"""
+    """Monte Carlo simulation engine with CORRECTED REAL withdrawal support"""
     
     def __init__(self):
         self.results = None
@@ -20,10 +20,10 @@ class MonteCarloSimulator:
                       inflation, withdrawal, capital_gains_tax_rate, n_simulations,
                       use_real_withdrawal=True, progress_bar=None, status_text=None, lang='en'):
         """
-        Run Monte Carlo simulation with enhanced capital gains taxation and REAL withdrawal support
+        Run Monte Carlo simulation with enhanced capital gains taxation and CORRECTED REAL withdrawal support
         
-        NEW PARAMETER:
-        use_real_withdrawal: If True, withdrawal amount is adjusted annually for inflation to maintain purchasing power
+        PARAMETER:
+        use_real_withdrawal: If True, withdrawal amount maintains constant purchasing power
         """
         
         # Prepare accumulation phase data
@@ -56,8 +56,8 @@ class MonteCarloSimulator:
                 if status_text:
                     status_text.text(get_text('simulation_step', lang).format(sim + 1, n_simulations))
             
-            # Run single simulation with detailed tax calculation and real withdrawal
-            result = self._run_single_simulation_with_real_withdrawal(
+            # Run single simulation with corrected withdrawal calculation
+            result = self._run_single_simulation_corrected(
                 acc_mean_returns, acc_volatilities, acc_allocations, acc_min_returns, acc_max_returns, acc_ters,
                 ret_mean_returns, ret_volatilities, ret_allocations, ret_min_returns, ret_max_returns, ret_ters,
                 initial_amount, years_to_retirement, years_retired,
@@ -88,21 +88,21 @@ class MonteCarloSimulator:
         
         return self.results
     
-    def _run_single_simulation_with_real_withdrawal(self, acc_mean_returns, acc_volatilities, acc_allocations, 
-                                                  acc_min_returns, acc_max_returns, acc_ters,
-                                                  ret_mean_returns, ret_volatilities, ret_allocations,
-                                                  ret_min_returns, ret_max_returns, ret_ters,
-                                                  initial_amount, years_to_retirement, years_retired, 
-                                                  annual_contribution, adjust_contribution_inflation, 
-                                                  inflation, base_withdrawal, capital_gains_tax_rate, 
-                                                  use_real_withdrawal):
-        """Run a single simulation with REAL withdrawal support"""
+    def _run_single_simulation_corrected(self, acc_mean_returns, acc_volatilities, acc_allocations, 
+                                       acc_min_returns, acc_max_returns, acc_ters,
+                                       ret_mean_returns, ret_volatilities, ret_allocations,
+                                       ret_min_returns, ret_max_returns, ret_ters,
+                                       initial_amount, years_to_retirement, years_retired, 
+                                       annual_contribution, adjust_contribution_inflation, 
+                                       inflation, base_withdrawal, capital_gains_tax_rate, 
+                                       use_real_withdrawal):
+        """Run a single simulation with CORRECTED REAL withdrawal logic"""
         
         try:
             from tax_engine import EnhancedTaxEngine
         except ImportError:
             # Fallback to simple method if tax_engine is not available
-            return self._run_single_simulation_simple_with_real_withdrawal(
+            return self._run_single_simulation_simple_corrected(
                 acc_mean_returns, acc_volatilities, acc_allocations, acc_min_returns, acc_max_returns, acc_ters,
                 ret_mean_returns, ret_volatilities, ret_allocations, ret_min_returns, ret_max_returns, ret_ters,
                 initial_amount, years_to_retirement, years_retired,
@@ -148,20 +148,11 @@ class MonteCarloSimulator:
         balance_real = accumulation_nominal / ((1 + inflation) ** years_to_retirement)
         accumulation_real = balance_real
         
-        # NEW: Initialize withdrawal tracking for real withdrawal
-        # CORRECTED: If using real withdrawal, adjust base amount for inflation during accumulation
-        if use_real_withdrawal:
-            # The user's input (base_withdrawal) is in today's purchasing power
-            # At retirement, we need to adjust it for inflation during accumulation phase
-            current_withdrawal = base_withdrawal * ((1 + inflation) ** years_to_retirement)
-        else:
-            # Nominal withdrawal: use exact amount entered by user
-            current_withdrawal = base_withdrawal
-            
+        # Initialize withdrawal tracking for corrected real withdrawal
         total_real_withdrawals = 0
         withdrawal_count = 0
         
-        # Retirement phase with REAL withdrawal calculations
+        # Retirement phase with CORRECTED withdrawal calculations
         annual_taxes_paid = []
         annual_net_withdrawals = []
         annual_gross_withdrawals = []
@@ -192,15 +183,14 @@ class MonteCarloSimulator:
                 # Portfolio depleted
                 break
             
-            # NEW: Calculate withdrawal amount based on real vs nominal choice
+            # CORRECTED: Calculate withdrawal amount based on real vs nominal choice
             if use_real_withdrawal:
-                # REAL withdrawal: Current withdrawal is already adjusted for accumulation inflation
-                # Now adjust for each additional year of retirement inflation
-                if year > 0:  # Don't adjust in first year (already adjusted for accumulation)
-                    current_withdrawal *= (1 + inflation)
-                withdrawal_amount = current_withdrawal
+                # REAL withdrawal: Maintain constant purchasing power
+                # Total inflation years from today = years_to_retirement + current_year
+                total_inflation_years = years_to_retirement + year
+                withdrawal_amount = base_withdrawal * ((1 + inflation) ** total_inflation_years)
             else:
-                # NOMINAL withdrawal: Keep same amount every year (original behavior)
+                # NOMINAL withdrawal: Keep same amount every year (no adjustment)
                 withdrawal_amount = base_withdrawal
             
             # Limit withdrawal to available portfolio
@@ -231,7 +221,7 @@ class MonteCarloSimulator:
         # Calculate average real withdrawal for compatibility
         avg_real_withdrawal = total_real_withdrawals / withdrawal_count if withdrawal_count > 0 else base_withdrawal
         
-        # Prepare enhanced tax information with withdrawal tracking
+        # Prepare enhanced tax information with corrected withdrawal tracking
         tax_details = {
             'total_contributions': final_status['total_contributions'],
             'total_withdrawals': final_status['total_withdrawals'],
@@ -239,10 +229,12 @@ class MonteCarloSimulator:
             'total_capital_gains_realized': final_status.get('total_capital_gains_realized', 0),
             'average_annual_tax': np.mean(annual_taxes_paid) if annual_taxes_paid else 0,
             'total_years_with_withdrawals': len(annual_taxes_paid),
-            'withdrawal_progression': annual_withdrawal_amounts,  # NEW: Track withdrawal amounts over time
-            'use_real_withdrawal': use_real_withdrawal,  # NEW: Track withdrawal type
-            'base_withdrawal': base_withdrawal,  # NEW: Original user input
-            'final_withdrawal': current_withdrawal if use_real_withdrawal else base_withdrawal  # NEW: Final withdrawal amount
+            'withdrawal_progression': annual_withdrawal_amounts,  # Track withdrawal amounts over time
+            'use_real_withdrawal': use_real_withdrawal,  # Track withdrawal type
+            'base_withdrawal': base_withdrawal,  # Original user input
+            # CORRECTED: Final withdrawal calculation
+            'final_withdrawal': (base_withdrawal * ((1 + inflation) ** (years_to_retirement + years_retired - 1)) 
+                               if use_real_withdrawal and years_retired > 0 else base_withdrawal)
         }
         
         return {
@@ -253,15 +245,15 @@ class MonteCarloSimulator:
             'tax_details': tax_details
         }
     
-    def _run_single_simulation_simple_with_real_withdrawal(self, acc_mean_returns, acc_volatilities, acc_allocations, 
-                                                         acc_min_returns, acc_max_returns, acc_ters,
-                                                         ret_mean_returns, ret_volatilities, ret_allocations,
-                                                         ret_min_returns, ret_max_returns, ret_ters,
-                                                         initial_amount, years_to_retirement, years_retired, 
-                                                         annual_contribution, adjust_contribution_inflation, 
-                                                         inflation, base_withdrawal, capital_gains_tax_rate, 
-                                                         use_real_withdrawal):
-        """Simplified simulation with REAL withdrawal support (fallback method)"""
+    def _run_single_simulation_simple_corrected(self, acc_mean_returns, acc_volatilities, acc_allocations, 
+                                              acc_min_returns, acc_max_returns, acc_ters,
+                                              ret_mean_returns, ret_volatilities, ret_allocations,
+                                              ret_min_returns, ret_max_returns, ret_ters,
+                                              initial_amount, years_to_retirement, years_retired, 
+                                              annual_contribution, adjust_contribution_inflation, 
+                                              inflation, base_withdrawal, capital_gains_tax_rate, 
+                                              use_real_withdrawal):
+        """Simplified simulation with CORRECTED REAL withdrawal support (fallback method)"""
         
         balance_nominal = initial_amount
         total_deposited = initial_amount
@@ -300,20 +292,11 @@ class MonteCarloSimulator:
         tax_rate_decimal = capital_gains_tax_rate / 100
         effective_tax_rate = tax_rate_decimal * capital_gains_percentage
         
-        # NEW: Initialize withdrawal for real/nominal handling
-        # CORRECTED: If using real withdrawal, adjust base amount for inflation during accumulation
-        if use_real_withdrawal:
-            # The user's input (base_withdrawal) is in today's purchasing power
-            # At retirement, we need to adjust it for inflation during accumulation phase
-            current_withdrawal = base_withdrawal * ((1 + inflation) ** years_to_retirement)
-        else:
-            # Nominal withdrawal: use exact amount entered by user
-            current_withdrawal = base_withdrawal
-            
+        # Initialize withdrawal tracking
         total_real_withdrawals = 0
         withdrawal_count = 0
         
-        # Retirement phase - NEW: with real withdrawal support
+        # Retirement phase - CORRECTED: with proper real withdrawal support
         balance = balance_real
         for year in range(int(years_retired)):
             annual_returns = [np.random.normal(ret_mean_returns[i], ret_volatilities[i]) 
@@ -330,15 +313,14 @@ class MonteCarloSimulator:
             # Apply return to balance
             balance *= (1 + annual_return_real)
             
-            # NEW: Calculate withdrawal amount based on real vs nominal choice
+            # CORRECTED: Calculate withdrawal amount based on real vs nominal choice
             if use_real_withdrawal:
-                # REAL withdrawal: Current withdrawal is already adjusted for accumulation inflation
-                # Now adjust for each additional year of retirement inflation
-                if year > 0:  # Don't adjust in first year (already adjusted for accumulation)
-                    current_withdrawal *= (1 + inflation)
-                withdrawal_amount = current_withdrawal
+                # REAL withdrawal: Maintain constant purchasing power
+                # Total inflation years from today = years_to_retirement + current_year
+                total_inflation_years = years_to_retirement + year
+                withdrawal_amount = base_withdrawal * ((1 + inflation) ** total_inflation_years)
             else:
-                # NOMINAL withdrawal: Keep same amount every year (original behavior)
+                # NOMINAL withdrawal: Keep same amount every year (no adjustment)
                 withdrawal_amount = base_withdrawal
             
             # Apply tax effects to withdrawal
@@ -359,11 +341,13 @@ class MonteCarloSimulator:
         # Calculate average real withdrawal
         avg_real_withdrawal = total_real_withdrawals / withdrawal_count if withdrawal_count > 0 else base_withdrawal
         
-        # Prepare simplified tax details
+        # Prepare corrected tax details
         tax_details = {
             'use_real_withdrawal': use_real_withdrawal,
             'base_withdrawal': base_withdrawal,
-            'final_withdrawal': current_withdrawal if use_real_withdrawal else base_withdrawal,
+            # CORRECTED: Final withdrawal calculation
+            'final_withdrawal': (base_withdrawal * ((1 + inflation) ** (years_to_retirement + years_retired - 1)) 
+                               if use_real_withdrawal and years_retired > 0 else base_withdrawal),
             'effective_tax_rate': effective_tax_rate,
             'total_years_with_withdrawals': withdrawal_count
         }
@@ -407,13 +391,11 @@ class MonteCarloSimulator:
         return stats
     
     def get_tax_analysis(self) -> Dict:
-        """Get simplified tax analysis from simulation results"""
+        """Get tax analysis from simulation results"""
         if not self.results or 'tax_details' not in self.results:
             return {}
         
         tax_data = self.results['tax_details']
-        
-        # Filter out empty tax details
         valid_tax_data = [detail for detail in tax_data if detail]
         
         if not valid_tax_data:
@@ -423,11 +405,9 @@ class MonteCarloSimulator:
         has_enhanced_details = any('total_taxes_paid' in detail for detail in valid_tax_data)
         
         if has_enhanced_details:
-            # Calculate enhanced tax statistics
             total_taxes_paid = [detail.get('total_taxes_paid', 0) for detail in valid_tax_data]
             total_withdrawals = [detail.get('total_withdrawals', 0) for detail in valid_tax_data]
             
-            # Calculate effective tax rates
             effective_tax_rates = []
             for i, detail in enumerate(valid_tax_data):
                 if total_withdrawals[i] > 0:
@@ -458,7 +438,6 @@ class MonteCarloSimulator:
                 }
             }
         else:
-            # Simplified tax analysis
             effective_rates = [detail.get('effective_tax_rate', 0) * 100 for detail in valid_tax_data]
             
             return {
