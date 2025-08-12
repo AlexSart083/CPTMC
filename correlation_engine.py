@@ -1,5 +1,6 @@
 """
-Enhanced Monte Carlo simulation engine with asset correlation support
+Enhanced Monte Carlo simulation engine with asset correlation support - FIXED VERSION
+CORRECTED: Eliminati tutti i problemi di calcolo che causavano successo rate troppo alti
 """
 
 import numpy as np
@@ -8,7 +9,7 @@ from translations import get_text
 
 
 class CorrelatedMonteCarloSimulator:
-    """Monte Carlo simulation engine with asset correlation support"""
+    """Monte Carlo simulation engine with asset correlation support - FIXED"""
     
     def __init__(self):
         self.results = None
@@ -134,9 +135,9 @@ class CorrelatedMonteCarloSimulator:
                                       initial_amount, years_to_retirement, years_retired,
                                       annual_contribution, adjust_contribution_inflation,
                                       inflation, withdrawal, capital_gains_tax_rate, 
-                                      n_simulations, progress_bar=None, status_text=None, lang='en'):
+                                      n_simulations, use_real_withdrawal=True, progress_bar=None, status_text=None, lang='en'):
         """
-        Run Monte Carlo simulation with correlated asset returns
+        Run Monte Carlo simulation with correlated asset returns - FIXED VERSION
         """
         
         # Prepare asset data
@@ -201,15 +202,15 @@ class CorrelatedMonteCarloSimulator:
                 if status_text:
                     status_text.text(get_text('simulation_step', lang).format(sim + 1, n_simulations))
             
-            # Run single simulation with correlation
-            result = self._run_single_simulation_with_correlation(
+            # Run single simulation with correlation - FIXED
+            result = self._run_single_simulation_with_correlation_fixed(
                 acc_mean_returns, acc_volatilities, acc_allocations, acc_min_returns, 
                 acc_max_returns, acc_ters, acc_correlation_matrix,
                 ret_mean_returns, ret_volatilities, ret_allocations, ret_min_returns, 
                 ret_max_returns, ret_ters, ret_correlation_matrix,
                 initial_amount, years_to_retirement, years_retired,
                 annual_contribution, adjust_contribution_inflation, inflation, withdrawal, 
-                capital_gains_tax_rate
+                capital_gains_tax_rate, use_real_withdrawal
             )
             
             accumulation_balances.append(result['accumulation_real'])
@@ -229,32 +230,33 @@ class CorrelatedMonteCarloSimulator:
             'accumulation_nominal': accumulation_balances_nominal,
             'final': final_results,
             'real_withdrawal': real_withdrawal_amounts,
-            'tax_details': detailed_tax_results
+            'tax_details': detailed_tax_results,
+            'use_real_withdrawal': use_real_withdrawal
         }
         
         return self.results
     
-    def _run_single_simulation_with_correlation(self, acc_mean_returns, acc_volatilities, acc_allocations, 
+    def _run_single_simulation_with_correlation_fixed(self, acc_mean_returns, acc_volatilities, acc_allocations, 
                                               acc_min_returns, acc_max_returns, acc_ters, acc_correlation_matrix,
                                               ret_mean_returns, ret_volatilities, ret_allocations,
                                               ret_min_returns, ret_max_returns, ret_ters, ret_correlation_matrix,
                                               initial_amount, years_to_retirement, years_retired, 
                                               annual_contribution, adjust_contribution_inflation, 
-                                              inflation, withdrawal, capital_gains_tax_rate):
-        """Run a single simulation with correlated returns"""
+                                              inflation, base_withdrawal, capital_gains_tax_rate, use_real_withdrawal):
+        """Run a single simulation with correlated returns - FIXED VERSION"""
         
         try:
             from tax_engine import EnhancedTaxEngine
         except ImportError:
             # Fallback to simple method if tax_engine is not available
-            return self._run_single_simulation_simple_with_correlation(
+            return self._run_single_simulation_simple_with_correlation_fixed(
                 acc_mean_returns, acc_volatilities, acc_allocations, acc_min_returns, 
                 acc_max_returns, acc_ters, acc_correlation_matrix,
                 ret_mean_returns, ret_volatilities, ret_allocations, ret_min_returns, 
                 ret_max_returns, ret_ters, ret_correlation_matrix,
                 initial_amount, years_to_retirement, years_retired,
-                annual_contribution, adjust_contribution_inflation, inflation, withdrawal, 
-                capital_gains_tax_rate
+                annual_contribution, adjust_contribution_inflation, inflation, base_withdrawal, 
+                capital_gains_tax_rate, use_real_withdrawal
             )
         
         # Initialize tax engine
@@ -308,11 +310,13 @@ class CorrelatedMonteCarloSimulator:
             int(years_retired)
         )
         
-        # Retirement phase with correlated returns
+        # FIXED: Retirement phase with corrected withdrawal calculations
         annual_taxes_paid = []
         annual_net_withdrawals = []
         annual_gross_withdrawals = []
         annual_capital_gains = []
+        total_real_withdrawals = 0
+        withdrawal_count = 0
         
         for year in range(int(years_retired)):
             # Use pre-generated correlated returns for this year
@@ -330,8 +334,8 @@ class CorrelatedMonteCarloSimulator:
             annual_return_nominal = sum(net_returns[i] * ret_allocations[i] 
                                       for i in range(len(net_returns)))
             
-            # Calculate real return
-            annual_return_real = annual_return_nominal - inflation
+            # FIXED: Calculate real return correctly
+            annual_return_real = (1 + annual_return_nominal) / (1 + inflation) - 1
             
             # Apply returns to portfolio
             tax_engine.apply_returns(annual_return_real, years_to_retirement + year + 1)
@@ -343,8 +347,18 @@ class CorrelatedMonteCarloSimulator:
             if current_portfolio_value <= 0:
                 break
             
-            # Calculate withdrawal amount
-            actual_withdrawal_amount = min(withdrawal, current_portfolio_value)
+            # FIXED: Calculate withdrawal amount based on real vs nominal choice (same logic as simulation_engine.py)
+            if use_real_withdrawal:
+                # REAL withdrawal: Maintain constant purchasing power
+                # Total inflation years from today = years_to_retirement + current_year
+                total_inflation_years = years_to_retirement + year
+                withdrawal_amount = base_withdrawal * ((1 + inflation) ** total_inflation_years)
+            else:
+                # NOMINAL withdrawal: Keep same amount every year (no adjustment)
+                withdrawal_amount = base_withdrawal
+            
+            # Limit to available portfolio
+            actual_withdrawal_amount = min(withdrawal_amount, current_portfolio_value)
             
             # Execute withdrawal with tax calculation
             withdrawal_result = tax_engine.calculate_withdrawal_tax(actual_withdrawal_amount)
@@ -353,6 +367,10 @@ class CorrelatedMonteCarloSimulator:
             annual_net_withdrawals.append(withdrawal_result['net_withdrawal'])
             annual_taxes_paid.append(withdrawal_result['taxes_owed'])
             annual_capital_gains.append(withdrawal_result['capital_gains'])
+            
+            # Track withdrawals for statistics
+            total_real_withdrawals += withdrawal_result['net_withdrawal']
+            withdrawal_count += 1
             
             # Check if portfolio is depleted
             final_status = tax_engine.get_portfolio_status()
@@ -364,7 +382,7 @@ class CorrelatedMonteCarloSimulator:
         final_portfolio_value = final_status['total_portfolio_value']
         
         # Calculate average real withdrawal
-        avg_real_withdrawal = np.mean(annual_net_withdrawals) if annual_net_withdrawals else withdrawal
+        avg_real_withdrawal = total_real_withdrawals / withdrawal_count if withdrawal_count > 0 else base_withdrawal
         
         # Prepare tax details
         tax_details = {
@@ -373,7 +391,11 @@ class CorrelatedMonteCarloSimulator:
             'total_taxes_paid': final_status['total_taxes_paid'],
             'total_capital_gains_realized': final_status.get('total_capital_gains_realized', 0),
             'average_annual_tax': np.mean(annual_taxes_paid) if annual_taxes_paid else 0,
-            'total_years_with_withdrawals': len(annual_taxes_paid)
+            'total_years_with_withdrawals': len(annual_taxes_paid),
+            'use_real_withdrawal': use_real_withdrawal,
+            'base_withdrawal': base_withdrawal,
+            'final_withdrawal': (base_withdrawal * ((1 + inflation) ** (years_to_retirement + years_retired - 1)) 
+                               if use_real_withdrawal and years_retired > 0 else base_withdrawal)
         }
         
         return {
@@ -384,14 +406,14 @@ class CorrelatedMonteCarloSimulator:
             'tax_details': tax_details
         }
     
-    def _run_single_simulation_simple_with_correlation(self, acc_mean_returns, acc_volatilities, acc_allocations, 
+    def _run_single_simulation_simple_with_correlation_fixed(self, acc_mean_returns, acc_volatilities, acc_allocations, 
                                                      acc_min_returns, acc_max_returns, acc_ters, acc_correlation_matrix,
                                                      ret_mean_returns, ret_volatilities, ret_allocations,
                                                      ret_min_returns, ret_max_returns, ret_ters, ret_correlation_matrix,
                                                      initial_amount, years_to_retirement, years_retired, 
                                                      annual_contribution, adjust_contribution_inflation, 
-                                                     inflation, withdrawal, capital_gains_tax_rate):
-        """Simplified simulation with correlation (fallback method)"""
+                                                     inflation, base_withdrawal, capital_gains_tax_rate, use_real_withdrawal):
+        """Simplified simulation with correlation - FIXED VERSION"""
         
         balance_nominal = initial_amount
         total_deposited = initial_amount
@@ -430,8 +452,6 @@ class CorrelatedMonteCarloSimulator:
         
         tax_rate_decimal = capital_gains_tax_rate / 100
         effective_tax_rate = tax_rate_decimal * capital_gains_percentage
-        real_withdrawal_multiplier = 1 - effective_tax_rate
-        real_withdrawal = withdrawal * real_withdrawal_multiplier
         
         # Generate correlated returns for retirement phase
         ret_correlated_returns = self._generate_correlated_returns(
@@ -439,8 +459,11 @@ class CorrelatedMonteCarloSimulator:
             int(years_retired)
         )
         
-        # Retirement phase
+        # FIXED: Retirement phase with same logic as simulation_engine.py
         balance = balance_real
+        total_real_withdrawals = 0
+        withdrawal_count = 0
+        
         for year in range(int(years_retired)):
             if year < len(ret_correlated_returns):
                 annual_returns = ret_correlated_returns[year]
@@ -449,27 +472,59 @@ class CorrelatedMonteCarloSimulator:
                                 for i in range(len(ret_mean_returns))]
             
             capped_returns = [max(min(annual_returns[i], ret_max_returns[i]), ret_min_returns[i]) 
-                            for i in range(len(annual_returns))]
+                            for i in range(len(ret_mean_returns))]
             net_returns = [capped_returns[i] - ret_ters[i] for i in range(len(capped_returns))]
             annual_return_nominal = sum(net_returns[i] * ret_allocations[i] 
                                       for i in range(len(net_returns)))
             
-            annual_return_real = annual_return_nominal - inflation
+            # FIXED: Calculate real return correctly
+            annual_return_real = (1 + annual_return_nominal) / (1 + inflation) - 1
+            
             balance *= (1 + annual_return_real)
-            balance -= real_withdrawal
+            
+            # FIXED: Calculate withdrawal amount based on real vs nominal choice (same logic as simulation_engine.py)
+            if use_real_withdrawal:
+                # REAL withdrawal: Maintain constant purchasing power
+                # Total inflation years from today = years_to_retirement + current_year
+                total_inflation_years = years_to_retirement + year
+                withdrawal_amount = base_withdrawal * ((1 + inflation) ** total_inflation_years)
+            else:
+                # NOMINAL withdrawal: Keep same amount every year (no adjustment)
+                withdrawal_amount = base_withdrawal
+            
+            # Apply tax effects to withdrawal
+            real_withdrawal_multiplier = 1 - effective_tax_rate
+            after_tax_withdrawal = withdrawal_amount * real_withdrawal_multiplier
+            
+            balance -= after_tax_withdrawal
+            
+            # Track withdrawals for statistics
+            total_real_withdrawals += after_tax_withdrawal
+            withdrawal_count += 1
             
             if balance < 0:
                 balance = 0
                 break
         
+        # Calculate average real withdrawal
+        avg_real_withdrawal = total_real_withdrawals / withdrawal_count if withdrawal_count > 0 else base_withdrawal
+        
         return {
             'accumulation_nominal': accumulation_nominal,
             'accumulation_real': accumulation_real,
             'final': balance,
-            'real_withdrawal': real_withdrawal,
-            'tax_details': {}
+            'real_withdrawal': avg_real_withdrawal,
+            'tax_details': {
+                'use_real_withdrawal': use_real_withdrawal,
+                'base_withdrawal': base_withdrawal,
+                'final_withdrawal': (base_withdrawal * ((1 + inflation) ** (years_to_retirement + years_retired - 1)) 
+                                   if use_real_withdrawal and years_retired > 0 else base_withdrawal),
+                'effective_tax_rate': effective_tax_rate,
+                'total_years_with_withdrawals': withdrawal_count
+            }
         }
     
+    # Include all the other methods from the original class
     def get_correlation_matrix(self):
         """Get the current correlation matrix"""
         return self.correlation_matrix
