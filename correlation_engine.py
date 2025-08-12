@@ -131,6 +131,20 @@ class CorrelatedMonteCarloSimulator:
         
         return correlated_returns
     
+    def run_simulation(self, accumulation_assets, retirement_assets, initial_amount, years_to_retirement, 
+                      years_retired, annual_contribution, adjust_contribution_inflation,
+                      inflation, withdrawal, capital_gains_tax_rate, n_simulations,
+                      use_real_withdrawal=True, progress_bar=None, status_text=None, lang='en'):
+        """
+        Standard interface compatible with MonteCarloSimulator - delegates to correlation version
+        """
+        return self.run_simulation_with_correlation(
+            accumulation_assets, retirement_assets, initial_amount, years_to_retirement, 
+            years_retired, annual_contribution, adjust_contribution_inflation,
+            inflation, withdrawal, capital_gains_tax_rate, n_simulations, 
+            use_real_withdrawal, progress_bar, status_text, lang
+        )
+
     def run_simulation_with_correlation(self, accumulation_assets, retirement_assets, 
                                       initial_amount, years_to_retirement, years_retired,
                                       annual_contribution, adjust_contribution_inflation,
@@ -196,10 +210,10 @@ class CorrelatedMonteCarloSimulator:
         real_withdrawal_amounts = []
         
         for sim in range(n_simulations):
-            # Update progress
+            # Update progress with safe status_text handling
             if progress_bar and sim % 100 == 0:
                 progress_bar.progress((sim + 1) / n_simulations)
-                if status_text:
+                if status_text and hasattr(status_text, 'text'):
                     status_text.text(get_text('simulation_step', lang).format(sim + 1, n_simulations))
             
             # Run single simulation with correlation - FIXED
@@ -219,10 +233,10 @@ class CorrelatedMonteCarloSimulator:
             detailed_tax_results.append(result['tax_details'])
             real_withdrawal_amounts.append(result.get('real_withdrawal', withdrawal))
         
-        # Update final progress
+        # Update final progress with safe status_text handling
         if progress_bar:
             progress_bar.progress(1.0)
-            if status_text:
+            if status_text and hasattr(status_text, 'text'):
                 status_text.text(get_text('simulation_completed', lang))
         
         self.results = {
@@ -555,3 +569,68 @@ class CorrelatedMonteCarloSimulator:
         
         stats['success_rate'] = self.calculate_success_rate()
         return stats
+
+    def get_tax_analysis(self) -> Dict:
+        """Get tax analysis from simulation results - compatible with simulation_engine.py"""
+        if not self.results or 'tax_details' not in self.results:
+            return {}
+        
+        tax_data = self.results['tax_details']
+        valid_tax_data = [detail for detail in tax_data if detail]
+        
+        if not valid_tax_data:
+            return {}
+        
+        # Check if we have enhanced tax details
+        has_enhanced_details = any('total_taxes_paid' in detail for detail in valid_tax_data)
+        
+        if has_enhanced_details:
+            total_taxes_paid = [detail.get('total_taxes_paid', 0) for detail in valid_tax_data]
+            total_withdrawals = [detail.get('total_withdrawals', 0) for detail in valid_tax_data]
+            
+            effective_tax_rates = []
+            for i, detail in enumerate(valid_tax_data):
+                if total_withdrawals[i] > 0:
+                    effective_rate = (detail.get('total_taxes_paid', 0) / total_withdrawals[i]) * 100
+                    effective_tax_rates.append(effective_rate)
+                else:
+                    effective_tax_rates.append(0.0)
+            
+            return {
+                'total_taxes_statistics': {
+                    'mean': np.mean(total_taxes_paid),
+                    'median': np.percentile(total_taxes_paid, 50),
+                    'min': np.min(total_taxes_paid),
+                    'max': np.max(total_taxes_paid),
+                    'std': np.std(total_taxes_paid)
+                },
+                'effective_tax_rate_statistics': {
+                    'mean': np.mean(effective_tax_rates),
+                    'median': np.percentile(effective_tax_rates, 50),
+                    'min': np.min(effective_tax_rates),
+                    'max': np.max(effective_tax_rates),
+                    'std': np.std(effective_tax_rates)
+                },
+                'withdrawal_info': {
+                    'use_real_withdrawal': valid_tax_data[0].get('use_real_withdrawal', False),
+                    'base_withdrawal': valid_tax_data[0].get('base_withdrawal', 0),
+                    'avg_final_withdrawal': np.mean([detail.get('final_withdrawal', 0) for detail in valid_tax_data])
+                }
+            }
+        else:
+            effective_rates = [detail.get('effective_tax_rate', 0) * 100 for detail in valid_tax_data]
+            
+            return {
+                'effective_tax_rate_statistics': {
+                    'mean': np.mean(effective_rates),
+                    'median': np.percentile(effective_rates, 50),
+                    'min': np.min(effective_rates),
+                    'max': np.max(effective_rates),
+                    'std': np.std(effective_rates)
+                },
+                'withdrawal_info': {
+                    'use_real_withdrawal': valid_tax_data[0].get('use_real_withdrawal', False),
+                    'base_withdrawal': valid_tax_data[0].get('base_withdrawal', 0),
+                    'avg_final_withdrawal': np.mean([detail.get('final_withdrawal', 0) for detail in valid_tax_data])
+                }
+            }
