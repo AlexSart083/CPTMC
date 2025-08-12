@@ -1,5 +1,6 @@
 """
-Updated UI components with enhanced disclaimers about long-term focus, return assumptions, and correlation limitations
+Updated UI components with enhanced disclaimers and REAL withdrawal option
+MODIFIED VERSION - Added real withdrawal functionality
 """
 
 import streamlit as st
@@ -10,7 +11,7 @@ from translations import get_text, get_profile_names, get_asset_names
 
 
 class UIComponents:
-    """Collection of reusable UI components with enhanced disclaimers"""
+    """Collection of reusable UI components with enhanced disclaimers and real withdrawal"""
     
     @staticmethod
     def render_language_selector(lang):
@@ -52,6 +53,10 @@ class UIComponents:
             st.markdown(get_text('correlation_disclaimer', lang))
             st.markdown(get_text('correlation_text', lang))
             
+            # NEW: Real withdrawal explanation
+            st.markdown(get_text('real_withdrawal_disclaimer', lang))
+            st.markdown(get_text('real_withdrawal_text', lang))
+            
             # Data information
             st.markdown(get_text('data_info', lang))
             st.markdown(get_text('data_text', lang))
@@ -59,7 +64,7 @@ class UIComponents:
     
     @staticmethod
     def render_general_parameters(lang):
-        """Render general parameters in sidebar including tax rate"""
+        """Render general parameters in sidebar including tax rate and REAL withdrawal options"""
         st.subheader(get_text('general_parameters', lang))
         
         params = {}
@@ -88,10 +93,37 @@ class UIComponents:
             get_text('inflation', lang), 
             value=2.5, min_value=0.0, max_value=10.0, step=0.1, format="%.2f"
         )
-        params['withdrawal'] = st.number_input(
-            get_text('withdrawal', lang), 
-            value=12000.0, min_value=0.0, step=500.0
+        
+        # MODIFIED: Real withdrawal section with explanation
+        st.markdown("---")
+        st.markdown("**💰 " + get_text('withdrawal_section_title', lang) + "**")
+        
+        # NEW: Real withdrawal toggle
+        params['use_real_withdrawal'] = st.checkbox(
+            get_text('use_real_withdrawal', lang),
+            value=True,  # Default to True for better user experience
+            help=get_text('use_real_withdrawal_help', lang)
         )
+        
+        # Withdrawal amount input with dynamic label
+        if params['use_real_withdrawal']:
+            withdrawal_label = get_text('real_withdrawal_amount', lang)
+            withdrawal_help = get_text('real_withdrawal_help', lang)
+        else:
+            withdrawal_label = get_text('nominal_withdrawal_amount', lang)
+            withdrawal_help = get_text('nominal_withdrawal_help', lang)
+        
+        params['withdrawal'] = st.number_input(
+            withdrawal_label, 
+            value=12000.0, min_value=0.0, step=500.0,
+            help=withdrawal_help
+        )
+        
+        # Show withdrawal explanation
+        if params['use_real_withdrawal']:
+            st.info(get_text('real_withdrawal_explanation', lang))
+        else:
+            st.warning(get_text('nominal_withdrawal_explanation', lang))
         
         # Capital gains tax rate parameter
         params['capital_gains_tax_rate'] = st.number_input(
