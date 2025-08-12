@@ -1,6 +1,6 @@
 """
 Monte Carlo Investment Simulator - Main Application
-Complete version with correlation features
+MODIFIED VERSION with REAL withdrawal support
 """
 
 import streamlit as st
@@ -22,7 +22,7 @@ except ImportError:
     print("Correlation modules not available - running in legacy mode")
 
 def main():
-    """Main application function with correlation support"""
+    """Main application function with correlation support and REAL withdrawal"""
     # Initialize session state
     PortfolioManager.initialize_session_state()
     
@@ -87,8 +87,14 @@ def main():
     # Main header
     st.title(get_text('main_title', lang))
     
-    # Enhanced disclaimers section
+    # Enhanced disclaimers section with real withdrawal info
     UIComponents.render_disclaimers(lang)
+    
+    # NEW: Real withdrawal explanation banner
+    st.info("🆕 **" + ("Nuova Funzionalità" if lang == 'it' else "New Feature") + "**: " + 
+            ("Questa versione supporta prelievi REALI che mantengono il potere d'acquisto aggiustandosi per l'inflazione!" 
+             if lang == 'it' else 
+             "This version supports REAL withdrawals that maintain purchasing power by adjusting for inflation!"))
     
     # Correlation methodology explanation (if available)
     if CORRELATION_AVAILABLE and enhanced_features:
@@ -130,7 +136,7 @@ def main():
     with st.sidebar:
         st.header(get_text('simulation_parameters', lang))
         
-        # General parameters
+        # MODIFIED: General parameters now include real withdrawal options
         params = UIComponents.render_general_parameters(lang)
         
         # CORRELATION SETTINGS SECTION
@@ -429,13 +435,14 @@ def main():
                                 params['withdrawal'],
                                 params['capital_gains_tax_rate'],
                                 params['n_simulations'],
+                                params['use_real_withdrawal'],  # NEW: Pass real withdrawal flag
                                 progress_bar, 
                                 status_text, 
                                 lang
                             )
                             simulation_method = "standard"
                     else:
-                        # Standard simulation without correlation
+                        # Standard simulation without correlation - MODIFIED to include real withdrawal
                         results = simulator.run_simulation(
                             active_accumulation_assets,
                             active_retirement_assets,
@@ -448,6 +455,7 @@ def main():
                             params['withdrawal'],
                             params['capital_gains_tax_rate'],
                             params['n_simulations'],
+                            params['use_real_withdrawal'],  # NEW: Pass real withdrawal flag
                             progress_bar, 
                             status_text, 
                             lang
@@ -471,6 +479,12 @@ def main():
                     else:
                         st.info("ℹ️ " + ("Simulazione completata senza correlazione (asset indipendenti)" if lang == 'it' else "Simulation completed without correlation (independent assets)"))
                     
+                    # NEW: Show withdrawal method used
+                    if params['use_real_withdrawal']:
+                        st.success("💰 " + ("Utilizzato prelievo REALE (aggiustato per inflazione)" if lang == 'it' else "Used REAL withdrawal (inflation-adjusted)"))
+                    else:
+                        st.info("💰 " + ("Utilizzato prelievo NOMINALE (importo fisso)" if lang == 'it' else "Used NOMINAL withdrawal (fixed amount)"))
+                    
                     # Display results
                     ResultsDisplay.show_results(
                         results, 
@@ -482,6 +496,7 @@ def main():
                         params['capital_gains_tax_rate'],
                         params['withdrawal'],
                         params['inflation'],
+                        params['use_real_withdrawal'],  # NEW: Pass real withdrawal flag to results
                         lang
                     )
                     
