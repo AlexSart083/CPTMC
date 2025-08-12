@@ -1,6 +1,6 @@
 """
 Enhanced results display components with simplified tax analysis and new chart types
-FIXED VERSION - Corrected final real values calculation
+MODIFIED VERSION - Shows only nominal values for median accumulation and median final
 """
 
 import streamlit as st
@@ -41,7 +41,7 @@ class ResultsDisplay:
     @staticmethod
     def show_results(results, simulator, total_deposited, n_simulations, years_to_retirement, 
                     years_retired, capital_gains_tax_rate, nominal_withdrawal, inflation_rate, lang):
-        """Display simplified simulation results with enhanced charts"""
+        """Display simplified simulation results with enhanced charts - SHOWING ONLY NOMINAL VALUES"""
         st.markdown("---")
         st.header(get_text('simulation_results', lang))
         
@@ -49,20 +49,15 @@ class ResultsDisplay:
         accumulation_balances_nominal = results['accumulation_nominal']
         final_results = results['final']
         
-        # FIXED: Calculate final results in real terms (adjusted for inflation)
-        # The inflation_rate is passed as percentage (e.g., 2.5), so we need to divide by 100
+        # MODIFIED: Calculate final results in real terms (for internal calculations and charts)
         inflation_decimal = inflation_rate / 100 if inflation_rate > 1 else inflation_rate
-        
-        # Total inflation factor over the entire period (accumulation + retirement)
         total_inflation_factor = (1 + inflation_decimal) ** (years_to_retirement + years_retired)
-        
-        # Convert final results to real terms
         final_results_real = [value / total_inflation_factor for value in final_results]
         
         # Get statistics
         stats = simulator.get_statistics()
         
-        # Add real final values statistics
+        # Add real final values statistics (for charts only)
         stats['final_real'] = {
             'mean': np.mean(final_results_real),
             'median': np.percentile(final_results_real, 50),
@@ -72,10 +67,10 @@ class ResultsDisplay:
             'p90': np.percentile(final_results_real, 90)
         }
         
-        # Display key metrics
-        ResultsDisplay._show_key_metrics(
-            total_deposited, stats['accumulation']['median'], 
-            stats['accumulation']['median'], stats['success_rate'], lang
+        # MODIFIED: Display key metrics using NOMINAL values only
+        ResultsDisplay._show_key_metrics_nominal_only(
+            total_deposited, stats['accumulation_nominal']['median'], 
+            stats['final']['median'], stats['success_rate'], lang
         )
         
         # Display simplified tax impact analysis
@@ -98,16 +93,20 @@ class ResultsDisplay:
         ResultsDisplay._show_success_message(stats['success_rate'], lang)
     
     @staticmethod
-    def _show_key_metrics(total_deposited, median_accumulation, median_final, success_rate, lang):
-        """Display key metrics in columns"""
+    def _show_key_metrics_nominal_only(total_deposited, median_accumulation_nominal, median_final_nominal, success_rate, lang):
+        """Display key metrics in columns - SHOWING ONLY NOMINAL VALUES"""
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
             st.metric(get_text('total_deposited', lang), f"€{total_deposited:,.0f}")
         with col2:
-            st.metric(get_text('median_accumulation', lang), f"€{median_accumulation:,.0f}")
+            # MODIFIED: Show nominal accumulation value with updated label
+            label_nominal = get_text('median_accumulation', lang) + " (Nominale)" if lang == 'it' else get_text('median_accumulation', lang) + " (Nominal)"
+            st.metric(label_nominal, f"€{median_accumulation_nominal:,.0f}")
         with col3:
-            st.metric(get_text('median_final', lang), f"€{median_final:,.0f}")
+            # MODIFIED: Show nominal final value with updated label
+            label_final_nominal = get_text('median_final', lang) + " (Nominale)" if lang == 'it' else get_text('median_final', lang) + " (Nominal)"
+            st.metric(label_final_nominal, f"€{median_final_nominal:,.0f}")
         with col4:
             st.metric(get_text('success_rate', lang), f"{success_rate:.1f}%")
     
