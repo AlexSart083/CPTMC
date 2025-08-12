@@ -1,5 +1,6 @@
 """
-Updated translations with enhanced disclaimers about long-term focus, return assumptions, and correlation limitations
+Updated translations with enhanced disclaimers and REAL withdrawal functionality
+MODIFIED VERSION - Added real withdrawal translations
 """
 
 TRANSLATIONS = {
@@ -27,6 +28,11 @@ TRANSLATIONS = {
         'returns_text': 'The default return parameters are examples based on realistic historical data that the developer considers reasonable. However, these are fully customizable by the user. All return assumptions should be carefully reviewed and adjusted based on your own research and expectations.',
         'correlation_disclaimer': '**Asset Correlation Limitations:**',
         'correlation_text': 'This simulation does not model correlations between different asset classes. Asset correlations are extremely difficult to parametrize accurately due to their dynamic nature and the numerous variables and unknowns involved. Each asset is simulated independently, which may not reflect real-world portfolio behavior during market stress events.',
+        
+        # NEW: Real withdrawal disclaimer
+        'real_withdrawal_disclaimer': '**Real vs Nominal Withdrawal:**',
+        'real_withdrawal_text': 'This app now supports REAL withdrawal amounts that maintain purchasing power by adjusting for inflation annually. If you select a €12,000 real withdrawal, you will maintain €12,000 of today\'s purchasing power throughout retirement. With nominal withdrawals, the purchasing power decreases over time due to inflation.',
+        
         'data_info': '**Data Information:**',
         'data_text': 'The returns are based on global and european market data from the last 30 years. Data may be inaccurate or outdated and should be used for educational purposes only.',        
         
@@ -40,6 +46,18 @@ TRANSLATIONS = {
         'adjust_contribution_inflation': '📈 Adjust contribution for inflation',
         'adjust_contribution_inflation_help': 'If checked, the annual contribution will increase each year by the inflation rate. If unchecked, the contribution remains fixed.',
         'inflation': 'Annual inflation (%)',
+        
+        # NEW: Real withdrawal parameters
+        'withdrawal_section_title': 'Retirement Withdrawal Settings',
+        'use_real_withdrawal': '🔄 Use REAL withdrawal (recommended)',
+        'use_real_withdrawal_help': 'If checked, withdrawal amount maintains constant purchasing power by adjusting for inflation. If unchecked, uses fixed nominal amount that loses purchasing power over time.',
+        'real_withdrawal_amount': 'Annual REAL withdrawal (€ in today\'s purchasing power)',
+        'real_withdrawal_help': 'This amount will be adjusted annually for inflation to maintain constant purchasing power. Example: €12,000 today becomes €12,300 next year with 2.5% inflation.',
+        'nominal_withdrawal_amount': 'Annual NOMINAL withdrawal (€ fixed amount)',
+        'nominal_withdrawal_help': 'This exact amount will be withdrawn every year without inflation adjustment. The purchasing power will decrease over time.',
+        'real_withdrawal_explanation': '✅ **Real withdrawal selected**: Your purchasing power will remain constant throughout retirement. The actual euro amount will increase each year to compensate for inflation.',
+        'nominal_withdrawal_explanation': '⚠️ **Nominal withdrawal selected**: The euro amount remains fixed, but your purchasing power will decrease over time due to inflation. After 25 years with 2.5% inflation, €12,000 will have the purchasing power of €6,473 today.',
+        
         'withdrawal': 'Annual withdrawal in retirement (€)',
         'capital_gains_tax_rate': '💰 Capital gains tax rate (%)',
         'capital_gains_tax_help': 'Tax rate applied to capital gains portion of withdrawals. The effective withdrawal amount will be reduced based on the capital gains percentage in your portfolio.',
@@ -103,7 +121,7 @@ TRANSLATIONS = {
         'median_accumulation': '📈 Median Accumulation Value',
         'median_final': '✨ Median Final Value',
         'success_rate': '✅ Success Rate',
-        'real_withdrawal_amount': '💸 Real Withdrawal Amount (After Tax)',
+        'real_withdrawal_amount_result': '💸 Real Withdrawal Amount (After Tax)',
         'accumulation_phase': '📊 Accumulation Phase (With Inflation)',
         'accumulation_phase_real': '📊 Accumulation Phase (With Inflation)',
         'accumulation_phase_nominal': '💰 Accumulation Phase (Without Inflation)',
@@ -144,7 +162,7 @@ TRANSLATIONS = {
         'warning_success': '❌ Warning! Only {:.1f}% probability of success. Charity awaits you.',
         
         # Footer
-        'footer': 'Created by AS with the supervision of KIM',
+        'footer': 'Created by AS with the supervision of KIM - Modified with Real Withdrawal Support',
         
         # Config errors
         'config_not_found': '❌ Configuration file \'{}\' not found!',
@@ -176,6 +194,11 @@ TRANSLATIONS = {
         'returns_text': 'I parametri di rendimento predefiniti sono esempi basati su dati storici realistici che lo sviluppatore considera ragionevoli. Tuttavia, questi sono completamente personalizzabili dall\'utente. Tutte le assunzioni sui rendimenti dovrebbero essere attentamente riviste e adattate in base alla propria ricerca e alle proprie aspettative.',
         'correlation_disclaimer': '**Limitazioni sulla Correlazione tra Asset:**',
         'correlation_text': 'Questa simulazione non modella le correlazioni tra le diverse classi di asset. Le correlazioni tra asset sono estremamente difficili da parametrizzare accuratamente a causa della loro natura dinamica e delle numerose variabili e incognite coinvolte. Ogni asset viene simulato indipendentemente, il che potrebbe non riflettere il comportamento reale del portafoglio durante eventi di stress di mercato.',
+        
+        # NEW: Real withdrawal disclaimer
+        'real_withdrawal_disclaimer': '**Prelievi Reali vs Nominali:**',
+        'real_withdrawal_text': 'Questa app ora supporta importi di prelievo REALI che mantengono il potere d\'acquisto aggiustandosi annualmente all\'inflazione. Se selezioni un prelievo reale di €12.000, manterrai €12.000 di potere d\'acquisto di oggi per tutta la pensione. Con prelievi nominali, il potere d\'acquisto diminuisce nel tempo a causa dell\'inflazione.',
+        
         'data_info': '**Informazioni sui Dati:**',
         'data_text': 'I rendimenti sono basati su dati di mercato globali ed europei degli ultimi 30 anni. I dati potrebbero essere imprecisi o obsoleti e dovrebbero essere utilizzati solo a scopo educativo.',
 
@@ -189,6 +212,18 @@ TRANSLATIONS = {
         'adjust_contribution_inflation': '📈 Aggiusta contributo per inflazione',
         'adjust_contribution_inflation_help': 'Se selezionato, il contributo annuale aumenterà ogni anno del tasso di inflazione. Se non selezionato, il contributo rimane fisso.',
         'inflation': 'Inflazione annuale (%)',
+        
+        # NEW: Real withdrawal parameters
+        'withdrawal_section_title': 'Impostazioni Prelievi Pensione',
+        'use_real_withdrawal': '🔄 Usa prelievo REALE (raccomandato)',
+        'use_real_withdrawal_help': 'Se selezionato, l\'importo del prelievo mantiene potere d\'acquisto costante aggiustandosi per l\'inflazione. Se non selezionato, usa un importo nominale fisso che perde potere d\'acquisto nel tempo.',
+        'real_withdrawal_amount': 'Prelievo annuale REALE (€ in potere d\'acquisto di oggi)',
+        'real_withdrawal_help': 'Questo importo sarà aggiustato annualmente per l\'inflazione per mantenere potere d\'acquisto costante. Esempio: €12.000 oggi diventano €12.300 l\'anno prossimo con inflazione 2.5%.',
+        'nominal_withdrawal_amount': 'Prelievo annuale NOMINALE (€ importo fisso)',
+        'nominal_withdrawal_help': 'Questo importo esatto sarà prelevato ogni anno senza aggiustamento per inflazione. Il potere d\'acquisto diminuirà nel tempo.',
+        'real_withdrawal_explanation': '✅ **Prelievo reale selezionato**: Il tuo potere d\'acquisto rimarrà costante durante la pensione. L\'importo effettivo in euro aumenterà ogni anno per compensare l\'inflazione.',
+        'nominal_withdrawal_explanation': '⚠️ **Prelievo nominale selezionato**: L\'importo in euro rimane fisso, ma il tuo potere d\'acquisto diminuirà nel tempo a causa dell\'inflazione. Dopo 25 anni con inflazione 2.5%, €12.000 avranno il potere d\'acquisto di €6.473 di oggi.',
+        
         'withdrawal': 'Prelievo annuale in pensione (€)',
         'capital_gains_tax_rate': '💰 Aliquota tassazione capital gain (%)',
         'capital_gains_tax_help': 'Aliquota fiscale applicata alla porzione di capital gain dei prelievi. L\'importo effettivo del prelievo sarà ridotto in base alla percentuale di capital gain nel portafoglio.',
@@ -252,7 +287,7 @@ TRANSLATIONS = {
         'median_accumulation': '📈 Valore Mediano Accumulo',
         'median_final': '✨ Valore Mediano Finale',
         'success_rate': '✅ Tasso di Successo',
-        'real_withdrawal_amount': '💸 Importo Prelievo Reale (Dopo Tasse)',
+        'real_withdrawal_amount_result': '💸 Importo Prelievo Reale (Dopo Tasse)',
         'accumulation_phase': '📊 Fase di Accumulo (Con Inflazione)',
         'accumulation_phase_real': '📊 Fase di Accumulo (Con Inflazione)',
         'accumulation_phase_nominal': '💰 Fase di Accumulo (Senza Inflazione)',
@@ -293,7 +328,7 @@ TRANSLATIONS = {
         'warning_success': '❌ Attenzione! Solo {:.1f}% di probabilità di successo. La carità ti aspetta.',
         
         # Footer
-        'footer': 'Creato da AS con la supervisione di KIM',
+        'footer': 'Creato da AS con la supervisione di KIM - Modificato con Supporto Prelievi Reali',
         
         # Config errors
         'config_not_found': '❌ File di configurazione \'{}\' non trovato!',
