@@ -1,6 +1,6 @@
 """
-Enhanced results display components with simplified tax analysis and new chart types
-MODIFIED VERSION - Shows only nominal values for median accumulation and median final
+Enhanced results display components with REAL withdrawal support and detailed withdrawal analysis
+MODIFIED VERSION - Added real withdrawal analysis and visualization
 """
 
 import streamlit as st
@@ -12,7 +12,7 @@ from translations import get_text
 
 
 class ResultsDisplay:
-    """Enhanced display of simulation results with simplified tax analysis"""
+    """Enhanced display of simulation results with REAL withdrawal analysis"""
     
     @staticmethod
     def calculate_cagr(final_value, initial_value, years):
@@ -40,8 +40,9 @@ class ResultsDisplay:
     
     @staticmethod
     def show_results(results, simulator, total_deposited, n_simulations, years_to_retirement, 
-                    years_retired, capital_gains_tax_rate, nominal_withdrawal, inflation_rate, lang):
-        """Display simplified simulation results with enhanced charts - SHOWING ONLY NOMINAL VALUES"""
+                    years_retired, capital_gains_tax_rate, nominal_withdrawal, inflation_rate, 
+                    use_real_withdrawal, lang):
+        """Display simulation results with REAL withdrawal analysis"""
         st.markdown("---")
         st.header(get_text('simulation_results', lang))
         
@@ -49,7 +50,7 @@ class ResultsDisplay:
         accumulation_balances_nominal = results['accumulation_nominal']
         final_results = results['final']
         
-        # MODIFIED: Calculate final results in real terms (for internal calculations and charts)
+        # Calculate final results in real terms (for internal calculations and charts)
         inflation_decimal = inflation_rate / 100 if inflation_rate > 1 else inflation_rate
         total_inflation_factor = (1 + inflation_decimal) ** (years_to_retirement + years_retired)
         final_results_real = [value / total_inflation_factor for value in final_results]
@@ -67,10 +68,16 @@ class ResultsDisplay:
             'p90': np.percentile(final_results_real, 90)
         }
         
-        # MODIFIED: Display key metrics using NOMINAL values only
-        ResultsDisplay._show_key_metrics_nominal_only(
+        # Display key metrics
+        ResultsDisplay._show_key_metrics_with_withdrawal_info(
             total_deposited, stats['accumulation_nominal']['median'], 
-            stats['final']['median'], stats['success_rate'], lang
+            stats['final']['median'], stats['success_rate'], 
+            nominal_withdrawal, use_real_withdrawal, inflation_rate, years_retired, lang
+        )
+        
+        # NEW: Display detailed withdrawal analysis
+        ResultsDisplay._show_detailed_withdrawal_analysis(
+            results, nominal_withdrawal, use_real_withdrawal, inflation_rate, years_retired, lang
         )
         
         # Display simplified tax impact analysis
@@ -78,12 +85,12 @@ class ResultsDisplay:
             results, total_deposited, nominal_withdrawal, capital_gains_tax_rate, lang
         )
         
-        # Display enhanced detailed statistics with nominal and real final values
+        # Display enhanced detailed statistics
         ResultsDisplay._show_enhanced_detailed_statistics(
             stats, years_to_retirement, years_retired, total_deposited, inflation_rate, lang
         )
         
-        # Display enhanced charts with scatter plots and real/nominal final values
+        # Display enhanced charts
         ResultsDisplay._show_enhanced_charts_with_scatter(
             accumulation_balances_nominal, accumulation_balances, 
             final_results, final_results_real, lang
@@ -93,76 +100,247 @@ class ResultsDisplay:
         ResultsDisplay._show_success_message(stats['success_rate'], lang)
     
     @staticmethod
-    def _show_key_metrics_nominal_only(total_deposited, median_accumulation_nominal, median_final_nominal, success_rate, lang):
-        """Display key metrics in columns - SHOWING ONLY NOMINAL VALUES"""
+    def _show_key_metrics_with_withdrawal_info(total_deposited, median_accumulation_nominal, 
+                                             median_final_nominal, success_rate, nominal_withdrawal, 
+                                             use_real_withdrawal, inflation_rate, years_retired, lang):
+        """Display key metrics with withdrawal information"""
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
             st.metric(get_text('total_deposited', lang), f"€{total_deposited:,.0f}")
+        
         with col2:
-            # MODIFIED: Show nominal accumulation value with updated label
             label_nominal = get_text('median_accumulation', lang) + " (Nominale)" if lang == 'it' else get_text('median_accumulation', lang) + " (Nominal)"
             st.metric(label_nominal, f"€{median_accumulation_nominal:,.0f}")
+        
         with col3:
-            # MODIFIED: Show nominal final value with updated label
             label_final_nominal = get_text('median_final', lang) + " (Nominale)" if lang == 'it' else get_text('median_final', lang) + " (Nominal)"
             st.metric(label_final_nominal, f"€{median_final_nominal:,.0f}")
+        
         with col4:
             st.metric(get_text('success_rate', lang), f"{success_rate:.1f}%")
+        
+        # NEW: Withdrawal summary section
+        st.markdown("---")
+        st.subheader("💰 " + ("Riassunto Strategia Prelievi" if lang == 'it' else "Withdrawal Strategy Summary"))
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if use_real_withdrawal:
+                st.success("✅ **" + ("Prelievo REALE selezionato" if lang == 'it' else "REAL withdrawal selected") + "**")
+                
+                # Calculate final withdrawal amount
+                final_withdrawal = nominal_withdrawal * ((1 + inflation_rate/100) ** years_retired)
+                
+                st.info(f"""
+                **{"Dettagli Prelievo Reale:" if lang == 'it' else "Real Withdrawal Details:"}**
+                - {"Importo iniziale:" if lang == 'it' else "Initial amount:"} €{nominal_withdrawal:,.0f}
+                - {"Importo finale (anno" if lang == 'it' else "Final amount (year"} {int(years_retired)}): €{final_withdrawal:,.0f}
+                - {"Potere d'acquisto:" if lang == 'it' else "Purchasing power:"} {"Costante" if lang == 'it' else "Constant"} 💪
+                - {"Incremento annuale:" if lang == 'it' else "Annual increase:"} {inflation_rate:.1f}%
+                """)
+            else:
+                st.warning("⚠️ **" + ("Prelievo NOMINALE selezionato" if lang == 'it' else "NOMINAL withdrawal selected") + "**")
+                
+                # Calculate purchasing power loss
+                final_purchasing_power = nominal_withdrawal / ((1 + inflation_rate/100) ** years_retired)
+                purchasing_power_loss = (1 - final_purchasing_power/nominal_withdrawal) * 100
+                
+                st.error(f"""
+                **{"Dettagli Prelievo Nominale:" if lang == 'it' else "Nominal Withdrawal Details:"}**
+                - {"Importo fisso:" if lang == 'it' else "Fixed amount:"} €{nominal_withdrawal:,.0f} {"ogni anno" if lang == 'it' else "every year"}
+                - {"Potere d'acquisto finale:" if lang == 'it' else "Final purchasing power:"} €{final_purchasing_power:,.0f} {"(di oggi)" if lang == 'it' else "(today's value)"}
+                - {"Perdita potere d'acquisto:" if lang == 'it' else "Purchasing power loss:"} {purchasing_power_loss:.1f}% 📉
+                - {"Incremento annuale:" if lang == 'it' else "Annual increase:"} 0% ({"fisso" if lang == 'it' else "fixed"})
+                """)
+        
+        with col2:
+            # Withdrawal progression chart
+            years = list(range(1, int(years_retired) + 1))
+            
+            if use_real_withdrawal:
+                # Real withdrawal progression
+                withdrawal_amounts = [nominal_withdrawal * ((1 + inflation_rate/100) ** year) for year in range(int(years_retired))]
+                purchasing_power = [nominal_withdrawal] * int(years_retired)  # Constant purchasing power
+                
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(
+                    x=years, y=withdrawal_amounts,
+                    mode='lines+markers',
+                    name='Importo Nominale' if lang == 'it' else 'Nominal Amount',
+                    line=dict(color='blue')
+                ))
+                fig.add_trace(go.Scatter(
+                    x=years, y=purchasing_power,
+                    mode='lines+markers',
+                    name='Potere d\'Acquisto' if lang == 'it' else 'Purchasing Power',
+                    line=dict(color='green', dash='dash')
+                ))
+                
+                fig.update_layout(
+                    title="Progressione Prelievo Reale" if lang == 'it' else "Real Withdrawal Progression",
+                    xaxis_title="Anno" if lang == 'it' else "Year",
+                    yaxis_title="Importo (€)" if lang == 'it' else "Amount (€)",
+                    height=300
+                )
+            else:
+                # Nominal withdrawal progression
+                withdrawal_amounts = [nominal_withdrawal] * int(years_retired)  # Fixed amount
+                purchasing_power = [nominal_withdrawal / ((1 + inflation_rate/100) ** year) for year in range(int(years_retired))]
+                
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(
+                    x=years, y=withdrawal_amounts,
+                    mode='lines+markers',
+                    name='Importo Nominale' if lang == 'it' else 'Nominal Amount',
+                    line=dict(color='blue')
+                ))
+                fig.add_trace(go.Scatter(
+                    x=years, y=purchasing_power,
+                    mode='lines+markers',
+                    name='Potere d\'Acquisto' if lang == 'it' else 'Purchasing Power',
+                    line=dict(color='red', dash='dash')
+                ))
+                
+                fig.update_layout(
+                    title="Progressione Prelievo Nominale" if lang == 'it' else "Nominal Withdrawal Progression",
+                    xaxis_title="Anno" if lang == 'it' else "Year",
+                    yaxis_title="Importo (€)" if lang == 'it' else "Amount (€)",
+                    height=300
+                )
+            
+            st.plotly_chart(fig, use_container_width=True)
+    
+    @staticmethod
+    def _show_detailed_withdrawal_analysis(results, base_withdrawal, use_real_withdrawal, 
+                                         inflation_rate, years_retired, lang):
+        """Show detailed analysis of withdrawal strategy over time"""
+        st.subheader("📊 " + ("Analisi Dettagliata Prelievi" if lang == 'it' else "Detailed Withdrawal Analysis"))
+        
+        # Get tax analysis for withdrawal insights
+        tax_analysis = results.get('tax_details', [])
+        valid_tax_details = [detail for detail in tax_analysis if detail and isinstance(detail, dict)]
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Withdrawal strategy comparison table
+            st.markdown("**" + ("Confronto Strategie di Prelievo" if lang == 'it' else "Withdrawal Strategy Comparison") + "**")
+            
+            years_sample = [1, 5, 10, 15, 20, 25]
+            years_sample = [y for y in years_sample if y <= years_retired]
+            
+            comparison_data = []
+            for year in years_sample:
+                if use_real_withdrawal:
+                    nominal_amount = base_withdrawal * ((1 + inflation_rate/100) ** (year-1))
+                    real_value = base_withdrawal  # Constant purchasing power
+                else:
+                    nominal_amount = base_withdrawal  # Fixed amount
+                    real_value = base_withdrawal / ((1 + inflation_rate/100) ** (year-1))
+                
+                comparison_data.append({
+                    ('Anno' if lang == 'it' else 'Year'): year,
+                    ('Importo Nominale (€)' if lang == 'it' else 'Nominal Amount (€)'): f"{nominal_amount:,.0f}",
+                    ('Valore Reale (€)' if lang == 'it' else 'Real Value (€)'): f"{real_value:,.0f}"
+                })
+            
+            df_comparison = pd.DataFrame(comparison_data)
+            st.dataframe(df_comparison, use_container_width=True)
+        
+        with col2:
+            # Additional withdrawal insights
+            st.markdown("**" + ("Insights Strategia Prelievi" if lang == 'it' else "Withdrawal Strategy Insights") + "**")
+            
+            # Calculate total withdrawals over retirement period
+            if use_real_withdrawal:
+                total_nominal_withdrawn = sum(base_withdrawal * ((1 + inflation_rate/100) ** year) 
+                                            for year in range(int(years_retired)))
+                total_real_value = base_withdrawal * years_retired  # Constant purchasing power
+                
+                st.metric(
+                    "Totale Prelevato (Nominale)" if lang == 'it' else "Total Withdrawn (Nominal)",
+                    f"€{total_nominal_withdrawn:,.0f}"
+                )
+                st.metric(
+                    "Valore Reale Totale" if lang == 'it' else "Total Real Value",
+                    f"€{total_real_value:,.0f}"
+                )
+                st.success("✅ " + ("Potere d'acquisto preservato" if lang == 'it' else "Purchasing power preserved"))
+                
+            else:
+                total_nominal_withdrawn = base_withdrawal * years_retired
+                total_real_value = sum(base_withdrawal / ((1 + inflation_rate/100) ** year) 
+                                     for year in range(int(years_retired)))
+                purchasing_power_erosion = (1 - total_real_value/total_nominal_withdrawn) * 100
+                
+                st.metric(
+                    "Totale Prelevato (Nominale)" if lang == 'it' else "Total Withdrawn (Nominal)",
+                    f"€{total_nominal_withdrawn:,.0f}"
+                )
+                st.metric(
+                    "Valore Reale Totale" if lang == 'it' else "Total Real Value",
+                    f"€{total_real_value:,.0f}"
+                )
+                st.error(f"📉 " + ("Erosione potere d'acquisto:" if lang == 'it' else "Purchasing power erosion:") + f" {purchasing_power_erosion:.1f}%")
     
     @staticmethod
     def _show_simplified_tax_analysis(results, total_deposited, nominal_withdrawal, capital_gains_tax_rate, lang):
-        """Display simplified tax impact analysis with only basic metrics"""
-        st.subheader("💰 Analisi Impatto Fiscale" if lang == 'it' else "💰 Tax Impact Analysis")
+        """Display simplified tax impact analysis with enhanced withdrawal information"""
+        st.subheader("💰 " + ("Analisi Impatto Fiscale" if lang == 'it' else "Tax Impact Analysis"))
         
-        # Create simplified columns - REMOVED Tax Burden Distribution column
-        col1, col2 = st.columns(2)  # Changed from 3 to 2 columns
+        col1, col2 = st.columns(2)
         
         # Get tax analysis if available
         try:
             tax_analysis = results.get('tax_details', [])
             valid_tax_details = [detail for detail in tax_analysis if detail]
             
-            if valid_tax_details:
+            if valid_tax_details and any('total_taxes_paid' in detail for detail in valid_tax_details):
                 # Enhanced tax analysis available
-                total_taxes = [detail['total_taxes_paid'] for detail in valid_tax_details]
+                total_taxes = [detail.get('total_taxes_paid', 0) for detail in valid_tax_details]
+                total_withdrawals = [detail.get('total_withdrawals', 0) for detail in valid_tax_details]
                 effective_rates = []
                 
                 for detail in valid_tax_details:
-                    if detail['total_withdrawals'] > 0:
-                        rate = (detail['total_taxes_paid'] / detail['total_withdrawals']) * 100
+                    if detail.get('total_withdrawals', 0) > 0:
+                        rate = (detail.get('total_taxes_paid', 0) / detail['total_withdrawals']) * 100
                         effective_rates.append(rate)
                     else:
                         effective_rates.append(0.0)
                 
                 with col1:
-                    st.subheader("📊 Tasse Totali" if lang == 'it' else "📊 Total Taxes")
+                    st.subheader("📊 " + ("Tasse Totali" if lang == 'it' else "Total Taxes"))
                     st.metric("Mediana", f"€{np.median(total_taxes):,.0f}")
                     st.metric("Media", f"€{np.mean(total_taxes):,.0f}")
                     st.metric("Min - Max", f"€{np.min(total_taxes):,.0f} - €{np.max(total_taxes):,.0f}")
                 
                 with col2:
-                    st.subheader("📈 Aliquota Effettiva" if lang == 'it' else "📈 Effective Tax Rate")
+                    st.subheader("📈 " + ("Aliquota Effettiva" if lang == 'it' else "Effective Tax Rate"))
                     st.metric("Mediana", f"{np.median(effective_rates):.2f}%")
                     st.metric("Media", f"{np.mean(effective_rates):.2f}%")
                     st.metric("Range", f"{np.min(effective_rates):.2f}% - {np.max(effective_rates):.2f}%")
                 
-                # Tax efficiency insights
+                # Tax efficiency insights with withdrawal info
                 mean_rate = np.mean(effective_rates)
+                use_real_withdrawal = results.get('use_real_withdrawal', False)
+                
+                withdrawal_type_text = "prelievi reali" if use_real_withdrawal else "prelievi nominali"
+                withdrawal_type_text_en = "real withdrawals" if use_real_withdrawal else "nominal withdrawals"
+                
                 if mean_rate <= capital_gains_tax_rate:
                     efficiency_savings = max(0, (capital_gains_tax_rate - mean_rate) / capital_gains_tax_rate * 100)
                     st.info(f"""
-                    **💡 Insights Fiscali:**
+                    **💡 Insights Fiscali ({withdrawal_type_text if lang == 'it' else withdrawal_type_text_en}):**
                     - **Aliquota nominale**: {capital_gains_tax_rate:.1f}% sui capital gains
                     - **Aliquota effettiva media**: {mean_rate:.2f}% sui prelievi totali
                     - **Efficienza fiscale**: {efficiency_savings:.1f}% di risparmio rispetto alla tassazione piena
-                    - **Spiegazione**: L'aliquota effettiva è più bassa perché le tasse si applicano solo ai capital gains, non all'intero prelievo
                     """ if lang == 'it' else f"""
-                    **💡 Tax Insights:**
+                    **💡 Tax Insights ({withdrawal_type_text_en}):**
                     - **Nominal rate**: {capital_gains_tax_rate:.1f}% on capital gains
                     - **Average effective rate**: {mean_rate:.2f}% on total withdrawals
                     - **Tax efficiency**: {efficiency_savings:.1f}% savings compared to full taxation
-                    - **Explanation**: The effective rate is lower because taxes apply only to capital gains, not the entire withdrawal
                     """)
                 
             else:
