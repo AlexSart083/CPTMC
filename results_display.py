@@ -130,21 +130,23 @@ class ResultsDisplay:
             if use_real_withdrawal:
                 st.success("✅ **" + ("Prelievo REALE selezionato" if lang == 'it' else "REAL withdrawal selected") + "**")
                 
-                # Calculate final withdrawal amount
-                final_withdrawal = nominal_withdrawal * ((1 + inflation_rate/100) ** years_retired)
+                # CORRECTED: Calculate progression starting from retirement-adjusted amount
+                initial_retirement_withdrawal = nominal_withdrawal * ((1 + inflation_rate/100) ** years_to_retirement)
+                final_withdrawal = initial_retirement_withdrawal * ((1 + inflation_rate/100) ** years_retired)
                 
                 st.info(f"""
                 **{"Dettagli Prelievo Reale:" if lang == 'it' else "Real Withdrawal Details:"}**
-                - {"Importo iniziale:" if lang == 'it' else "Initial amount:"} €{nominal_withdrawal:,.0f}
-                - {"Importo finale (anno" if lang == 'it' else "Final amount (year"} {int(years_retired)}): €{final_withdrawal:,.0f}
-                - {"Potere d'acquisto:" if lang == 'it' else "Purchasing power:"} {"Costante" if lang == 'it' else "Constant"} 💪
+                - {"Potere d'acquisto oggi:" if lang == 'it' else "Today's purchasing power:"} €{nominal_withdrawal:,.0f}
+                - {"Primo prelievo (al pensionamento):" if lang == 'it' else "First withdrawal (at retirement):"} €{initial_retirement_withdrawal:,.0f}
+                - {"Ultimo prelievo (anno" if lang == 'it' else "Final withdrawal (year"} {int(years_retired)}): €{final_withdrawal:,.0f}
+                - {"Potere d'acquisto:" if lang == 'it' else "Purchasing power:"} {"Costante (€" if lang == 'it' else "Constant (€"}{nominal_withdrawal:,.0f} {"di oggi)" if lang == 'it' else "today's value)"} 💪
                 - {"Incremento annuale:" if lang == 'it' else "Annual increase:"} {inflation_rate:.1f}%
                 """)
             else:
                 st.warning("⚠️ **" + ("Prelievo NOMINALE selezionato" if lang == 'it' else "NOMINAL withdrawal selected") + "**")
                 
                 # Calculate purchasing power loss
-                final_purchasing_power = nominal_withdrawal / ((1 + inflation_rate/100) ** years_retired)
+                final_purchasing_power = nominal_withdrawal / ((1 + inflation_rate/100) ** (years_to_retirement + years_retired))
                 purchasing_power_loss = (1 - final_purchasing_power/nominal_withdrawal) * 100
                 
                 st.error(f"""
@@ -160,9 +162,10 @@ class ResultsDisplay:
             years = list(range(1, int(years_retired) + 1))
             
             if use_real_withdrawal:
-                # Real withdrawal progression
-                withdrawal_amounts = [nominal_withdrawal * ((1 + inflation_rate/100) ** year) for year in range(int(years_retired))]
-                purchasing_power = [nominal_withdrawal] * int(years_retired)  # Constant purchasing power
+                # CORRECTED: Real withdrawal progression starts from retirement-adjusted amount
+                initial_retirement_withdrawal = base_withdrawal * ((1 + inflation_rate/100) ** years_to_retirement)
+                withdrawal_amounts = [initial_retirement_withdrawal * ((1 + inflation_rate/100) ** year) for year in range(int(years_retired))]
+                purchasing_power = [base_withdrawal] * int(years_retired)  # Constant purchasing power in today's terms
                 
                 fig = go.Figure()
                 fig.add_trace(go.Scatter(
@@ -174,20 +177,21 @@ class ResultsDisplay:
                 fig.add_trace(go.Scatter(
                     x=years, y=purchasing_power,
                     mode='lines+markers',
-                    name='Potere d\'Acquisto' if lang == 'it' else 'Purchasing Power',
+                    name='Potere d\'Acquisto (Oggi)' if lang == 'it' else 'Purchasing Power (Today)',
                     line=dict(color='green', dash='dash')
                 ))
                 
                 fig.update_layout(
                     title="Progressione Prelievo Reale" if lang == 'it' else "Real Withdrawal Progression",
-                    xaxis_title="Anno" if lang == 'it' else "Year",
+                    xaxis_title="Anno di Pensione" if lang == 'it' else "Retirement Year",
                     yaxis_title="Importo (€)" if lang == 'it' else "Amount (€)",
                     height=300
                 )
             else:
                 # Nominal withdrawal progression
-                withdrawal_amounts = [nominal_withdrawal] * int(years_retired)  # Fixed amount
-                purchasing_power = [nominal_withdrawal / ((1 + inflation_rate/100) ** year) for year in range(int(years_retired))]
+                withdrawal_amounts = [base_withdrawal] * int(years_retired)  # Fixed amount
+                # CORRECTED: Calculate purchasing power loss including accumulation period
+                purchasing_power = [base_withdrawal / ((1 + inflation_rate/100) ** (years_to_retirement + year)) for year in range(int(years_retired))]
                 
                 fig = go.Figure()
                 fig.add_trace(go.Scatter(
@@ -199,13 +203,13 @@ class ResultsDisplay:
                 fig.add_trace(go.Scatter(
                     x=years, y=purchasing_power,
                     mode='lines+markers',
-                    name='Potere d\'Acquisto' if lang == 'it' else 'Purchasing Power',
+                    name='Potere d\'Acquisto (Oggi)' if lang == 'it' else 'Purchasing Power (Today)',
                     line=dict(color='red', dash='dash')
                 ))
                 
                 fig.update_layout(
                     title="Progressione Prelievo Nominale" if lang == 'it' else "Nominal Withdrawal Progression",
-                    xaxis_title="Anno" if lang == 'it' else "Year",
+                    xaxis_title="Anno di Pensione" if lang == 'it' else "Retirement Year",
                     yaxis_title="Importo (€)" if lang == 'it' else "Amount (€)",
                     height=300
                 )
