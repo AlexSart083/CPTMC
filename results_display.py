@@ -163,9 +163,9 @@ class ResultsDisplay:
             
             if use_real_withdrawal:
                 # CORRECTED: Real withdrawal progression starts from retirement-adjusted amount
-                initial_retirement_withdrawal = base_withdrawal * ((1 + inflation_rate/100) ** years_to_retirement)
+                initial_retirement_withdrawal = nominal_withdrawal * ((1 + inflation_rate/100) ** years_to_retirement)
                 withdrawal_amounts = [initial_retirement_withdrawal * ((1 + inflation_rate/100) ** year) for year in range(int(years_retired))]
-                purchasing_power = [base_withdrawal] * int(years_retired)  # Constant purchasing power in today's terms
+                purchasing_power = [nominal_withdrawal] * int(years_retired)  # Constant purchasing power in today's terms
                 
                 fig = go.Figure()
                 fig.add_trace(go.Scatter(
@@ -189,9 +189,9 @@ class ResultsDisplay:
                 )
             else:
                 # Nominal withdrawal progression
-                withdrawal_amounts = [base_withdrawal] * int(years_retired)  # Fixed amount
+                withdrawal_amounts = [nominal_withdrawal] * int(years_retired)  # Fixed amount
                 # CORRECTED: Calculate purchasing power loss including accumulation period
-                purchasing_power = [base_withdrawal / ((1 + inflation_rate/100) ** (years_to_retirement + year)) for year in range(int(years_retired))]
+                purchasing_power = [nominal_withdrawal / ((1 + inflation_rate/100) ** (years_to_retirement + year)) for year in range(int(years_retired))]
                 
                 fig = go.Figure()
                 fig.add_trace(go.Scatter(
@@ -217,7 +217,7 @@ class ResultsDisplay:
             st.plotly_chart(fig, use_container_width=True)
     
     @staticmethod
-    def _show_detailed_withdrawal_analysis(results, base_withdrawal, use_real_withdrawal, 
+    def _show_detailed_withdrawal_analysis(results, nominal_withdrawal, use_real_withdrawal, 
                                          inflation_rate, years_to_retirement, years_retired, lang):
         """Show detailed analysis of withdrawal strategy over time"""
         st.subheader("📊 " + ("Analisi Dettagliata Prelievi" if lang == 'it' else "Detailed Withdrawal Analysis"))
@@ -239,13 +239,13 @@ class ResultsDisplay:
             for year in years_sample:
                 if use_real_withdrawal:
                     # CORRECTED: Start from retirement-adjusted amount
-                    initial_retirement_withdrawal = base_withdrawal * ((1 + inflation_rate/100) ** years_to_retirement)
+                    initial_retirement_withdrawal = nominal_withdrawal * ((1 + inflation_rate/100) ** years_to_retirement)
                     nominal_amount = initial_retirement_withdrawal * ((1 + inflation_rate/100) ** (year-1))
-                    real_value = base_withdrawal  # Constant purchasing power in today's terms
+                    real_value = nominal_withdrawal  # Constant purchasing power in today's terms
                 else:
-                    nominal_amount = base_withdrawal  # Fixed amount
+                    nominal_amount = nominal_withdrawal  # Fixed amount
                     # CORRECTED: Calculate purchasing power loss including accumulation period
-                    real_value = base_withdrawal / ((1 + inflation_rate/100) ** (years_to_retirement + year - 1))
+                    real_value = nominal_withdrawal / ((1 + inflation_rate/100) ** (years_to_retirement + year - 1))
                 
                 comparison_data.append({
                     ('Anno' if lang == 'it' else 'Year'): year,
@@ -263,10 +263,10 @@ class ResultsDisplay:
             # Calculate total withdrawals over retirement period
             if use_real_withdrawal:
                 # CORRECTED: Start from retirement-adjusted amount
-                initial_retirement_withdrawal = base_withdrawal * ((1 + inflation_rate/100) ** years_to_retirement)
+                initial_retirement_withdrawal = nominal_withdrawal * ((1 + inflation_rate/100) ** years_to_retirement)
                 total_nominal_withdrawn = sum(initial_retirement_withdrawal * ((1 + inflation_rate/100) ** year) 
                                             for year in range(int(years_retired)))
-                total_real_value = base_withdrawal * years_retired  # Constant purchasing power in today's terms
+                total_real_value = nominal_withdrawal * years_retired  # Constant purchasing power in today's terms
                 
                 st.metric(
                     "Totale Prelevato (Nominale)" if lang == 'it' else "Total Withdrawn (Nominal)",
@@ -279,9 +279,9 @@ class ResultsDisplay:
                 st.success("✅ " + ("Potere d'acquisto preservato" if lang == 'it' else "Purchasing power preserved"))
                 
             else:
-                total_nominal_withdrawn = base_withdrawal * years_retired
+                total_nominal_withdrawn = nominal_withdrawal * years_retired
                 # CORRECTED: Include accumulation period in purchasing power calculation
-                total_real_value = sum(base_withdrawal / ((1 + inflation_rate/100) ** (years_to_retirement + year)) 
+                total_real_value = sum(nominal_withdrawal / ((1 + inflation_rate/100) ** (years_to_retirement + year)) 
                                      for year in range(int(years_retired)))
                 purchasing_power_erosion = (1 - total_real_value/total_nominal_withdrawn) * 100
                 
