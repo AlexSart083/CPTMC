@@ -1,6 +1,6 @@
 """
 Enhanced results display components with CORRECTED REAL withdrawal support, detailed withdrawal analysis, and integrated VaR/CVaR risk metrics
-COMPLETE FILE - Corretti tutti i calcoli dei prelievi + integrato VaR/CVaR direttamente nell'app
+FIXED VERSION - Corrected function signatures and arguments
 """
 
 import streamlit as st
@@ -729,9 +729,9 @@ class ResultsDisplay:
             
             # Risk level assessment based on accumulation nominal values
             ResultsDisplay._assess_risk_level(accumulation_nominal_data, total_deposited, lang)
-        elif 'accumulation' in phases_data:
+        elif 'accumulation_real' in phases_data:
             # Fallback to real accumulation values if nominal not available
-            accumulation_data = phases_data['accumulation']
+            accumulation_data = phases_data['accumulation_real']
             st.subheader("🎯 " + ("Metriche di Rischio Chiave (Fine Accumulo - Reale)" if lang == 'it' else "Key Risk Metrics (End of Accumulation - Real)"))
             
             col1, col2, col3, col4 = st.columns(4)
@@ -814,12 +814,12 @@ class ResultsDisplay:
         
         # Loss probability analysis - CORRECTED: Use accumulation NOMINAL values as primary
         if 'accumulation_nominal' in results:
-            ResultsDisplay._show_loss_probability_analysis(results['accumulation_nominal'], total_deposited, lang, "accumulation_nominal")
+            ResultsDisplay._show_loss_probability_analysis(results['accumulation_nominal'], total_deposited, lang)
         elif 'accumulation' in results:
-            ResultsDisplay._show_loss_probability_analysis(results['accumulation'], total_deposited, lang, "accumulation")
+            ResultsDisplay._show_loss_probability_analysis(results['accumulation'], total_deposited, lang)
         elif 'final' in results:
             # Last fallback to final values if accumulation not available
-            ResultsDisplay._show_loss_probability_analysis(results['final'], total_deposited, lang, "final")
+            ResultsDisplay._show_loss_probability_analysis(results['final'], total_deposited, lang)
 
     @staticmethod
     def _assess_risk_level(final_data, total_deposited, lang):
@@ -878,20 +878,20 @@ class ResultsDisplay:
         ])
         
         with tab1:
-            # CORRECTED: Use accumulation NOMINAL values for primary analysis
+            # FIXED: Correct function calls with proper arguments
             if 'accumulation_nominal' in results and 'accumulation_nominal' in phases_data:
-                ResultsDisplay._show_distribution_with_var_cvar_markers(results['accumulation_nominal'], phases_data['accumulation_nominal'], lang, "accumulation_nominal")
-            elif 'accumulation' in results and 'accumulation' in phases_data:
-                ResultsDisplay._show_distribution_with_var_cvar_markers(results['accumulation'], phases_data['accumulation'], lang, "accumulation")
+                ResultsDisplay._show_distribution_with_var_cvar_markers(results['accumulation_nominal'], phases_data['accumulation_nominal'], lang)
+            elif 'accumulation' in results and 'accumulation_real' in phases_data:
+                ResultsDisplay._show_distribution_with_var_cvar_markers(results['accumulation'], phases_data['accumulation_real'], lang)
             elif 'final' in results and 'final' in phases_data:
-                ResultsDisplay._show_distribution_with_var_cvar_markers(results['final'], phases_data['final'], lang, "final")
+                ResultsDisplay._show_distribution_with_var_cvar_markers(results['final'], phases_data['final'], lang)
         
         with tab2:
             ResultsDisplay._show_var_cvar_comparison_chart(phases_data, lang)
     
     @staticmethod
     def _show_distribution_with_var_cvar_markers(final_values, final_data, lang):
-        """Show distribution with VaR and CVaR markers"""
+        """FIXED: Show distribution with VaR and CVaR markers - corrected function signature"""
         fig = go.Figure()
         
         # Add histogram
@@ -928,7 +928,7 @@ class ResultsDisplay:
         )
         
         fig.update_layout(
-            title="Distribuzione Valori Finali con VaR e CVaR" if lang == 'it' else "Final Values Distribution with VaR and CVaR",
+            title="Distribuzione Valori con VaR e CVaR" if lang == 'it' else "Values Distribution with VaR and CVaR",
             xaxis_title="Valore Portfolio (€)" if lang == 'it' else "Portfolio Value (€)",
             yaxis_title="Frequenza" if lang == 'it' else "Frequency",
             height=500,
