@@ -1,0 +1,676 @@
+"""
+Risk UI Components - User interface components for displaying VaR and CVaR results
+Componenti UI per il Rischio - Componenti dell'interfaccia utente per mostrare i risultati VaR e CVaR
+"""
+
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
+from typing import Dict, List, Optional
+from risk_metrics import RiskMetricsCalculator
+
+
+class RiskUIComponents:
+    """UI components for displaying risk metrics (VaR and CVaR)"""
+    
+    @staticmethod
+    def render_risk_metrics_section(simulation_results: Dict, total_deposited: float, lang: str = 'en'):
+        """
+        Render the main risk metrics section with VaR and CVaR
+        
+        Args:
+            simulation_results: Results from Monte Carlo simulation
+            total_deposited: Total amount deposited for reference
+            lang: Language ('en' or 'it')
+        """
+        # Calculate comprehensive risk metrics
+        risk_metrics = RiskMetricsCalculator.calculate_risk_metrics_comprehensive(
+            simulation_results, 
+            confidence_levels=[0.90, 0.95, 0.99]
+        )
+        
+        if not risk_metrics:
+            st.warning("⚠️ " + ("Dati insufficienti per calcolare le metriche di rischio" 
+                               if lang == 'it' else "Insufficient data for risk metrics calculation"))
+            return
+        
+        # Section header
+        st.markdown("---")
+        st.header("⚡ " + ("Analisi del Rischio (VaR & CVaR)" if lang == 'it' else "Risk Analysis (VaR & CVaR)"))
+        
+        # Risk explanation
+        with st.expander("ℹ️ " + ("Cosa sono VaR e CVaR?" if lang == 'it' else "What are VaR and CVaR?"), expanded=False):
+            if lang == 'it':
+                st.markdown("""
+                **📊 Value at Risk (VaR):**
+                - VaR al 5% indica il valore minimo che il tuo portafoglio raggiungerà nel 95% dei casi
+                - Es: VaR 5% = €50.000 significa che solo nel 5% dei casi peggiori il portafoglio varrà meno di €50.000
+                
+                **📉 Conditional Value at Risk (CVaR):**
+                - CVaR al 5% è il valore medio del portafoglio nei peggiori 5% degli scenari
+                - Es: CVaR 5% = €30.000 significa che quando le cose vanno davvero male (peggiore 5%), il portafoglio vale in media €30.000
+                
+                **🎯 Perché sono importanti:**
+                - Aiutano a comprendere i rischi estremi del tuo piano di investimento
+                - CVaR è sempre ≤ VaR e mostra quanto possono essere gravi le perdite estreme
+                - Utili per valutare se puoi tollerare gli scenari peggiori
+                """)
+            else:
+                st.markdown("""
+                **📊 Value at Risk (VaR):**
+                - VaR at 5% indicates the minimum value your portfolio will reach in 95% of cases
+                - Ex: VaR 5% = €50,000 means that only in the worst 5% of cases will the portfolio be worth less than €50,000
+                
+                **📉 Conditional Value at Risk (CVaR):**
+                - CVaR at 5% is the average portfolio value in the worst 5% of scenarios
+                - Ex: CVaR 5% = €30,000 means when things go really bad (worst 5%), the portfolio averages €30,000
+                
+                **🎯 Why they matter:**
+                - Help understand extreme risks of your investment plan
+                - CVaR is always ≤ VaR and shows how severe extreme losses can be
+                - Useful for assessing whether you can tolerate worst-case scenarios
+                """)
+        
+        # Display key VaR/CVaR metrics
+        RiskUIComponents._render_key_risk_metrics(risk_metrics, lang)
+        
+        # Risk visualization charts
+        RiskUIComponents._render_risk_visualizations(simulation_results, risk_metrics, lang)
+        
+        # Risk comparison table
+        RiskUIComponents._render_risk_comparison_table(risk_metrics, lang)
+        
+        # Loss probability analysis
+        RiskUIComponents._render_loss_probability_analysis(simulation_results, total_deposited, lang)
+        
+        # Risk insights and recommendations
+        RiskUIComponents._render_risk_insights(risk_metrics, total_deposited, lang)
+    
+    @staticmethod
+    def _render_key_risk_metrics(risk_metrics: Dict, lang: str):
+        """Render key VaR and CVaR metrics in a prominent display"""
+        st.subheader("🎯 " + ("Metriche di Rischio Chiave (5% VaR/CVaR)" if lang == 'it' else "Key Risk Metrics (5% VaR/CVaR)"))
+        
+        # Focus on final values with 5% confidence
+        if 'final' not in risk_metrics:
+            st.warning("⚠️ " + ("Dati finali non disponibili" if lang == 'it' else "Final data not available"))
+            return
+        
+        final_metrics = risk_metrics['final']
+        var_5 = final_metrics['var'].get('5%', 0)
+        cvar_5 = final_metrics['cvar'].get('5%', 0)
+        mean_final = final_metrics['statistics']['mean']
+        median_final = final_metrics['statistics']['median']
+        
+        # Display in columns
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric(
+                label="📊 VaR 5%" + (" (Valore Finale)" if lang == 'it' else " (Final Value)"),
+                value=f"€{var_5:,.0f}",
+                help="Valore minimo nel 95% dei casi" if lang == 'it' else "Minimum value in 95% of cases"
+            )
+        
+        with col2:
+            st.metric(
+                label="📉 CVaR 5%" + (" (Valore Finale)" if lang == 'it' else " (Final Value)"),
+                value=f"€{cvar_5:,.0f}",
+                help="Valore medio nei peggiori 5% dei casi" if lang == 'it' else "Average value in worst 5% of cases"
+            )
+        
+        with col3:
+            st.metric(
+                label="📈 " + ("Media" if lang == 'it' else "Mean"),
+                value=f"€{mean_final:,.0f}",
+                help="Valore medio di tutti gli scenari" if lang == 'it' else "Average value across all scenarios"
+            )
+        
+        with col4:
+            # Calculate the "risk gap" - difference between median and CVaR
+            risk_gap = median_final - cvar_5 if cvar_5 < median_final else 0
+            st.metric(
+                label="⚡ " + ("Gap di Rischio" if lang == 'it' else "Risk Gap"),
+                value=f"€{risk_gap:,.0f}",
+                help="Differenza tra mediana e CVaR 5%" if lang == 'it' else "Difference between median and CVaR 5%"
+            )
+        
+        # Risk level indicator
+        if var_5 <= 0:
+            risk_status = "🔴 " + ("ALTO RISCHIO" if lang == 'it' else "HIGH RISK")
+            risk_message = ("Significativa probabilità di perdere tutto il capitale" if lang == 'it' 
+                           else "Significant probability of losing all capital")
+            st.error(f"{risk_status}: {risk_message}")
+        elif var_5 < mean_final * 0.3:
+            risk_status = "🟡 " + ("RISCHIO MODERATO-ALTO" if lang == 'it' else "MODERATE-HIGH RISK") 
+            risk_message = ("I peggiori scenari possono essere molto negativi" if lang == 'it'
+                           else "Worst-case scenarios can be very negative")
+            st.warning(f"{risk_status}: {risk_message}")
+        elif var_5 < mean_final * 0.7:
+            risk_status = "🟠 " + ("RISCHIO MODERATO" if lang == 'it' else "MODERATE RISK")
+            risk_message = ("Rischio gestibile ma da monitorare" if lang == 'it' 
+                           else "Manageable risk but worth monitoring")
+            st.info(f"{risk_status}: {risk_message}")
+        else:
+            risk_status = "🟢 " + ("RISCHIO BASSO" if lang == 'it' else "LOW RISK")
+            risk_message = ("Scenari peggiori relativamente contenuti" if lang == 'it'
+                           else "Worst-case scenarios relatively contained")
+            st.success(f"{risk_status}: {risk_message}")
+    
+    @staticmethod
+    def _render_risk_visualizations(simulation_results: Dict, risk_metrics: Dict, lang: str):
+        """Render risk visualization charts"""
+        st.subheader("📈 " + ("Visualizzazioni del Rischio" if lang == 'it' else "Risk Visualizations"))
+        
+        # Create tabs for different visualizations
+        tab1, tab2, tab3 = st.tabs([
+            "📊 " + ("Distribuzione con VaR/CVaR" if lang == 'it' else "Distribution with VaR/CVaR"),
+            "📈 " + ("Confronto Fasi" if lang == 'it' else "Phase Comparison"), 
+            "🎯 " + ("Mappa del Rischio" if lang == 'it' else "Risk Heatmap")
+        ])
+        
+        with tab1:
+            RiskUIComponents._render_distribution_with_risk_markers(simulation_results, risk_metrics, lang)
+        
+        with tab2:
+            RiskUIComponents._render_phase_risk_comparison(risk_metrics, lang)
+        
+        with tab3:
+            RiskUIComponents._render_risk_heatmap(risk_metrics, lang)
+    
+    @staticmethod
+    def _render_distribution_with_risk_markers(simulation_results: Dict, risk_metrics: Dict, lang: str):
+        """Render distribution histogram with VaR and CVaR markers"""
+        if 'final' not in simulation_results:
+            return
+        
+        final_values = simulation_results['final']
+        final_risk = risk_metrics.get('final', {})
+        
+        if not final_risk:
+            return
+        
+        var_5 = final_risk['var'].get('5%', 0)
+        cvar_5 = final_risk['cvar'].get('5%', 0)
+        mean_val = final_risk['statistics']['mean']
+        median_val = final_risk['statistics']['median']
+        
+        # Create histogram
+        fig = go.Figure()
+        
+        # Add histogram
+        fig.add_trace(go.Histogram(
+            x=final_values,
+            name="Distribuzione" if lang == 'it' else "Distribution",
+            opacity=0.7,
+            nbinsx=50,
+            marker_color='lightblue'
+        ))
+        
+        # Add VaR line
+        fig.add_vline(
+            x=var_5,
+            line=dict(color="red", width=3, dash="dash"),
+            annotation_text=f"VaR 5%: €{var_5:,.0f}",
+            annotation_position="top"
+        )
+        
+        # Add CVaR line
+        fig.add_vline(
+            x=cvar_5,
+            line=dict(color="darkred", width=3, dash="solid"),
+            annotation_text=f"CVaR 5%: €{cvar_5:,.0f}",
+            annotation_position="top"
+        )
+        
+        # Add mean line
+        fig.add_vline(
+            x=mean_val,
+            line=dict(color="green", width=2, dash="dot"),
+            annotation_text=f"{'Media' if lang == 'it' else 'Mean'}: €{mean_val:,.0f}",
+            annotation_position="top"
+        )
+        
+        # Add median line
+        fig.add_vline(
+            x=median_val,
+            line=dict(color="blue", width=2, dash="dot"),
+            annotation_text=f"{'Mediana' if lang == 'it' else 'Median'}: €{median_val:,.0f}",
+            annotation_position="bottom"
+        )
+        
+        fig.update_layout(
+            title="Distribuzione Valori Finali con Metriche di Rischio" if lang == 'it' else "Final Values Distribution with Risk Metrics",
+            xaxis_title="Valore Portfolio (€)" if lang == 'it' else "Portfolio Value (€)",
+            yaxis_title="Frequenza" if lang == 'it' else "Frequency",
+            height=500,
+            showlegend=False
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Add explanation
+        if lang == 'it':
+            st.info("""
+            **📖 Come leggere il grafico:**
+            - **Linea rossa tratteggiata (VaR 5%)**: Solo il 5% dei risultati è a sinistra di questa linea
+            - **Linea rossa continua (CVaR 5%)**: Valore medio di tutti i risultati a sinistra del VaR 5%
+            - **Linea verde punteggiata**: Valore medio di tutti gli scenari
+            - **Linea blu punteggiata**: Valore mediano (50° percentile)
+            """)
+        else:
+            st.info("""
+            **📖 How to read the chart:**
+            - **Red dashed line (VaR 5%)**: Only 5% of results are to the left of this line
+            - **Red solid line (CVaR 5%)**: Average value of all results to the left of VaR 5%
+            - **Green dotted line**: Average value across all scenarios
+            - **Blue dotted line**: Median value (50th percentile)
+            """)
+    
+    @staticmethod
+    def _render_phase_risk_comparison(risk_metrics: Dict, lang: str):
+        """Render comparison of risk metrics across different phases"""
+        phases = ['accumulation_nominal', 'accumulation', 'final']
+        phase_names = {
+            'accumulation_nominal': 'Accumulo (Nominale)' if lang == 'it' else 'Accumulation (Nominal)',
+            'accumulation': 'Accumulo (Reale)' if lang == 'it' else 'Accumulation (Real)',
+            'final': 'Finale' if lang == 'it' else 'Final'
+        }
+        
+        # Prepare data for comparison
+        comparison_data = []
+        
+        for phase in phases:
+            if phase in risk_metrics:
+                phase_data = risk_metrics[phase]
+                var_5 = phase_data['var'].get('5%', 0)
+                cvar_5 = phase_data['cvar'].get('5%', 0)
+                mean_val = phase_data['statistics']['mean']
+                
+                comparison_data.append({
+                    'Phase': phase_names[phase],
+                    'VaR 5%': var_5,
+                    'CVaR 5%': cvar_5,
+                    'Mean': mean_val,
+                    'Risk Ratio (CVaR/Mean)': cvar_5/mean_val if mean_val != 0 else 0
+                })
+        
+        if not comparison_data:
+            st.warning("⚠️ " + ("Dati insufficienti per il confronto" if lang == 'it' else "Insufficient data for comparison"))
+            return
+        
+        df_comparison = pd.DataFrame(comparison_data)
+        
+        # Create grouped bar chart
+        fig = go.Figure()
+        
+        # Add VaR bars
+        fig.add_trace(go.Bar(
+            name='VaR 5%',
+            x=df_comparison['Phase'],
+            y=df_comparison['VaR 5%'],
+            marker_color='lightcoral',
+            yaxis='y1'
+        ))
+        
+        # Add CVaR bars
+        fig.add_trace(go.Bar(
+            name='CVaR 5%',
+            x=df_comparison['Phase'],
+            y=df_comparison['CVaR 5%'],
+            marker_color='darkred',
+            yaxis='y1'
+        ))
+        
+        # Add Mean line
+        fig.add_trace(go.Scatter(
+            name='Media' if lang == 'it' else 'Mean',
+            x=df_comparison['Phase'],
+            y=df_comparison['Mean'],
+            mode='lines+markers',
+            line=dict(color='green', width=3),
+            marker=dict(size=8),
+            yaxis='y1'
+        ))
+        
+        fig.update_layout(
+            title="Confronto VaR e CVaR tra le Fasi" if lang == 'it' else "VaR and CVaR Comparison Across Phases",
+            xaxis_title="Fase" if lang == 'it' else "Phase",
+            yaxis_title="Valore (€)" if lang == 'it' else "Value (€)",
+            barmode='group',
+            height=500,
+            legend=dict(x=0, y=1)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Display comparison table
+        st.markdown("**" + ("Tabella di Confronto:" if lang == 'it' else "Comparison Table:") + "**")
+        
+        # Format the dataframe for display
+        display_df = df_comparison.copy()
+        display_df['VaR 5%'] = display_df['VaR 5%'].apply(lambda x: f"€{x:,.0f}")
+        display_df['CVaR 5%'] = display_df['CVaR 5%'].apply(lambda x: f"€{x:,.0f}")
+        display_df['Mean'] = display_df['Mean'].apply(lambda x: f"€{x:,.0f}")
+        display_df['Risk Ratio (CVaR/Mean)'] = display_df['Risk Ratio (CVaR/Mean)'].apply(lambda x: f"{x:.3f}")
+        
+        st.dataframe(display_df, use_container_width=True)
+    
+    @staticmethod
+    def _render_risk_heatmap(risk_metrics: Dict, lang: str):
+        """Render a heatmap showing risk levels across phases and confidence levels"""
+        # Prepare data for heatmap
+        phases = []
+        confidence_levels = ['1%', '5%', '10%']
+        var_data = []
+        cvar_data = []
+        
+        for phase_key, phase_data in risk_metrics.items():
+            if 'var' in phase_data and 'cvar' in phase_data:
+                phase_name = phase_data.get('phase_name', phase_key)
+                phases.append(phase_name)
+                
+                var_row = []
+                cvar_row = []
+                
+                for conf_level in confidence_levels:
+                    var_val = phase_data['var'].get(conf_level, 0)
+                    cvar_val = phase_data['cvar'].get(conf_level, 0)
+                    
+                    var_row.append(var_val)
+                    cvar_row.append(cvar_val)
+                
+                var_data.append(var_row)
+                cvar_data.append(cvar_row)
+        
+        if not phases:
+            st.warning("⚠️ " + ("Dati insufficienti per la mappa del rischio" if lang == 'it' else "Insufficient data for risk heatmap"))
+            return
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # VaR Heatmap
+            fig_var = px.imshow(
+                var_data,
+                x=[f"VaR {cl}" for cl in confidence_levels],
+                y=phases,
+                title="Mappa VaR per Fase e Livello di Confidenza" if lang == 'it' else "VaR Heatmap by Phase and Confidence Level",
+                color_continuous_scale="Reds",
+                aspect="auto"
+            )
+            
+            # Add value annotations
+            for i, phase in enumerate(phases):
+                for j, conf_level in enumerate(confidence_levels):
+                    fig_var.add_annotation(
+                        x=j, y=i,
+                        text=f"€{var_data[i][j]:,.0f}",
+                        showarrow=False,
+                        font=dict(color="white" if var_data[i][j] < np.mean(var_data) else "black")
+                    )
+            
+            st.plotly_chart(fig_var, use_container_width=True)
+        
+        with col2:
+            # CVaR Heatmap
+            fig_cvar = px.imshow(
+                cvar_data,
+                x=[f"CVaR {cl}" for cl in confidence_levels],
+                y=phases,
+                title="Mappa CVaR per Fase e Livello di Confidenza" if lang == 'it' else "CVaR Heatmap by Phase and Confidence Level",
+                color_continuous_scale="Reds",
+                aspect="auto"
+            )
+            
+            # Add value annotations
+            for i, phase in enumerate(phases):
+                for j, conf_level in enumerate(confidence_levels):
+                    fig_cvar.add_annotation(
+                        x=j, y=i,
+                        text=f"€{cvar_data[i][j]:,.0f}",
+                        showarrow=False,
+                        font=dict(color="white" if cvar_data[i][j] < np.mean(cvar_data) else "black")
+                    )
+            
+            st.plotly_chart(fig_cvar, use_container_width=True)
+    
+    @staticmethod
+    def _render_risk_comparison_table(risk_metrics: Dict, lang: str):
+        """Render comprehensive risk comparison table"""
+        st.subheader("📊 " + ("Tabella Completa delle Metriche di Rischio" if lang == 'it' else "Comprehensive Risk Metrics Table"))
+        
+        # Prepare comprehensive table data
+        table_data = []
+        
+        for phase_key, phase_data in risk_metrics.items():
+            phase_name = phase_data.get('phase_name', phase_key)
+            stats = phase_data['statistics']
+            
+            row = {
+                ('Fase' if lang == 'it' else 'Phase'): phase_name,
+                ('Media (€)' if lang == 'it' else 'Mean (€)'): f"{stats['mean']:,.0f}",
+                ('Mediana (€)' if lang == 'it' else 'Median (€)'): f"{stats['median']:,.0f}",
+                ('VaR 1% (€)'): f"{phase_data['var'].get('1%', 0):,.0f}",
+                ('VaR 5% (€)'): f"{phase_data['var'].get('5%', 0):,.0f}",
+                ('VaR 10% (€)'): f"{phase_data['var'].get('10%', 0):,.0f}",
+                ('CVaR 1% (€)'): f"{phase_data['cvar'].get('1%', 0):,.0f}",
+                ('CVaR 5% (€)'): f"{phase_data['cvar'].get('5%', 0):,.0f}",
+                ('CVaR 10% (€)'): f"{phase_data['cvar'].get('10%', 0):,.0f}",
+            }
+            
+            table_data.append(row)
+        
+        if table_data:
+            df_table = pd.DataFrame(table_data)
+            st.dataframe(df_table, use_container_width=True)
+        else:
+            st.warning("⚠️ " + ("Nessun dato disponibile per la tabella" if lang == 'it' else "No data available for table"))
+    
+    @staticmethod
+    def _render_loss_probability_analysis(simulation_results: Dict, total_deposited: float, lang: str):
+        """Render loss probability analysis"""
+        st.subheader("📉 " + ("Analisi Probabilità di Perdita" if lang == 'it' else "Loss Probability Analysis"))
+        
+        if 'final' not in simulation_results:
+            st.warning("⚠️ " + ("Dati finali non disponibili" if lang == 'it' else "Final data not available"))
+            return
+        
+        # Calculate loss probabilities
+        loss_analysis = RiskMetricsCalculator.calculate_loss_probabilities(
+            simulation_results['final'], 
+            total_deposited
+        )
+        
+        if not loss_analysis:
+            return
+        
+        # Display overall loss probability
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.metric(
+                label="📊 " + ("Probabilità di Perdita Totale" if lang == 'it' else "Total Loss Probability"),
+                value=f"{loss_analysis['total_loss_probability']:.1f}%",
+                help="Probabilità che il portfolio finale sia inferiore al totale depositato" if lang == 'it' 
+                     else "Probability that final portfolio is less than total deposited"
+            )
+            
+            avg_loss = loss_analysis.get('average_loss_when_loss_occurs', 0)
+            st.metric(
+                label="💔 " + ("Perdita Media (quando si verifica)" if lang == 'it' else "Average Loss (when it occurs)"),
+                value=f"€{avg_loss:,.0f}",
+                help="Valore medio del portfolio quando si verifica una perdita" if lang == 'it'
+                     else "Average portfolio value when a loss occurs"
+            )
+        
+        with col2:
+            # Loss threshold analysis
+            thresholds = loss_analysis.get('loss_thresholds', {})
+            
+            threshold_data = []
+            for threshold_key, threshold_info in thresholds.items():
+                loss_percent = threshold_key.replace('loss_', '').replace('%', '')
+                probability = threshold_info['probability']
+                threshold_value = threshold_info['threshold_value']
+                
+                threshold_data.append({
+                    ('Soglia Perdita' if lang == 'it' else 'Loss Threshold'): f"{loss_percent}%",
+                    ('Valore Soglia (€)' if lang == 'it' else 'Threshold Value (€)'): f"€{threshold_value:,.0f}",
+                    ('Probabilità (%)' if lang == 'it' else 'Probability (%)'): f"{probability:.1f}%"
+                })
+            
+            if threshold_data:
+                df_thresholds = pd.DataFrame(threshold_data)
+                st.markdown("**" + ("Probabilità per Soglia di Perdita:" if lang == 'it' else "Probability by Loss Threshold:") + "**")
+                st.dataframe(df_thresholds, use_container_width=True)
+        
+        # Visual representation of loss probabilities
+        if thresholds:
+            threshold_names = [f"{k.replace('loss_', '').replace('%', '')}%" for k in thresholds.keys()]
+            probabilities = [v['probability'] for v in thresholds.values()]
+            
+            fig = px.bar(
+                x=threshold_names,
+                y=probabilities,
+                title="Probabilità di Perdita per Soglia" if lang == 'it' else "Loss Probability by Threshold",
+                labels={
+                    'x': 'Soglia di Perdita' if lang == 'it' else 'Loss Threshold',
+                    'y': 'Probabilità (%)' if lang == 'it' else 'Probability (%)'
+                },
+                color=probabilities,
+                color_continuous_scale='Reds'
+            )
+            
+            fig.update_layout(height=400)
+            st.plotly_chart(fig, use_container_width=True)
+    
+    @staticmethod
+    def _render_risk_insights(risk_metrics: Dict, total_deposited: float, lang: str):
+        """Render risk insights and recommendations"""
+        st.subheader("💡 " + ("Insights e Raccomandazioni sul Rischio" if lang == 'it' else "Risk Insights and Recommendations"))
+        
+        # Generate risk summary
+        risk_summary = RiskMetricsCalculator.generate_risk_summary(risk_metrics, lang)
+        
+        if not risk_summary:
+            return
+        
+        # Display key insights
+        if 'key_insights' in risk_summary:
+            st.markdown("**" + ("🔍 Insights Chiave:" if lang == 'it' else "🔍 Key Insights:") + "**")
+            for insight in risk_summary['key_insights']:
+                st.markdown(f"• {insight}")
+        
+        # Display risk level assessment
+        if 'risk_levels' in risk_summary and 'overall' in risk_summary['risk_levels']:
+            overall_risk = risk_summary['risk_levels']['overall']
+            risk_level = overall_risk['level']
+            var_5 = overall_risk['var_5_percent']
+            cvar_5 = overall_risk['cvar_5_percent']
+            
+            st.markdown("---")
+            st.markdown("**" + ("🎯 Valutazione Complessiva del Rischio:" if lang == 'it' else "🎯 Overall Risk Assessment:") + "**")
+            
+            if lang == 'it':
+                risk_text = f"""
+                **Livello di Rischio**: {risk_level}
+                
+                **Scenario Peggiore (5%):**
+                - Nel peggiore 5% dei casi, il tuo portafoglio varrà almeno €{var_5:,.0f}
+                - Se le cose vanno davvero male (peggiori 5% degli scenari), il valore medio sarà €{cvar_5:,.0f}
+                
+                **Cosa significa per te:**
+                """
+                
+                if var_5 <= 0:
+                    risk_text += "⚠️ C'è una probabilità significativa di perdere tutto il capitale investito. Considera di rivedere la strategia di investimento."
+                elif var_5 < total_deposited * 0.5:
+                    risk_text += "⚡ Nei casi peggiori potresti perdere più del 50% del capitale. Valuta se puoi tollerare questo livello di rischio."
+                elif var_5 < total_deposited * 0.8:
+                    risk_text += "📊 Il rischio è moderato. Nei casi peggiori potresti perdere fino al 20-50% del capitale."
+                else:
+                    risk_text += "✅ Il rischio sembra gestibile. Anche nei casi peggiori le perdite sono relativamente contenute."
+                    
+            else:
+                risk_text = f"""
+                **Risk Level**: {risk_level}
+                
+                **Worst Case Scenario (5%):**
+                - In the worst 5% of cases, your portfolio will be worth at least €{var_5:,.0f}
+                - When things go really bad (worst 5% of scenarios), the average value will be €{cvar_5:,.0f}
+                
+                **What this means for you:**
+                """
+                
+                if var_5 <= 0:
+                    risk_text += "⚠️ There's a significant probability of losing all invested capital. Consider reviewing your investment strategy."
+                elif var_5 < total_deposited * 0.5:
+                    risk_text += "⚡ In worst cases you could lose more than 50% of capital. Evaluate if you can tolerate this risk level."
+                elif var_5 < total_deposited * 0.8:
+                    risk_text += "📊 Risk is moderate. In worst cases you could lose 20-50% of capital."
+                else:
+                    risk_text += "✅ Risk seems manageable. Even in worst cases, losses are relatively contained."
+            
+            st.markdown(risk_text)
+        
+        # Recommendations based on risk level
+        st.markdown("---")
+        st.markdown("**" + ("💼 Raccomandazioni:" if lang == 'it' else "💼 Recommendations:") + "**")
+        
+        if 'final' in risk_metrics:
+            var_5 = risk_metrics['final']['var'].get('5%', 0)
+            mean_val = risk_metrics['final']['statistics']['mean']
+            
+            if lang == 'it':
+                if var_5 <= 0:
+                    st.error("""
+                    🚨 **Azione Urgente Richiesta:**
+                    - Rivedi completamente la strategia di investimento
+                    - Considera un portafoglio più conservativo
+                    - Aumenta i contributi o riduci i prelievi previsti
+                    - Consulta un consulente finanziario
+                    """)
+                elif var_5 < mean_val * 0.3:
+                    st.warning("""
+                    ⚠️ **Considera Questi Aggiustamenti:**
+                    - Riduci l'esposizione agli asset più rischiosi
+                    - Diversifica maggiormente il portafoglio
+                    - Considera di aumentare i contributi
+                    - Monitora regolarmente i progressi
+                    """)
+                else:
+                    st.info("""
+                    ✅ **Mantieni il Corso:**
+                    - La strategia attuale sembra ragionevole
+                    - Monitora periodicamente le performance
+                    - Sii preparato ad aggiustamenti se necessario
+                    - Rivedi la strategia ogni 1-2 anni
+                    """)
+            else:
+                if var_5 <= 0:
+                    st.error("""
+                    🚨 **Urgent Action Required:**
+                    - Completely review your investment strategy
+                    - Consider a more conservative portfolio
+                    - Increase contributions or reduce planned withdrawals
+                    - Consult a financial advisor
+                    """)
+                elif var_5 < mean_val * 0.3:
+                    st.warning("""
+                    ⚠️ **Consider These Adjustments:**
+                    - Reduce exposure to riskier assets
+                    - Diversify the portfolio further
+                    - Consider increasing contributions
+                    - Monitor progress regularly
+                    """)
+                else:
+                    st.info("""
+                    ✅ **Stay the Course:**
+                    - Current strategy seems reasonable
+                    - Monitor performance periodically
+                    - Be prepared for adjustments if needed
+                    - Review strategy every 1-2 years
+                    """)
