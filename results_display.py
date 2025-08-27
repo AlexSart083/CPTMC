@@ -691,10 +691,48 @@ class ResultsDisplay:
             st.warning("⚠️ " + ("Dati insufficienti per l'analisi VaR/CVaR" if lang == 'it' else "Insufficient data for VaR/CVaR analysis"))
             return
         
-        # Display key metrics for ACCUMULATION values (more important for retirement planning)
-        if 'accumulation' in phases_data:
+        # Display key metrics for ACCUMULATION NOMINAL values (most important for retirement planning)
+        if 'accumulation_nominal' in phases_data:
+            accumulation_nominal_data = phases_data['accumulation_nominal']
+            st.subheader("🎯 " + ("Metriche di Rischio Chiave (Fine Accumulo - Nominale)" if lang == 'it' else "Key Risk Metrics (End of Accumulation - Nominal)"))
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric(
+                    label="📊 VaR 5%",
+                    value=f"€{accumulation_nominal_data['var5']:,.0f}",
+                    help="Valore nominale minimo al pensionamento nel 95% dei casi" if lang == 'it' else "Minimum nominal value at retirement in 95% of cases"
+                )
+            
+            with col2:
+                st.metric(
+                    label="📉 CVaR 5%", 
+                    value=f"€{accumulation_nominal_data['cvar5']:,.0f}",
+                    help="Valore nominale medio al pensionamento nei peggiori 5% dei casi" if lang == 'it' else "Average nominal value at retirement in worst 5% of cases"
+                )
+            
+            with col3:
+                st.metric(
+                    label="📈 " + ("Media" if lang == 'it' else "Mean"),
+                    value=f"€{accumulation_nominal_data['mean']:,.0f}",
+                    help="Valore nominale medio al pensionamento" if lang == 'it' else "Average nominal value at retirement"
+                )
+            
+            with col4:
+                risk_gap = accumulation_nominal_data['mean'] - accumulation_nominal_data['cvar5'] if accumulation_nominal_data['cvar5'] < accumulation_nominal_data['mean'] else 0
+                st.metric(
+                    label="⚡ " + ("Gap di Rischio" if lang == 'it' else "Risk Gap"),
+                    value=f"€{risk_gap:,.0f}",
+                    help="Differenza tra media e CVaR 5%" if lang == 'it' else "Difference between mean and CVaR 5%"
+                )
+            
+            # Risk level assessment based on accumulation nominal values
+            ResultsDisplay._assess_risk_level(accumulation_nominal_data, total_deposited, lang)
+        elif 'accumulation' in phases_data:
+            # Fallback to real accumulation values if nominal not available
             accumulation_data = phases_data['accumulation']
-            st.subheader("🎯 " + ("Metriche di Rischio Chiave (Fine Accumulo)" if lang == 'it' else "Key Risk Metrics (End of Accumulation)"))
+            st.subheader("🎯 " + ("Metriche di Rischio Chiave (Fine Accumulo - Reale)" if lang == 'it' else "Key Risk Metrics (End of Accumulation - Real)"))
             
             col1, col2, col3, col4 = st.columns(4)
             
@@ -702,21 +740,21 @@ class ResultsDisplay:
                 st.metric(
                     label="📊 VaR 5%",
                     value=f"€{accumulation_data['var5']:,.0f}",
-                    help="Valore minimo al pensionamento nel 95% dei casi" if lang == 'it' else "Minimum value at retirement in 95% of cases"
+                    help="Valore reale minimo al pensionamento nel 95% dei casi" if lang == 'it' else "Minimum real value at retirement in 95% of cases"
                 )
             
             with col2:
                 st.metric(
                     label="📉 CVaR 5%", 
                     value=f"€{accumulation_data['cvar5']:,.0f}",
-                    help="Valore medio al pensionamento nei peggiori 5% dei casi" if lang == 'it' else "Average value at retirement in worst 5% of cases"
+                    help="Valore reale medio al pensionamento nei peggiori 5% dei casi" if lang == 'it' else "Average real value at retirement in worst 5% of cases"
                 )
             
             with col3:
                 st.metric(
                     label="📈 " + ("Media" if lang == 'it' else "Mean"),
                     value=f"€{accumulation_data['mean']:,.0f}",
-                    help="Valore medio al pensionamento" if lang == 'it' else "Average value at retirement"
+                    help="Valore reale medio al pensionamento" if lang == 'it' else "Average real value at retirement"
                 )
             
             with col4:
@@ -727,10 +765,10 @@ class ResultsDisplay:
                     help="Differenza tra media e CVaR 5%" if lang == 'it' else "Difference between mean and CVaR 5%"
                 )
             
-            # Risk level assessment based on accumulation values
+            # Risk level assessment
             ResultsDisplay._assess_risk_level(accumulation_data, total_deposited, lang)
         elif 'final' in phases_data:
-            # Fallback to final values if accumulation not available
+            # Last fallback to final values
             final_data = phases_data['final']
             st.subheader("🎯 " + ("Metriche di Rischio Chiave (Valori Finali)" if lang == 'it' else "Key Risk Metrics (Final Values)"))
             
@@ -774,11 +812,13 @@ class ResultsDisplay:
         # VaR/CVaR visualizations
         ResultsDisplay._show_var_cvar_visualizations(results, phases_data, lang)
         
-        # Loss probability analysis - CORRECTED: Use accumulation values
-        if 'accumulation' in results:
+        # Loss probability analysis - CORRECTED: Use accumulation NOMINAL values as primary
+        if 'accumulation_nominal' in results:
+            ResultsDisplay._show_loss_probability_analysis(results['accumulation_nominal'], total_deposited, lang, "accumulation_nominal")
+        elif 'accumulation' in results:
             ResultsDisplay._show_loss_probability_analysis(results['accumulation'], total_deposited, lang, "accumulation")
         elif 'final' in results:
-            # Fallback to final values if accumulation not available
+            # Last fallback to final values if accumulation not available
             ResultsDisplay._show_loss_probability_analysis(results['final'], total_deposited, lang, "final")
 
     @staticmethod
@@ -838,8 +878,10 @@ class ResultsDisplay:
         ])
         
         with tab1:
-            # CORRECTED: Use accumulation values for primary analysis
-            if 'accumulation' in results and 'accumulation' in phases_data:
+            # CORRECTED: Use accumulation NOMINAL values for primary analysis
+            if 'accumulation_nominal' in results and 'accumulation_nominal' in phases_data:
+                ResultsDisplay._show_distribution_with_var_cvar_markers(results['accumulation_nominal'], phases_data['accumulation_nominal'], lang, "accumulation_nominal")
+            elif 'accumulation' in results and 'accumulation' in phases_data:
                 ResultsDisplay._show_distribution_with_var_cvar_markers(results['accumulation'], phases_data['accumulation'], lang, "accumulation")
             elif 'final' in results and 'final' in phases_data:
                 ResultsDisplay._show_distribution_with_var_cvar_markers(results['final'], phases_data['final'], lang, "final")
