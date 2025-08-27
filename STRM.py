@@ -1,6 +1,6 @@
 """
 Monte Carlo Investment Simulator - Main Application
-MODIFIED VERSION with REAL withdrawal support
+COMPLETE FILE with REAL withdrawal support and integrated VaR/CVaR risk analysis
 """
 
 import streamlit as st
@@ -22,7 +22,7 @@ except ImportError:
     print("Correlation modules not available - running in legacy mode")
 
 def main():
-    """Main application function with correlation support and REAL withdrawal"""
+    """Main application function with correlation support, REAL withdrawal, and integrated VaR/CVaR"""
     # Initialize session state
     PortfolioManager.initialize_session_state()
     
@@ -90,11 +90,16 @@ def main():
     # Enhanced disclaimers section with real withdrawal info
     UIComponents.render_disclaimers(lang)
     
-    # NEW: Real withdrawal explanation banner
-    st.info("🆕 **" + ("Nuova Funzionalità" if lang == 'it' else "New Feature") + "**: " + 
-            ("Questa versione supporta prelievi REALI che mantengono il potere d'acquisto aggiustandosi per l'inflazione!" 
+    # NEW: Feature announcements
+    st.info("🆕 **" + ("Nuove Funzionalità" if lang == 'it' else "New Features") + "**: " + 
+            ("Questa versione include prelievi REALI che mantengono il potere d'acquisto e analisi VaR/CVaR integrata!" 
              if lang == 'it' else 
-             "This version supports REAL withdrawals that maintain purchasing power by adjusting for inflation!"))
+             "This version includes REAL withdrawals that maintain purchasing power and integrated VaR/CVaR analysis!"))
+    
+    st.success("⚡ **" + ("Analisi del Rischio Integrata" if lang == 'it' else "Integrated Risk Analysis") + "**: " + 
+              ("VaR e CVaR al 5% ora integrati direttamente nell'app per valutare i rischi estremi!" 
+               if lang == 'it' else 
+               "VaR and CVaR at 5% now integrated directly in the app to assess extreme risks!"))
     
     # Correlation methodology explanation (if available)
     if CORRELATION_AVAILABLE and enhanced_features:
@@ -485,7 +490,10 @@ def main():
                     else:
                         st.info("💰 " + ("Utilizzato prelievo NOMINALE (importo fisso)" if lang == 'it' else "Used NOMINAL withdrawal (fixed amount)"))
                     
-                    # Display results
+                    # NEW: Show VaR/CVaR integration status
+                    st.success("⚡ " + ("Analisi VaR/CVaR integrata nei risultati" if lang == 'it' else "VaR/CVaR analysis integrated in results"))
+                    
+                    # Display results (now includes integrated VaR/CVaR analysis)
                     ResultsDisplay.show_results(
                         results, 
                         simulator,
