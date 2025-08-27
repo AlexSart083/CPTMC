@@ -1,6 +1,6 @@
 """
-Updated translations with enhanced disclaimers and REAL withdrawal functionality
-MODIFIED VERSION - Added real withdrawal translations
+Updated translations with enhanced disclaimers, REAL withdrawal functionality, and integrated VaR/CVaR
+COMPLETE FILE - Added real withdrawal translations + VaR/CVaR translations
 """
 
 TRANSLATIONS = {
@@ -162,12 +162,41 @@ TRANSLATIONS = {
         'warning_success': '❌ Warning! Only {:.1f}% probability of success. Charity awaits you.',
         
         # Footer
-        'footer': 'Created by AS with the supervision of KIM - Modified with Real Withdrawal Support',
+        'footer': 'Created by AS with the supervision of KIM - Modified with Real Withdrawal Support and VaR/CVaR Analysis',
         
         # Config errors
         'config_not_found': '❌ Configuration file \'{}\' not found!',
         'config_load_error': '❌ Error loading configuration file: {}',
         'asset_characteristics_error': '❌ Error loading asset characteristics: {}',
+        
+        # VaR/CVaR Risk Analysis - NEW
+        'risk_analysis_title': 'Risk Analysis (VaR & CVaR)',
+        'var_explanation_title': 'What are VaR and CVaR?',
+        'key_risk_metrics_title': 'Key Risk Metrics (Final Values)',
+        'risk_visualizations_title': 'VaR and CVaR Visualizations',
+        'distribution_with_var_cvar': 'Distribution with VaR/CVaR',
+        'phase_comparison': 'Phase Comparison',
+        'var_cvar_table_by_phase': 'VaR and CVaR Table by Phase',
+        'loss_probability_analysis': 'Loss Probability Analysis',
+        'minimum_value_95_percent': 'Minimum value in 95% of cases',
+        'average_value_worst_5_percent': 'Average value in worst 5% of cases',
+        'average_value_all_scenarios': 'Average value across all scenarios',
+        'difference_mean_cvar': 'Difference between mean and CVaR 5%',
+        'high_risk': 'HIGH RISK',
+        'moderate_high_risk': 'MODERATE-HIGH RISK',
+        'moderate_risk': 'MODERATE RISK',
+        'low_risk': 'LOW RISK',
+        'significant_probability_lose_all': 'Significant probability of losing all capital',
+        'worst_scenarios_very_negative': 'Worst-case scenarios can be very negative',
+        'manageable_risk_monitor': 'Manageable risk but worth monitoring',
+        'worst_scenarios_contained': 'Worst-case scenarios relatively contained',
+        'final_values_distribution_var_cvar': 'Final Values Distribution with VaR and CVaR',
+        'var_cvar_comparison_phases': 'VaR and CVaR Comparison Across Phases',
+        'total_loss_probability': 'Total Loss Probability',
+        'prob_final_less_deposited': 'Probability that final portfolio is less than total deposited',
+        'average_value_when_loss': 'Average Value (when loss occurs)',
+        'probability_by_threshold': 'Probability by Threshold:',
+        'loss_probability_by_threshold': 'Loss Probability by Threshold',
     },
     
     'it': {
@@ -328,12 +357,41 @@ TRANSLATIONS = {
         'warning_success': '❌ Attenzione! Solo {:.1f}% di probabilità di successo. La carità ti aspetta.',
         
         # Footer
-        'footer': 'Creato da AS con la supervisione di KIM - Modificato con Supporto Prelievi Reali',
+        'footer': 'Creato da AS con la supervisione di KIM - Modificato con Supporto Prelievi Reali e Analisi VaR/CVaR',
         
         # Config errors
         'config_not_found': '❌ File di configurazione \'{}\' non trovato!',
         'config_load_error': '❌ Errore nel caricamento del file di configurazione: {}',
         'asset_characteristics_error': '❌ Errore nel caricamento delle caratteristiche degli asset: {}',
+        
+        # VaR/CVaR Risk Analysis - NEW
+        'risk_analysis_title': 'Analisi del Rischio (VaR & CVaR)',
+        'var_explanation_title': 'Cosa sono VaR e CVaR?',
+        'key_risk_metrics_title': 'Metriche di Rischio Chiave (Valori Finali)',
+        'risk_visualizations_title': 'Visualizzazioni VaR e CVaR',
+        'distribution_with_var_cvar': 'Distribuzione con VaR/CVaR',
+        'phase_comparison': 'Confronto per Fase',
+        'var_cvar_table_by_phase': 'Tabella VaR e CVaR per Fase',
+        'loss_probability_analysis': 'Analisi Probabilità di Perdita',
+        'minimum_value_95_percent': 'Valore minimo nel 95% dei casi',
+        'average_value_worst_5_percent': 'Valore medio nei peggiori 5% dei casi',
+        'average_value_all_scenarios': 'Valore medio di tutti gli scenari',
+        'difference_mean_cvar': 'Differenza tra media e CVaR 5%',
+        'high_risk': 'ALTO RISCHIO',
+        'moderate_high_risk': 'RISCHIO MODERATO-ALTO',
+        'moderate_risk': 'RISCHIO MODERATO',
+        'low_risk': 'RISCHIO BASSO',
+        'significant_probability_lose_all': 'Significativa probabilità di perdere tutto il capitale',
+        'worst_scenarios_very_negative': 'I peggiori scenari possono essere molto negativi',
+        'manageable_risk_monitor': 'Rischio gestibile ma da monitorare',
+        'worst_scenarios_contained': 'Scenari peggiori relativamente contenuti',
+        'final_values_distribution_var_cvar': 'Distribuzione Valori Finali con VaR e CVaR',
+        'var_cvar_comparison_phases': 'Confronto VaR e CVaR tra le Fasi',
+        'total_loss_probability': 'Probabilità Perdita Totale',
+        'prob_final_less_deposited': 'Probabilità che il portfolio finale sia inferiore al totale depositato',
+        'average_value_when_loss': 'Valore Medio (quando c\'è perdita)',
+        'probability_by_threshold': 'Probabilità per Soglia:',
+        'loss_probability_by_threshold': 'Probabilità di Perdita per Soglia',
     }
 }
 
