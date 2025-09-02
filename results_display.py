@@ -1,6 +1,7 @@
 """
 Enhanced results display components with CORRECTED REAL withdrawal support, detailed withdrawal analysis, and integrated VaR/CVaR risk metrics
-FIXED VERSION - Corrected function signatures and arguments
+COMPLETE FILE - Corretti tutti i calcoli dei prelievi + integrato VaR/CVaR direttamente nell'app
+MODIFIED: Added both nominal and real accumulation tables in detailed statistics
 """
 
 import streamlit as st
@@ -294,7 +295,7 @@ class ResultsDisplay:
     
     @staticmethod
     def _show_enhanced_detailed_statistics(stats, years_to_retirement, years_retired, total_deposited, inflation_rate, lang):
-        """Show enhanced detailed statistics"""
+        """Show enhanced detailed statistics with both nominal and real accumulation tables"""
         st.markdown("---")
         st.subheader("📊 " + ("Statistiche Dettagliate" if lang == 'it' else "Detailed Statistics"))
         
@@ -306,7 +307,8 @@ class ResultsDisplay:
         ])
         
         with tab1:
-            ResultsDisplay._show_phase_statistics(stats, 'accumulation', years_to_retirement, total_deposited, lang)
+            # MODIFIED: Show both nominal and real accumulation statistics
+            ResultsDisplay._show_accumulation_statistics_both(stats, years_to_retirement, total_deposited, lang)
         
         with tab2:
             ResultsDisplay._show_phase_statistics(stats, 'final', years_to_retirement + years_retired, total_deposited, lang)
@@ -318,6 +320,41 @@ class ResultsDisplay:
         
         with tab3:
             ResultsDisplay._show_performance_statistics(stats, years_to_retirement, years_retired, total_deposited, lang)
+    
+    @staticmethod
+    def _show_accumulation_statistics_both(stats, years_to_retirement, total_deposited, lang):
+        """Show both nominal and real accumulation statistics in separate tables"""
+        # First show nominal accumulation statistics
+        if 'accumulation_nominal' in stats:
+            st.markdown("**📊 " + ("Valori Accumulo (Nominali - Senza Aggiustamento Inflazione)" if lang == 'it' else "Accumulation Values (Nominal - No Inflation Adjustment)") + "**")
+            st.markdown("*" + ("Questi sono i valori assoluti senza considerare l'inflazione durante l'accumulo" if lang == 'it' else "These are absolute values without considering inflation during accumulation") + "*")
+            
+            ResultsDisplay._show_phase_statistics(stats, 'accumulation_nominal', years_to_retirement, total_deposited, lang)
+            
+            st.markdown("---")
+        
+        # Then show real accumulation statistics
+        if 'accumulation' in stats:
+            st.markdown("**🏛️ " + ("Valori Accumulo (Reali - Con Aggiustamento Inflazione)" if lang == 'it' else "Accumulation Values (Real - Inflation Adjusted)") + "**")
+            st.markdown("*" + ("Questi valori rappresentano il potere d'acquisto in euro di oggi" if lang == 'it' else "These values represent purchasing power in today's euros") + "*")
+            
+            ResultsDisplay._show_phase_statistics(stats, 'accumulation', years_to_retirement, total_deposited, lang)
+        
+        # Add explanation of the difference
+        if 'accumulation_nominal' in stats and 'accumulation' in stats:
+            st.markdown("---")
+            st.info("💡 " + ("**Differenza tra Nominale e Reale**: I valori nominali mostrano l'importo assoluto che avrai al pensionamento. I valori reali mostrano quanto varrà quel denaro in termini di potere d'acquisto di oggi, considerando l'inflazione." if lang == 'it' else "**Difference between Nominal and Real**: Nominal values show the absolute amount you'll have at retirement. Real values show what that money will be worth in terms of today's purchasing power, considering inflation."))
+            
+            # Show inflation impact
+            nominal_median = stats['accumulation_nominal']['median']
+            real_median = stats['accumulation']['median']
+            inflation_impact = (real_median / nominal_median * 100) if nominal_median > 0 else 0
+            
+            st.metric(
+                "📉 " + ("Impatto Inflazione sull'Accumulo" if lang == 'it' else "Inflation Impact on Accumulation"),
+                f"{100 - inflation_impact:.1f}%",
+                help=("Riduzione del potere d'acquisto dovuta all'inflazione" if lang == 'it' else "Reduction in purchasing power due to inflation")
+            )
     
     @staticmethod
     def _show_phase_statistics(stats, phase, years, total_deposited, lang):
@@ -729,9 +766,9 @@ class ResultsDisplay:
             
             # Risk level assessment based on accumulation nominal values
             ResultsDisplay._assess_risk_level(accumulation_nominal_data, total_deposited, lang)
-        elif 'accumulation_real' in phases_data:
+        elif 'accumulation' in phases_data:
             # Fallback to real accumulation values if nominal not available
-            accumulation_data = phases_data['accumulation_real']
+            accumulation_data = phases_data['accumulation']
             st.subheader("🎯 " + ("Metriche di Rischio Chiave (Fine Accumulo - Reale)" if lang == 'it' else "Key Risk Metrics (End of Accumulation - Real)"))
             
             col1, col2, col3, col4 = st.columns(4)
@@ -814,12 +851,12 @@ class ResultsDisplay:
         
         # Loss probability analysis - CORRECTED: Use accumulation NOMINAL values as primary
         if 'accumulation_nominal' in results:
-            ResultsDisplay._show_loss_probability_analysis(results['accumulation_nominal'], total_deposited, lang)
+            ResultsDisplay._show_loss_probability_analysis(results['accumulation_nominal'], total_deposited, lang, "accumulation_nominal")
         elif 'accumulation' in results:
-            ResultsDisplay._show_loss_probability_analysis(results['accumulation'], total_deposited, lang)
+            ResultsDisplay._show_loss_probability_analysis(results['accumulation'], total_deposited, lang, "accumulation")
         elif 'final' in results:
             # Last fallback to final values if accumulation not available
-            ResultsDisplay._show_loss_probability_analysis(results['final'], total_deposited, lang)
+            ResultsDisplay._show_loss_probability_analysis(results['final'], total_deposited, lang, "final")
 
     @staticmethod
     def _assess_risk_level(final_data, total_deposited, lang):
@@ -878,20 +915,20 @@ class ResultsDisplay:
         ])
         
         with tab1:
-            # FIXED: Correct function calls with proper arguments
+            # CORRECTED: Use accumulation NOMINAL values for primary analysis
             if 'accumulation_nominal' in results and 'accumulation_nominal' in phases_data:
-                ResultsDisplay._show_distribution_with_var_cvar_markers(results['accumulation_nominal'], phases_data['accumulation_nominal'], lang)
-            elif 'accumulation' in results and 'accumulation_real' in phases_data:
-                ResultsDisplay._show_distribution_with_var_cvar_markers(results['accumulation'], phases_data['accumulation_real'], lang)
+                ResultsDisplay._show_distribution_with_var_cvar_markers(results['accumulation_nominal'], phases_data['accumulation_nominal'], lang, "accumulation_nominal")
+            elif 'accumulation' in results and 'accumulation' in phases_data:
+                ResultsDisplay._show_distribution_with_var_cvar_markers(results['accumulation'], phases_data['accumulation'], lang, "accumulation")
             elif 'final' in results and 'final' in phases_data:
-                ResultsDisplay._show_distribution_with_var_cvar_markers(results['final'], phases_data['final'], lang)
+                ResultsDisplay._show_distribution_with_var_cvar_markers(results['final'], phases_data['final'], lang, "final")
         
         with tab2:
             ResultsDisplay._show_var_cvar_comparison_chart(phases_data, lang)
     
     @staticmethod
-    def _show_distribution_with_var_cvar_markers(final_values, final_data, lang):
-        """FIXED: Show distribution with VaR and CVaR markers - corrected function signature"""
+    def _show_distribution_with_var_cvar_markers(final_values, final_data, lang, phase_type):
+        """Show distribution with VaR and CVaR markers"""
         fig = go.Figure()
         
         # Add histogram
@@ -927,8 +964,16 @@ class ResultsDisplay:
             annotation_position="bottom"
         )
         
+        # Dynamic title based on phase
+        if phase_type == "accumulation_nominal":
+            title = "Distribuzione Valori Accumulo (Nominali) con VaR e CVaR" if lang == 'it' else "Accumulation Values (Nominal) Distribution with VaR and CVaR"
+        elif phase_type == "accumulation":
+            title = "Distribuzione Valori Accumulo (Reali) con VaR e CVaR" if lang == 'it' else "Accumulation Values (Real) Distribution with VaR and CVaR"
+        else:
+            title = "Distribuzione Valori Finali con VaR e CVaR" if lang == 'it' else "Final Values Distribution with VaR and CVaR"
+        
         fig.update_layout(
-            title="Distribuzione Valori con VaR e CVaR" if lang == 'it' else "Values Distribution with VaR and CVaR",
+            title=title,
             xaxis_title="Valore Portfolio (€)" if lang == 'it' else "Portfolio Value (€)",
             yaxis_title="Frequenza" if lang == 'it' else "Frequency",
             height=500,
@@ -1001,7 +1046,7 @@ class ResultsDisplay:
         st.plotly_chart(fig, use_container_width=True)
     
     @staticmethod
-    def _show_loss_probability_analysis(final_values, total_deposited, lang):
+    def _show_loss_probability_analysis(final_values, total_deposited, lang, phase_type):
         """Show loss probability analysis"""
         st.subheader("📉 " + ("Analisi Probabilità di Perdita" if lang == 'it' else "Loss Probability Analysis"))
         
