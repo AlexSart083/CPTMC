@@ -1,6 +1,6 @@
 """
 Monte Carlo Investment Simulator - Main Application
-COMPLETE FILE with REAL withdrawal support and integrated VaR/CVaR risk analysis
+COMPLETE FIXED FILE with asset loading corrections, REAL withdrawal support and integrated VaR/CVaR risk analysis
 """
 
 import streamlit as st
@@ -141,7 +141,7 @@ def main():
     with st.sidebar:
         st.header(get_text('simulation_parameters', lang))
         
-        # MODIFIED: General parameters now include real withdrawal options
+        # General parameters now include real withdrawal options
         params = UIComponents.render_general_parameters(lang)
         
         # CORRELATION SETTINGS SECTION
@@ -260,16 +260,17 @@ def main():
         
         st.markdown("---")
     
-    # Main area - Portfolio Configuration
+    # Main area - Portfolio Configuration - FIXED VERSION
     st.subheader(get_text('portfolio_config', lang))
+    
+    # FIXED: Get assets DIRECTLY from session state
+    accumulation_assets = PortfolioManager.get_current_assets('accumulation')
+    retirement_assets = PortfolioManager.get_current_assets('retirement')
     
     # Create two columns for portfolios
     if use_same_portfolio:
         # Single portfolio configuration
         st.subheader(get_text('accumulation_portfolio', lang))
-        
-        # Get current assets
-        accumulation_assets = st.session_state.get('current_accumulation_assets', [])
         
         if accumulation_assets:
             # Asset editor
@@ -277,7 +278,7 @@ def main():
                 accumulation_assets, lang, 'accumulation'
             )
             
-            # Update session state with modified assets
+            # FIXED: Update session state IMMEDIATELY after each modification
             PortfolioManager.update_assets_from_ui(updated_assets, 'accumulation')
             
             # Allocation controls
@@ -289,15 +290,16 @@ def main():
             if balance_clicked:
                 PortfolioManager.balance_allocations('accumulation')
             
-            # Show allocation status
-            total_allocation = PortfolioManager.get_total_allocation(updated_assets)
+            # Show allocation status - USE updated assets from session state
+            current_assets = PortfolioManager.get_current_assets('accumulation')
+            total_allocation = PortfolioManager.get_total_allocation(current_assets)
             UIComponents.render_allocation_status(total_allocation, lang)
             
             # Show allocation chart
-            UIComponents.render_allocation_chart(updated_assets, lang, 'accumulation')
+            UIComponents.render_allocation_chart(current_assets, lang, 'accumulation')
             
             # Asset summary
-            UIComponents.render_asset_summary(updated_assets, lang, 'accumulation')
+            UIComponents.render_asset_summary(current_assets, lang, 'accumulation')
         else:
             st.warning(get_text('select_profile', lang))
     
@@ -308,13 +310,12 @@ def main():
         with col1:
             st.subheader(get_text('accumulation_portfolio', lang))
             
-            accumulation_assets = st.session_state.get('current_accumulation_assets', [])
-            
             if accumulation_assets:
                 updated_acc_assets = UIComponents.render_asset_editor(
                     accumulation_assets, lang, 'accumulation'
                 )
                 
+                # FIXED: Update immediately
                 PortfolioManager.update_assets_from_ui(updated_acc_assets, 'accumulation')
                 
                 reset_acc, balance_acc = UIComponents.render_allocation_controls(lang, 'accumulation')
@@ -325,24 +326,25 @@ def main():
                 if balance_acc:
                     PortfolioManager.balance_allocations('accumulation')
                 
-                total_acc_allocation = PortfolioManager.get_total_allocation(updated_acc_assets)
+                # USE updated assets from session state
+                current_acc_assets = PortfolioManager.get_current_assets('accumulation')
+                total_acc_allocation = PortfolioManager.get_total_allocation(current_acc_assets)
                 UIComponents.render_allocation_status(total_acc_allocation, lang)
                 
-                UIComponents.render_allocation_chart(updated_acc_assets, lang, 'accumulation')
-                UIComponents.render_asset_summary(updated_acc_assets, lang, 'accumulation')
+                UIComponents.render_allocation_chart(current_acc_assets, lang, 'accumulation')
+                UIComponents.render_asset_summary(current_acc_assets, lang, 'accumulation')
             else:
                 st.warning(get_text('select_profile', lang))
         
         with col2:
             st.subheader(get_text('retirement_portfolio', lang))
             
-            retirement_assets = st.session_state.get('current_retirement_assets', [])
-            
             if retirement_assets:
                 updated_ret_assets = UIComponents.render_asset_editor(
                     retirement_assets, lang, 'retirement'
                 )
                 
+                # FIXED: Update immediately
                 PortfolioManager.update_assets_from_ui(updated_ret_assets, 'retirement')
                 
                 reset_ret, balance_ret = UIComponents.render_allocation_controls(lang, 'retirement')
@@ -353,11 +355,13 @@ def main():
                 if balance_ret:
                     PortfolioManager.balance_allocations('retirement')
                 
-                total_ret_allocation = PortfolioManager.get_total_allocation(updated_ret_assets)
+                # USE updated assets from session state
+                current_ret_assets = PortfolioManager.get_current_assets('retirement')
+                total_ret_allocation = PortfolioManager.get_total_allocation(current_ret_assets)
                 UIComponents.render_allocation_status(total_ret_allocation, lang)
                 
-                UIComponents.render_allocation_chart(updated_ret_assets, lang, 'retirement')
-                UIComponents.render_asset_summary(updated_ret_assets, lang, 'retirement')
+                UIComponents.render_allocation_chart(current_ret_assets, lang, 'retirement')
+                UIComponents.render_asset_summary(current_ret_assets, lang, 'retirement')
             else:
                 st.warning(get_text('select_profile', lang))
     
@@ -365,14 +369,14 @@ def main():
     
     # Run simulation button
     if UIComponents.render_run_simulation_button(lang):
-        # Get current assets
-        accumulation_assets = st.session_state.get('current_accumulation_assets', [])
-        retirement_assets = st.session_state.get('current_retirement_assets', [])
+        # FIXED: Get assets ALWAYS from session state at the moment of simulation
+        final_accumulation_assets = PortfolioManager.get_current_assets('accumulation')
+        final_retirement_assets = PortfolioManager.get_current_assets('retirement')
         
         # Validate inputs
         is_valid, active_accumulation_assets, active_retirement_assets = (
             PortfolioManager.validate_simulation_inputs(
-                accumulation_assets, retirement_assets, lang
+                final_accumulation_assets, final_retirement_assets, lang
             )
         )
         
@@ -420,6 +424,7 @@ def main():
                                 params['withdrawal'],
                                 params['capital_gains_tax_rate'],
                                 params['n_simulations'],
+                                params['use_real_withdrawal'],
                                 progress_bar, 
                                 status_text, 
                                 lang
@@ -440,14 +445,14 @@ def main():
                                 params['withdrawal'],
                                 params['capital_gains_tax_rate'],
                                 params['n_simulations'],
-                                params['use_real_withdrawal'],  # NEW: Pass real withdrawal flag
+                                params['use_real_withdrawal'],
                                 progress_bar, 
                                 status_text, 
                                 lang
                             )
                             simulation_method = "standard"
                     else:
-                        # Standard simulation without correlation - MODIFIED to include real withdrawal
+                        # Standard simulation without correlation
                         results = simulator.run_simulation(
                             active_accumulation_assets,
                             active_retirement_assets,
@@ -460,7 +465,7 @@ def main():
                             params['withdrawal'],
                             params['capital_gains_tax_rate'],
                             params['n_simulations'],
-                            params['use_real_withdrawal'],  # NEW: Pass real withdrawal flag
+                            params['use_real_withdrawal'],
                             progress_bar, 
                             status_text, 
                             lang
@@ -484,13 +489,13 @@ def main():
                     else:
                         st.info("ℹ️ " + ("Simulazione completata senza correlazione (asset indipendenti)" if lang == 'it' else "Simulation completed without correlation (independent assets)"))
                     
-                    # NEW: Show withdrawal method used
+                    # Show withdrawal method used
                     if params['use_real_withdrawal']:
                         st.success("💰 " + ("Utilizzato prelievo REALE (aggiustato per inflazione)" if lang == 'it' else "Used REAL withdrawal (inflation-adjusted)"))
                     else:
                         st.info("💰 " + ("Utilizzato prelievo NOMINALE (importo fisso)" if lang == 'it' else "Used NOMINAL withdrawal (fixed amount)"))
                     
-                    # NEW: Show VaR/CVaR integration status
+                    # Show VaR/CVaR integration status
                     st.success("⚡ " + ("Analisi VaR/CVaR integrata nei risultati" if lang == 'it' else "VaR/CVaR analysis integrated in results"))
                     
                     # Display results (now includes integrated VaR/CVaR analysis)
@@ -504,7 +509,7 @@ def main():
                         params['capital_gains_tax_rate'],
                         params['withdrawal'],
                         params['inflation'],
-                        params['use_real_withdrawal'],  # NEW: Pass real withdrawal flag to results
+                        params['use_real_withdrawal'],
                         lang
                     )
                     
