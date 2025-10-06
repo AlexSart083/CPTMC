@@ -1,5 +1,6 @@
 """
 Portfolio management utilities for the Monte Carlo Investment Simulator
+FIXED VERSION - Risolti i problemi di caricamento asset
 """
 
 import streamlit as st
@@ -34,47 +35,64 @@ class PortfolioManager:
         # Flag to use same portfolio for both phases
         if 'use_same_portfolio' not in st.session_state:
             st.session_state.use_same_portfolio = True
+        
+        # NUOVO: Flag per forzare il refresh degli asset dopo il caricamento
+        if 'force_asset_refresh' not in st.session_state:
+            st.session_state.force_asset_refresh = False
     
     @staticmethod
     def load_accumulation_profile(config_manager, selected_profile):
         """Load a specific investment profile for accumulation phase"""
-        if st.session_state.last_selected_accumulation_profile != selected_profile:
+        # FIXED: Carica SEMPRE il profilo, anche se è lo stesso
+        loaded_assets = config_manager.get_profile_data(selected_profile)
+        if loaded_assets:
+            # Crea una copia profonda degli asset per evitare riferimenti condivisi
+            st.session_state.current_accumulation_assets = [asset.copy() for asset in loaded_assets]
             st.session_state.last_selected_accumulation_profile = selected_profile
-            loaded_assets = config_manager.get_profile_data(selected_profile)
-            if loaded_assets:
-                st.session_state.current_accumulation_assets = loaded_assets
-                # If using same portfolio, also load for retirement
-                if st.session_state.use_same_portfolio:
-                    st.session_state.current_retirement_assets = loaded_assets.copy()
-                    st.session_state.last_selected_retirement_profile = selected_profile
-                st.rerun()
+            
+            # If using same portfolio, also load for retirement
+            if st.session_state.use_same_portfolio:
+                st.session_state.current_retirement_assets = [asset.copy() for asset in loaded_assets]
+                st.session_state.last_selected_retirement_profile = selected_profile
+            
+            # Forza il refresh degli asset
+            st.session_state.force_asset_refresh = True
+            st.rerun()
     
     @staticmethod
     def load_retirement_profile(config_manager, selected_profile):
         """Load a specific investment profile for retirement phase"""
-        if st.session_state.last_selected_retirement_profile != selected_profile:
+        # FIXED: Carica SEMPRE il profilo, anche se è lo stesso
+        loaded_assets = config_manager.get_profile_data(selected_profile)
+        if loaded_assets:
+            # Crea una copia profonda degli asset
+            st.session_state.current_retirement_assets = [asset.copy() for asset in loaded_assets]
             st.session_state.last_selected_retirement_profile = selected_profile
-            loaded_assets = config_manager.get_profile_data(selected_profile)
-            if loaded_assets:
-                st.session_state.current_retirement_assets = loaded_assets
-                st.rerun()
+            
+            # Forza il refresh degli asset
+            st.session_state.force_asset_refresh = True
+            st.rerun()
     
     @staticmethod
     def initialize_default_profiles(config_manager, accumulation_profile, retirement_profile):
         """Initialize default profiles if no assets are loaded"""
-        if 'current_accumulation_assets' not in st.session_state or not st.session_state.current_accumulation_assets:
+        # FIXED: Inizializza SOLO se gli asset sono vuoti
+        if not st.session_state.current_accumulation_assets:
             loaded_assets = config_manager.get_profile_data(accumulation_profile)
             if loaded_assets:
-                st.session_state.current_accumulation_assets = loaded_assets
+                st.session_state.current_accumulation_assets = [asset.copy() for asset in loaded_assets]
+                st.session_state.last_selected_accumulation_profile = accumulation_profile
         
-        if 'current_retirement_assets' not in st.session_state or not st.session_state.current_retirement_assets:
-            if st.session_state.use_same_portfolio and 'current_accumulation_assets' in st.session_state:
+        if not st.session_state.current_retirement_assets:
+            if st.session_state.use_same_portfolio and st.session_state.current_accumulation_assets:
                 # Use same assets as accumulation
                 st.session_state.current_retirement_assets = [asset.copy() for asset in st.session_state.current_accumulation_assets]
+                st.session_state.last_selected_retirement_profile = st.session_state.last_selected_accumulation_profile
             else:
                 loaded_assets = config_manager.get_profile_data(retirement_profile)
                 if loaded_assets:
-                    st.session_state.current_retirement_assets = loaded_assets
+                    st.session_state.current_retirement_assets = [asset.copy() for asset in loaded_assets]
+                    st.session_state.last_selected_retirement_profile = retirement_profile
     
     @staticmethod
     def sync_retirement_to_accumulation():
@@ -82,6 +100,7 @@ class PortfolioManager:
         if (st.session_state.use_same_portfolio and 
             'current_accumulation_assets' in st.session_state and 
             st.session_state.current_accumulation_assets):
+            # Crea una copia profonda per evitare riferimenti condivisi
             st.session_state.current_retirement_assets = [asset.copy() for asset in st.session_state.current_accumulation_assets]
             if 'last_selected_accumulation_profile' in st.session_state:
                 st.session_state.last_selected_retirement_profile = st.session_state.last_selected_accumulation_profile
@@ -130,6 +149,13 @@ class PortfolioManager:
         """Validate inputs before running simulation"""
         from translations import get_text
         
+        # FIXED: Assicurati che stiamo usando gli asset correnti dal session state
+        if not accumulation_assets:
+            accumulation_assets = st.session_state.get('current_accumulation_assets', [])
+        
+        if not retirement_assets:
+            retirement_assets = st.session_state.get('current_retirement_assets', [])
+        
         # Filter only assets with allocation > 0
         active_accumulation_assets = [asset for asset in accumulation_assets if asset['allocation'] > 0]
         active_retirement_assets = [asset for asset in retirement_assets if asset['allocation'] > 0]
@@ -161,16 +187,9 @@ class PortfolioManager:
         """Update session state assets with UI changes"""
         assets_key = f'current_{phase}_assets'
         if assets_key in st.session_state:
-            # Update the session state with the modified assets
-            for i, asset in enumerate(st.session_state[assets_key]):
-                if i < len(assets_data):
-                    ui_asset = assets_data[i]
-                    asset['allocation'] = ui_asset['allocation']
-                    asset['ter'] = ui_asset['ter']
-                    asset['return'] = ui_asset['return']
-                    asset['volatility'] = ui_asset['volatility']
-                    asset['min_return'] = ui_asset['min_return']
-                    asset['max_return'] = ui_asset['max_return']
+            # FIXED: Aggiorna direttamente il session state con i nuovi dati
+            # Questo assicura che le modifiche dall'UI vengano salvate
+            st.session_state[assets_key] = [asset.copy() for asset in assets_data]
             
             # Sync retirement if using same portfolio and updating accumulation
             if phase == 'accumulation' and st.session_state.use_same_portfolio:
@@ -183,3 +202,15 @@ class PortfolioManager:
             # Sync retirement to accumulation
             PortfolioManager.sync_retirement_to_accumulation()
             st.rerun()
+    
+    @staticmethod
+    def get_current_assets(phase='accumulation'):
+        """Get current assets for a specific phase - NUOVO metodo helper"""
+        assets_key = f'current_{phase}_assets'
+        return st.session_state.get(assets_key, [])
+    
+    @staticmethod
+    def clear_force_refresh():
+        """Clear the force refresh flag - NUOVO"""
+        if 'force_asset_refresh' in st.session_state:
+            st.session_state.force_asset_refresh = False
