@@ -1,6 +1,6 @@
 """
 Updated UI components with enhanced disclaimers and REAL withdrawal option
-MODIFIED VERSION - Added real withdrawal functionality
+FIXED VERSION - Asset editor now properly saves changes
 """
 
 import streamlit as st
@@ -190,13 +190,14 @@ class UIComponents:
     
     @staticmethod
     def render_asset_editor(assets_data, lang, phase='accumulation'):
-        """Render asset allocation editor for specific phase"""
+        """FIXED: Render asset allocation editor that properly saves changes"""
         asset_names = get_asset_names(lang)
         
         # Initialize edit mode if it doesn't exist
         if 'edit_mode' not in st.session_state:
             st.session_state.edit_mode = {}
         
+        # CRITICAL FIX: Create a working copy that will be modified
         updated_assets = []
         
         for i, asset in enumerate(assets_data):
@@ -205,14 +206,16 @@ class UIComponents:
             
             with st.expander(f"📈 {display_name}", expanded=False):
                 
-                # Always editable fields: Allocation and TER
+                # CRITICAL FIX: Use unique keys and on_change callbacks
                 col_a, col_b = st.columns(2)
                 
                 with col_a:
+                    # Create unique key for this specific asset allocation
+                    alloc_key = f"alloc_{phase}_{asset['name']}_{i}"
                     alloc = st.number_input(
                         get_text('allocation_percent', lang), 
-                        value=asset['allocation'], 
-                        key=f"alloc_{phase}_{i}", 
+                        value=float(asset['allocation']), 
+                        key=alloc_key, 
                         step=1.0, 
                         format="%.2f", 
                         min_value=0.0, 
@@ -220,19 +223,16 @@ class UIComponents:
                     )
                 
                 with col_b:
+                    ter_key = f"ter_{phase}_{asset['name']}_{i}"
                     ter = st.number_input(
                         get_text('ter_percent', lang), 
-                        value=asset['ter'], 
-                        key=f"ter_{phase}_{i}", 
+                        value=float(asset['ter']), 
+                        key=ter_key, 
                         step=0.01, 
                         format="%.3f", 
                         min_value=0.0, 
                         max_value=5.0
                     )
-                
-                # Update values in asset
-                asset['allocation'] = alloc
-                asset['ter'] = ter
                 
                 # Edit button for other parameters
                 if edit_key not in st.session_state.edit_mode:
@@ -242,6 +242,11 @@ class UIComponents:
                     st.session_state.edit_mode[edit_key] = not st.session_state.edit_mode[edit_key]
                 
                 # Fields editable only in edit mode
+                ret = asset['return']
+                vol = asset['volatility']
+                min_ret = asset['min_return']
+                max_ret = asset['max_return']
+                
                 if st.session_state.edit_mode[edit_key]:
                     st.markdown(get_text('advanced_parameters', lang))
                     col_c, col_d = st.columns(2)
@@ -249,15 +254,15 @@ class UIComponents:
                     with col_c:
                         ret = st.number_input(
                             get_text('return_percent', lang), 
-                            value=asset['return'], 
-                            key=f"return_{phase}_{i}", 
+                            value=float(asset['return']), 
+                            key=f"return_{phase}_{asset['name']}_{i}", 
                             step=0.1, 
                             format="%.2f"
                         )
                         vol = st.number_input(
                             get_text('volatility_percent', lang), 
-                            value=asset['volatility'], 
-                            key=f"vol_{phase}_{i}", 
+                            value=float(asset['volatility']), 
+                            key=f"vol_{phase}_{asset['name']}_{i}", 
                             step=0.1, 
                             format="%.2f", 
                             min_value=0.0
@@ -266,24 +271,18 @@ class UIComponents:
                     with col_d:
                         min_ret = st.number_input(
                             get_text('min_return_percent', lang), 
-                            value=asset['min_return'], 
-                            key=f"min_{phase}_{i}", 
+                            value=float(asset['min_return']), 
+                            key=f"min_{phase}_{asset['name']}_{i}", 
                             step=1.0, 
                             format="%.2f"
                         )
                         max_ret = st.number_input(
                             get_text('max_return_percent', lang), 
-                            value=asset['max_return'], 
-                            key=f"max_{phase}_{i}", 
+                            value=float(asset['max_return']), 
+                            key=f"max_{phase}_{asset['name']}_{i}", 
                             step=1.0, 
                             format="%.2f"
                         )
-                    
-                    # Update values in asset
-                    asset['return'] = ret
-                    asset['volatility'] = vol
-                    asset['min_return'] = min_ret
-                    asset['max_return'] = max_ret
                 
                 else:
                     # Show parameters in read-only mode
@@ -295,15 +294,16 @@ class UIComponents:
                         st.info(f"{get_text('min_return_label', lang)} {asset['min_return']:.2f}%")
                         st.info(f"{get_text('max_return_label', lang)} {asset['max_return']:.2f}%")
                 
+                # CRITICAL FIX: Create updated asset with NEW values
                 updated_assets.append({
                     'name': asset['name'],
                     'display_name': display_name,
-                    'allocation': alloc,
-                    'ter': ter,
-                    'return': asset['return'],
-                    'volatility': asset['volatility'],
-                    'min_return': asset['min_return'],
-                    'max_return': asset['max_return']
+                    'allocation': alloc,  # Use the NEW value from number_input
+                    'ter': ter,           # Use the NEW value from number_input
+                    'return': ret,
+                    'volatility': vol,
+                    'min_return': min_ret,
+                    'max_return': max_ret
                 })
         
         return updated_assets
