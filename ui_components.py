@@ -197,21 +197,24 @@ class UIComponents:
         if 'edit_mode' not in st.session_state:
             st.session_state.edit_mode = {}
         
+        # CRITICAL FIX: Use profile name in key to force widget recreation when profile changes
+        profile_key = st.session_state.get(f'last_selected_{phase}_profile', 'default')
+        
         # CRITICAL FIX: Create a working copy that will be modified
         updated_assets = []
         
         for i, asset in enumerate(assets_data):
             display_name = asset_names.get(asset['name'], asset['name'])
-            edit_key = f"edit_{phase}_{i}"
+            edit_key = f"edit_{phase}_{i}_{profile_key}"
             
             with st.expander(f"📈 {display_name}", expanded=False):
                 
-                # CRITICAL FIX: Use unique keys and on_change callbacks
+                # CRITICAL FIX: Use unique keys that include profile name
                 col_a, col_b = st.columns(2)
                 
                 with col_a:
-                    # Create unique key for this specific asset allocation
-                    alloc_key = f"alloc_{phase}_{asset['name']}_{i}"
+                    # Create unique key that includes profile name - forces recreation on profile change
+                    alloc_key = f"alloc_{phase}_{asset['name']}_{i}_{profile_key}"
                     alloc = st.number_input(
                         get_text('allocation_percent', lang), 
                         value=float(asset['allocation']), 
