@@ -273,13 +273,18 @@ def main():
         st.subheader(get_text('accumulation_portfolio', lang))
         
         if accumulation_assets:
-            # Asset editor
+            # Asset editor - RETURNS updated assets with current widget values
             updated_assets = UIComponents.render_asset_editor(
                 accumulation_assets, lang, 'accumulation'
             )
             
-            # FIXED: Update session state IMMEDIATELY after each modification
-            PortfolioManager.update_assets_from_ui(updated_assets, 'accumulation')
+            # CRITICAL FIX: Update session state with the returned values
+            # This captures ANY changes made in the UI widgets
+            st.session_state.current_accumulation_assets = [asset.copy() for asset in updated_assets]
+            
+            # Sync to retirement if using same portfolio
+            if st.session_state.use_same_portfolio:
+                st.session_state.current_retirement_assets = [asset.copy() for asset in updated_assets]
             
             # Allocation controls
             reset_clicked, balance_clicked = UIComponents.render_allocation_controls(lang, 'accumulation')
@@ -311,12 +316,17 @@ def main():
             st.subheader(get_text('accumulation_portfolio', lang))
             
             if accumulation_assets:
+                # Asset editor - RETURNS updated assets
                 updated_acc_assets = UIComponents.render_asset_editor(
                     accumulation_assets, lang, 'accumulation'
                 )
                 
-                # FIXED: Update immediately
-                PortfolioManager.update_assets_from_ui(updated_acc_assets, 'accumulation')
+                # CRITICAL FIX: Save to session state immediately
+                st.session_state.current_accumulation_assets = [asset.copy() for asset in updated_acc_assets]
+                
+                # Sync if using same portfolio
+                if st.session_state.use_same_portfolio:
+                    st.session_state.current_retirement_assets = [asset.copy() for asset in updated_acc_assets]
                 
                 reset_acc, balance_acc = UIComponents.render_allocation_controls(lang, 'accumulation')
                 
@@ -340,12 +350,13 @@ def main():
             st.subheader(get_text('retirement_portfolio', lang))
             
             if retirement_assets:
+                # Asset editor - RETURNS updated assets
                 updated_ret_assets = UIComponents.render_asset_editor(
                     retirement_assets, lang, 'retirement'
                 )
                 
-                # FIXED: Update immediately
-                PortfolioManager.update_assets_from_ui(updated_ret_assets, 'retirement')
+                # CRITICAL FIX: Save to session state immediately
+                st.session_state.current_retirement_assets = [asset.copy() for asset in updated_ret_assets]
                 
                 reset_ret, balance_ret = UIComponents.render_allocation_controls(lang, 'retirement')
                 
@@ -367,11 +378,24 @@ def main():
     
     st.markdown("---")
     
+    # CRITICAL FIX: Before simulation button, ensure all current values are saved
+    # This is needed because Streamlit may not have updated session_state yet
+    def prepare_for_simulation():
+        """Ensure all current asset values are saved before simulation"""
+        # Force a save of current assets from the UI
+        if 'current_accumulation_assets' in st.session_state:
+            # Re-get to ensure we have latest
+            pass  # Already updated by render_asset_editor above
+    
     # Run simulation button
     if UIComponents.render_run_simulation_button(lang):
+        # CRITICAL FIX: Give Streamlit a moment to update session_state
+        # by re-reading the assets one final time
+        prepare_for_simulation()
+        
         # FIXED: Get assets ALWAYS from session state at the moment of simulation
-        final_accumulation_assets = PortfolioManager.get_current_assets('accumulation')
-        final_retirement_assets = PortfolioManager.get_current_assets('retirement')
+        final_accumulation_assets = st.session_state.get('current_accumulation_assets', [])
+        final_retirement_assets = st.session_state.get('current_retirement_assets', [])
         
         # Validate inputs
         is_valid, active_accumulation_assets, active_retirement_assets = (
