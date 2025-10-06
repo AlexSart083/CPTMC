@@ -1,6 +1,6 @@
 """
 Monte Carlo Investment Simulator - Main Application
-COMPLETE FIXED FILE with asset loading corrections, REAL withdrawal support and integrated VaR/CVaR risk analysis
+SIMPLIFIED FIX - Just use current assets, don't reload anything
 """
 
 import streamlit as st
@@ -22,8 +22,8 @@ except ImportError:
     print("Correlation modules not available - running in legacy mode")
 
 def main():
-    """Main application function with correlation support, REAL withdrawal, and integrated VaR/CVaR"""
-    # Initialize session state
+    """Main application function - SIMPLIFIED"""
+    # Initialize session state ONLY ONCE
     PortfolioManager.initialize_session_state()
     
     # Initialize correlation settings in session state
@@ -188,18 +188,20 @@ def main():
             else:
                 st.info("🔗 " + ("Funzionalità correlazione non disponibile" if lang == 'it' else "Correlation features not available"))
         
-        # Initialize default profiles
+        # Initialize default profiles ONLY IF EMPTY
         st.markdown("---")
         st.subheader(get_text('portfolio_config', lang))
         
-        try:
-            PortfolioManager.initialize_default_profiles(
-                config_manager, 
-                'Moderate',  # Default accumulation profile
-                'Conservative'  # Default retirement profile
-            )
-        except Exception as e:
-            st.error(f"Failed to initialize default profiles: {str(e)}")
+        # SIMPLIFIED: Only initialize if truly empty
+        if not st.session_state.current_accumulation_assets:
+            try:
+                PortfolioManager.initialize_default_profiles(
+                    config_manager, 
+                    'Moderate',  # Default accumulation profile
+                    'Conservative'  # Default retirement profile
+                )
+            except Exception as e:
+                st.error(f"Failed to initialize default profiles: {str(e)}")
         
         # Toggle for using same portfolio
         use_same_portfolio = UIComponents.render_same_portfolio_toggle(lang)
@@ -260,12 +262,12 @@ def main():
         
         st.markdown("---")
     
-    # Main area - Portfolio Configuration - FIXED VERSION
+    # Main area - Portfolio Configuration - SIMPLIFIED
     st.subheader(get_text('portfolio_config', lang))
     
-    # FIXED: Get assets DIRECTLY from session state
-    accumulation_assets = PortfolioManager.get_current_assets('accumulation')
-    retirement_assets = PortfolioManager.get_current_assets('retirement')
+    # SIMPLIFIED: Just get current assets from session state - DON'T reload anything
+    accumulation_assets = st.session_state.current_accumulation_assets
+    retirement_assets = st.session_state.current_retirement_assets
     
     # Create two columns for portfolios
     if use_same_portfolio:
@@ -273,16 +275,15 @@ def main():
         st.subheader(get_text('accumulation_portfolio', lang))
         
         if accumulation_assets:
-            # Asset editor - RETURNS updated assets with current widget values
+            # Asset editor - returns updated values
             updated_assets = UIComponents.render_asset_editor(
                 accumulation_assets, lang, 'accumulation'
             )
             
-            # CRITICAL FIX: Update session state with the returned values
-            # This captures ANY changes made in the UI widgets
-            st.session_state.current_accumulation_assets = [asset.copy() for asset in updated_assets]
+            # SIMPLIFIED: Just update the session state directly
+            st.session_state.current_accumulation_assets = updated_assets
             
-            # Sync to retirement if using same portfolio
+            # Sync if using same portfolio
             if st.session_state.use_same_portfolio:
                 st.session_state.current_retirement_assets = [asset.copy() for asset in updated_assets]
             
@@ -295,16 +296,15 @@ def main():
             if balance_clicked:
                 PortfolioManager.balance_allocations('accumulation')
             
-            # Show allocation status - USE updated assets from session state
-            current_assets = PortfolioManager.get_current_assets('accumulation')
-            total_allocation = PortfolioManager.get_total_allocation(current_assets)
+            # Show allocation status
+            total_allocation = PortfolioManager.get_total_allocation(st.session_state.current_accumulation_assets)
             UIComponents.render_allocation_status(total_allocation, lang)
             
             # Show allocation chart
-            UIComponents.render_allocation_chart(current_assets, lang, 'accumulation')
+            UIComponents.render_allocation_chart(st.session_state.current_accumulation_assets, lang, 'accumulation')
             
             # Asset summary
-            UIComponents.render_asset_summary(current_assets, lang, 'accumulation')
+            UIComponents.render_asset_summary(st.session_state.current_accumulation_assets, lang, 'accumulation')
         else:
             st.warning(get_text('select_profile', lang))
     
@@ -316,17 +316,12 @@ def main():
             st.subheader(get_text('accumulation_portfolio', lang))
             
             if accumulation_assets:
-                # Asset editor - RETURNS updated assets
                 updated_acc_assets = UIComponents.render_asset_editor(
                     accumulation_assets, lang, 'accumulation'
                 )
                 
-                # CRITICAL FIX: Save to session state immediately
-                st.session_state.current_accumulation_assets = [asset.copy() for asset in updated_acc_assets]
-                
-                # Sync if using same portfolio
-                if st.session_state.use_same_portfolio:
-                    st.session_state.current_retirement_assets = [asset.copy() for asset in updated_acc_assets]
+                # SIMPLIFIED: Just update directly
+                st.session_state.current_accumulation_assets = updated_acc_assets
                 
                 reset_acc, balance_acc = UIComponents.render_allocation_controls(lang, 'accumulation')
                 
@@ -336,13 +331,11 @@ def main():
                 if balance_acc:
                     PortfolioManager.balance_allocations('accumulation')
                 
-                # USE updated assets from session state
-                current_acc_assets = PortfolioManager.get_current_assets('accumulation')
-                total_acc_allocation = PortfolioManager.get_total_allocation(current_acc_assets)
+                total_acc_allocation = PortfolioManager.get_total_allocation(st.session_state.current_accumulation_assets)
                 UIComponents.render_allocation_status(total_acc_allocation, lang)
                 
-                UIComponents.render_allocation_chart(current_acc_assets, lang, 'accumulation')
-                UIComponents.render_asset_summary(current_acc_assets, lang, 'accumulation')
+                UIComponents.render_allocation_chart(st.session_state.current_accumulation_assets, lang, 'accumulation')
+                UIComponents.render_asset_summary(st.session_state.current_accumulation_assets, lang, 'accumulation')
             else:
                 st.warning(get_text('select_profile', lang))
         
@@ -350,13 +343,12 @@ def main():
             st.subheader(get_text('retirement_portfolio', lang))
             
             if retirement_assets:
-                # Asset editor - RETURNS updated assets
                 updated_ret_assets = UIComponents.render_asset_editor(
                     retirement_assets, lang, 'retirement'
                 )
                 
-                # CRITICAL FIX: Save to session state immediately
-                st.session_state.current_retirement_assets = [asset.copy() for asset in updated_ret_assets]
+                # SIMPLIFIED: Just update directly
+                st.session_state.current_retirement_assets = updated_ret_assets
                 
                 reset_ret, balance_ret = UIComponents.render_allocation_controls(lang, 'retirement')
                 
@@ -366,36 +358,21 @@ def main():
                 if balance_ret:
                     PortfolioManager.balance_allocations('retirement')
                 
-                # USE updated assets from session state
-                current_ret_assets = PortfolioManager.get_current_assets('retirement')
-                total_ret_allocation = PortfolioManager.get_total_allocation(current_ret_assets)
+                total_ret_allocation = PortfolioManager.get_total_allocation(st.session_state.current_retirement_assets)
                 UIComponents.render_allocation_status(total_ret_allocation, lang)
                 
-                UIComponents.render_allocation_chart(current_ret_assets, lang, 'retirement')
-                UIComponents.render_asset_summary(current_ret_assets, lang, 'retirement')
+                UIComponents.render_allocation_chart(st.session_state.current_retirement_assets, lang, 'retirement')
+                UIComponents.render_asset_summary(st.session_state.current_retirement_assets, lang, 'retirement')
             else:
                 st.warning(get_text('select_profile', lang))
     
     st.markdown("---")
     
-    # CRITICAL FIX: Before simulation button, ensure all current values are saved
-    # This is needed because Streamlit may not have updated session_state yet
-    def prepare_for_simulation():
-        """Ensure all current asset values are saved before simulation"""
-        # Force a save of current assets from the UI
-        if 'current_accumulation_assets' in st.session_state:
-            # Re-get to ensure we have latest
-            pass  # Already updated by render_asset_editor above
-    
-    # Run simulation button
+    # Run simulation button - SIMPLIFIED: Just use what's in session state RIGHT NOW
     if UIComponents.render_run_simulation_button(lang):
-        # CRITICAL FIX: Give Streamlit a moment to update session_state
-        # by re-reading the assets one final time
-        prepare_for_simulation()
-        
-        # FIXED: Get assets ALWAYS from session state at the moment of simulation
-        final_accumulation_assets = st.session_state.get('current_accumulation_assets', [])
-        final_retirement_assets = st.session_state.get('current_retirement_assets', [])
+        # SIMPLIFIED: Use current assets from session state - NO reloading, NO snapshots
+        final_accumulation_assets = st.session_state.current_accumulation_assets
+        final_retirement_assets = st.session_state.current_retirement_assets
         
         # Validate inputs
         is_valid, active_accumulation_assets, active_retirement_assets = (
