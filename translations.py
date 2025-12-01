@@ -471,3 +471,4 @@ def get_asset_names(lang='en'):
         }
     }
     return assets.get(lang, assets['en'])
+
