@@ -9,7 +9,7 @@ from simulation_engine import MonteCarloSimulator
 from ui_components import UIComponents
 from results_display import ResultsDisplay
 from portfolio_manager import PortfolioManager
-from translations_professional import get_text  # Usa la versione professionale
+from translations import get_text  # Usa la versione professionale
 
 # Import optional correlation modules if available
 try:
