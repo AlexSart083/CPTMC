@@ -1,6 +1,6 @@
 """
-Monte Carlo Investment Simulator - Main Application
-SIMPLIFIED FIX - Just use current assets, don't reload anything
+Monte Carlo Investment Simulator - Bootstrap Theme Version
+Main Application with Bootstrap-style CSS
 """
 
 import streamlit as st
@@ -9,7 +9,7 @@ from simulation_engine import MonteCarloSimulator
 from ui_components import UIComponents
 from results_display import ResultsDisplay
 from portfolio_manager import PortfolioManager
-from translations import get_text
+from translations_professional import get_text  # Usa la versione professionale
 
 # Import optional correlation modules if available
 try:
@@ -19,14 +19,150 @@ try:
     CORRELATION_AVAILABLE = True
 except ImportError:
     CORRELATION_AVAILABLE = False
-    print("Correlation modules not available - running in legacy mode")
+
+def load_css():
+    """Load professional Bootstrap-style CSS"""
+    css = """
+    <style>
+    /* Professional Bootstrap-inspired Theme */
+    :root {
+        --primary-color: #0066cc;
+        --secondary-color: #6c757d;
+        --success-color: #28a745;
+        --warning-color: #ffc107;
+        --danger-color: #dc3545;
+        --info-color: #17a2b8;
+        --light-bg: #f8f9fa;
+        --dark-text: #212529;
+        --border-color: #dee2e6;
+    }
+
+    .main {
+        background-color: white;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    h1, h2, h3, h4 {
+        font-weight: 600;
+        color: var(--dark-text);
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    h1 {
+        border-bottom: 3px solid var(--primary-color);
+        padding-bottom: 0.5rem;
+    }
+
+    h2 {
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 0.5rem;
+    }
+
+    .stButton button {
+        border-radius: 4px;
+        font-weight: 500;
+        padding: 0.5rem 1.5rem;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+    }
+
+    .stButton button[kind="primary"] {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .stButton button[kind="primary"]:hover {
+        background-color: #0052a3;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .stMetric {
+        background-color: var(--light-bg);
+        padding: 1rem;
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+    }
+
+    .stMetric label {
+        font-weight: 600;
+        color: var(--secondary-color);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stMetric [data-testid="stMetricValue"] {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .stAlert {
+        border-radius: 4px;
+        border-left: 4px solid;
+    }
+
+    .streamlit-expanderHeader {
+        background-color: var(--light-bg);
+        border-radius: 4px;
+        font-weight: 600;
+        border: 1px solid var(--border-color);
+    }
+
+    .streamlit-expanderHeader:hover {
+        background-color: #e9ecef;
+    }
+
+    section[data-testid="stSidebar"] {
+        background-color: var(--light-bg);
+        border-right: 1px solid var(--border-color);
+    }
+
+    .stProgress > div > div {
+        background-color: var(--primary-color);
+    }
+
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background-color: var(--light-bg);
+        padding: 0.5rem;
+        border-radius: 4px;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        background-color: white;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-weight: 500;
+    }
+
+    .stTabs [aria-selected="true"] {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .footer {
+        text-align: center;
+        color: var(--secondary-color);
+        font-size: 0.875rem;
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-color);
+    }
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
 
 def main():
-    """Main application function - SIMPLIFIED"""
-    # Initialize session state ONLY ONCE
+    """Main application function with professional theme"""
+    # Initialize session state
     PortfolioManager.initialize_session_state()
     
-    # Initialize correlation settings in session state
+    # Load professional CSS
+    load_css()
+    
+    # Initialize correlation settings
     if 'use_correlation' not in st.session_state:
         st.session_state.use_correlation = False
     if 'correlation_scenario' not in st.session_state:
@@ -39,7 +175,7 @@ def main():
     # Page configuration
     st.set_page_config(
         page_title=get_text('page_title', lang),
-        page_icon="🏗️",
+        page_icon="📊",  # Usa un'icona neutra invece di emoticon
         layout="wide",
         initial_sidebar_state="expanded"
     )
@@ -65,9 +201,6 @@ def main():
         st.stop()
     
     # Initialize simulator
-    correlation_enabled = False
-    correlation_matrix = None
-    
     try:
         if CORRELATION_AVAILABLE and enhanced_features and st.session_state.use_correlation:
             try:
@@ -87,53 +220,19 @@ def main():
     # Main header
     st.title(get_text('main_title', lang))
     
-    # Enhanced disclaimers section with real withdrawal info
+    # Enhanced disclaimers section
     UIComponents.render_disclaimers(lang)
     
-    # NEW: Feature announcements
-    st.info("🆕 **" + ("Nuove Funzionalità" if lang == 'it' else "New Features") + "**: " + 
+    # Feature announcements
+    st.info("**" + ("Nuove Funzionalità" if lang == 'it' else "New Features") + "**: " + 
             ("Questa versione include prelievi REALI che mantengono il potere d'acquisto e analisi VaR/CVaR integrata!" 
              if lang == 'it' else 
              "This version includes REAL withdrawals that maintain purchasing power and integrated VaR/CVaR analysis!"))
     
-    st.success("⚡ **" + ("Analisi del Rischio Integrata" if lang == 'it' else "Integrated Risk Analysis") + "**: " + 
+    st.success("**" + ("Analisi del Rischio Integrata" if lang == 'it' else "Integrated Risk Analysis") + "**: " + 
               ("VaR e CVaR al 5% ora integrati direttamente nell'app per valutare i rischi estremi!" 
                if lang == 'it' else 
                "VaR and CVaR at 5% now integrated directly in the app to assess extreme risks!"))
-    
-    # Correlation methodology explanation (if available)
-    if CORRELATION_AVAILABLE and enhanced_features:
-        with st.expander("🔗 Metodologia Correlazione Asset" if lang == 'it' else "🔗 Asset Correlation Methodology"):
-            if lang == 'it':
-                st.markdown("""
-                **🔍 Come vengono gestite le correlazioni tra asset:**
-                
-                1. **Distribuzione Normale Multivariata**: Utilizziamo distribuzioni normali multivariate per generare rendimenti correlati
-                2. **Matrice di Correlazione**: Ogni scenario ha una matrice di correlazione specifica che definisce le relazioni tra asset
-                3. **Scenari Multipli**: Supportiamo diversi scenari (mercati normali, crisi, asset indipendenti)
-                4. **Validazione Matematica**: Le matrici vengono validate per assicurare proprietà matematiche corrette
-                
-                **📊 Vantaggi del sistema con correlazione:**
-                - ✅ Simulazioni più realistiche dei mercati finanziari
-                - ✅ Migliore stima del rischio di portafoglio durante le crisi
-                - ✅ Analisi dell'efficacia della diversificazione
-                - ✅ Stress testing con scenari di alta correlazione
-                """)
-            else:
-                st.markdown("""
-                **🔍 How asset correlations are managed:**
-                
-                1. **Multivariate Normal Distribution**: We use multivariate normal distributions to generate correlated returns
-                2. **Correlation Matrix**: Each scenario has a specific correlation matrix defining asset relationships
-                3. **Multiple Scenarios**: Support for different scenarios (normal markets, crises, independent assets)
-                4. **Mathematical Validation**: Matrices are validated to ensure correct mathematical properties
-                
-                **📊 Advantages of correlation system:**
-                - ✅ More realistic financial market simulations
-                - ✅ Better portfolio risk estimation during crises
-                - ✅ Analysis of diversification effectiveness
-                - ✅ Stress testing with high correlation scenarios
-                """)
     
     st.markdown("---")
     
@@ -141,25 +240,22 @@ def main():
     with st.sidebar:
         st.header(get_text('simulation_parameters', lang))
         
-        # General parameters now include real withdrawal options
+        # General parameters
         params = UIComponents.render_general_parameters(lang)
         
-        # CORRELATION SETTINGS SECTION
+        # CORRELATION SETTINGS (if available)
         if CORRELATION_AVAILABLE and enhanced_features:
             st.markdown("---")
-            st.subheader("🔗 " + ("Correlazione Asset" if lang == 'it' else "Asset Correlation"))
+            st.subheader(("Correlazione Asset" if lang == 'it' else "Asset Correlation"))
             
-            # Correlation toggle
             try:
                 use_correlation = CorrelationUIComponents.render_correlation_toggle(lang)
                 st.session_state.use_correlation = use_correlation
             except Exception as e:
-                st.error(f"Correlation UI error: {str(e)}")
                 use_correlation = False
                 st.session_state.use_correlation = False
             
             if use_correlation:
-                # Correlation scenario selector (simplified for sidebar)
                 correlation_scenarios = ['normal_times', 'crisis_times', 'independent', 'defensive', 'high_inflation']
                 scenario_names = {
                     'normal_times': 'Mercati Normali' if lang == 'it' else 'Normal Markets',
@@ -170,7 +266,7 @@ def main():
                 }
                 
                 selected_scenario = st.selectbox(
-                    "📊 " + ("Scenario:" if lang == 'it' else "Scenario:"),
+                    ("Scenario:" if lang == 'it' else "Scenario:"),
                     correlation_scenarios,
                     format_func=lambda x: scenario_names.get(x, x),
                     index=0,
@@ -179,31 +275,24 @@ def main():
                 
                 st.session_state.correlation_scenario = selected_scenario
                 
-                # Button to show advanced correlation settings
-                if st.button("⚙️ " + ("Impostazioni Avanzate" if lang == 'it' else "Advanced Settings")):
+                if st.button(("Impostazioni Avanzate" if lang == 'it' else "Advanced Settings")):
                     st.session_state.show_correlation_settings = True
-        else:
-            if CORRELATION_AVAILABLE:
-                st.info("🔗 " + ("Correlazione disabilitata" if lang == 'it' else "Correlation disabled"))
-            else:
-                st.info("🔗 " + ("Funzionalità correlazione non disponibile" if lang == 'it' else "Correlation features not available"))
         
-        # Initialize default profiles ONLY IF EMPTY
+        # Initialize default profiles
         st.markdown("---")
         st.subheader(get_text('portfolio_config', lang))
         
-        # SIMPLIFIED: Only initialize if truly empty
         if not st.session_state.current_accumulation_assets:
             try:
                 PortfolioManager.initialize_default_profiles(
                     config_manager, 
-                    'Moderate',  # Default accumulation profile
-                    'Conservative'  # Default retirement profile
+                    'Moderate',
+                    'Conservative'
                 )
             except Exception as e:
                 st.error(f"Failed to initialize default profiles: {str(e)}")
         
-        # Toggle for using same portfolio
+        # Portfolio toggle
         use_same_portfolio = UIComponents.render_same_portfolio_toggle(lang)
         
         # Profile selectors
@@ -224,70 +313,26 @@ def main():
             if st.button(get_text('load_profile', lang), key='load_ret_profile'):
                 PortfolioManager.load_retirement_profile(config_manager, retirement_profile)
     
-    # ADVANCED CORRELATION SETTINGS (in main area)
-    if (CORRELATION_AVAILABLE and enhanced_features and 
-        st.session_state.get('show_correlation_settings', False)):
-        st.markdown("---")
-        
-        with st.expander("🔗 " + ("Impostazioni Correlazione Avanzate" if lang == 'it' else "Advanced Correlation Settings"), expanded=True):
-            try:
-                # Get correlation settings
-                scenario, correlation_matrix = CorrelationUIComponents.render_correlation_settings(config_manager, lang)
-                
-                # If using correlation, set up the simulator
-                if (st.session_state.use_correlation and 
-                    isinstance(simulator, CorrelatedMonteCarloSimulator)):
-                    # Get asset names for correlation matrix setup
-                    all_asset_names = list(config_manager.asset_characteristics.keys())
-                    simulator.set_correlation_matrix(all_asset_names, correlation_matrix)
-                    
-                    # Show correlation visualization
-                    CorrelationUIComponents.render_correlation_visualization(
-                        correlation_matrix, all_asset_names, lang
-                    )
-                    
-                    # Show correlation impact analysis
-                    CorrelationUIComponents.render_correlation_impact_analysis(lang)
-                
-            except Exception as e:
-                st.error(f"Correlation settings error: {str(e)}")
-                st.info("Using default correlation settings")
-            
-            # Button to hide correlation settings
-            col1, col2 = st.columns([1, 5])
-            with col1:
-                if st.button("❌ " + ("Chiudi" if lang == 'it' else "Close")):
-                    st.session_state.show_correlation_settings = False
-                    st.rerun()
-        
-        st.markdown("---")
-    
-    # Main area - Portfolio Configuration - SIMPLIFIED
+    # Main area - Portfolio Configuration
     st.subheader(get_text('portfolio_config', lang))
     
-    # SIMPLIFIED: Just get current assets from session state - DON'T reload anything
     accumulation_assets = st.session_state.current_accumulation_assets
     retirement_assets = st.session_state.current_retirement_assets
     
-    # Create two columns for portfolios
+    # Portfolio configuration UI
     if use_same_portfolio:
-        # Single portfolio configuration
         st.subheader(get_text('accumulation_portfolio', lang))
         
         if accumulation_assets:
-            # Asset editor - returns updated values
             updated_assets = UIComponents.render_asset_editor(
                 accumulation_assets, lang, 'accumulation'
             )
             
-            # SIMPLIFIED: Just update the session state directly
             st.session_state.current_accumulation_assets = updated_assets
             
-            # Sync if using same portfolio
             if st.session_state.use_same_portfolio:
                 st.session_state.current_retirement_assets = [asset.copy() for asset in updated_assets]
             
-            # Allocation controls
             reset_clicked, balance_clicked = UIComponents.render_allocation_controls(lang, 'accumulation')
             
             if reset_clicked:
@@ -296,20 +341,15 @@ def main():
             if balance_clicked:
                 PortfolioManager.balance_allocations('accumulation')
             
-            # Show allocation status
             total_allocation = PortfolioManager.get_total_allocation(st.session_state.current_accumulation_assets)
             UIComponents.render_allocation_status(total_allocation, lang)
             
-            # Show allocation chart
             UIComponents.render_allocation_chart(st.session_state.current_accumulation_assets, lang, 'accumulation')
-            
-            # Asset summary
             UIComponents.render_asset_summary(st.session_state.current_accumulation_assets, lang, 'accumulation')
         else:
             st.warning(get_text('select_profile', lang))
     
     else:
-        # Separate portfolio configurations
         col1, col2 = st.columns(2)
         
         with col1:
@@ -320,7 +360,6 @@ def main():
                     accumulation_assets, lang, 'accumulation'
                 )
                 
-                # SIMPLIFIED: Just update directly
                 st.session_state.current_accumulation_assets = updated_acc_assets
                 
                 reset_acc, balance_acc = UIComponents.render_allocation_controls(lang, 'accumulation')
@@ -347,7 +386,6 @@ def main():
                     retirement_assets, lang, 'retirement'
                 )
                 
-                # SIMPLIFIED: Just update directly
                 st.session_state.current_retirement_assets = updated_ret_assets
                 
                 reset_ret, balance_ret = UIComponents.render_allocation_controls(lang, 'retirement')
@@ -368,13 +406,11 @@ def main():
     
     st.markdown("---")
     
-    # Run simulation button - SIMPLIFIED: Just use what's in session state RIGHT NOW
+    # Run simulation button
     if UIComponents.render_run_simulation_button(lang):
-        # SIMPLIFIED: Use current assets from session state - NO reloading, NO snapshots
         final_accumulation_assets = st.session_state.current_accumulation_assets
         final_retirement_assets = st.session_state.current_retirement_assets
         
-        # Validate inputs
         is_valid, active_accumulation_assets, active_retirement_assets = (
             PortfolioManager.validate_simulation_inputs(
                 final_accumulation_assets, final_retirement_assets, lang
@@ -382,7 +418,6 @@ def main():
         )
         
         if is_valid:
-            # Calculate total deposited
             total_deposited = ResultsDisplay.calculate_total_deposited(
                 params['initial_amount'],
                 params['annual_contribution'],
@@ -391,115 +426,43 @@ def main():
                 params['inflation'] / 100
             )
             
-            # Setup progress tracking
             progress_bar = st.progress(0)
             status_text = st.empty()
             
-            # Run simulation
             with st.spinner(get_text('simulation_progress', lang)):
                 try:
-                    # Setup correlation if enabled
-                    if (CORRELATION_AVAILABLE and enhanced_features and 
-                        st.session_state.use_correlation and correlation_enabled):
-                        # Get correlation matrix for active assets
-                        if correlation_matrix is not None:
-                            # Set correlation matrix in simulator
-                            all_asset_names = list(config_manager.asset_characteristics.keys())
-                            simulator.set_correlation_matrix(all_asset_names, correlation_matrix)
+                    # Run simulation
+                    results = simulator.run_simulation(
+                        active_accumulation_assets,
+                        active_retirement_assets,
+                        params['initial_amount'], 
+                        params['years_to_retirement'], 
+                        params['years_retired'],
+                        params['annual_contribution'], 
+                        params['adjust_contribution_inflation'], 
+                        params['inflation'] / 100, 
+                        params['withdrawal'],
+                        params['capital_gains_tax_rate'],
+                        params['n_simulations'],
+                        params['use_real_withdrawal'],
+                        progress_bar, 
+                        status_text, 
+                        lang
+                    )
                     
-                    # Choose simulation method based on correlation setting
-                    if (CORRELATION_AVAILABLE and enhanced_features and 
-                        st.session_state.use_correlation and correlation_enabled and
-                        hasattr(simulator, 'run_simulation_with_correlation')):
-                        # Enhanced simulation with correlation
-                        try:
-                            results = simulator.run_simulation_with_correlation(
-                                active_accumulation_assets,
-                                active_retirement_assets,
-                                params['initial_amount'], 
-                                params['years_to_retirement'], 
-                                params['years_retired'],
-                                params['annual_contribution'], 
-                                params['adjust_contribution_inflation'], 
-                                params['inflation'] / 100, 
-                                params['withdrawal'],
-                                params['capital_gains_tax_rate'],
-                                params['n_simulations'],
-                                params['use_real_withdrawal'],
-                                progress_bar, 
-                                status_text, 
-                                lang
-                            )
-                            simulation_method = "correlation"
-                        except Exception as e:
-                            st.warning(f"Correlation simulation failed: {str(e)}. Using standard simulation.")
-                            # Fallback to standard simulation
-                            results = simulator.run_simulation(
-                                active_accumulation_assets,
-                                active_retirement_assets,
-                                params['initial_amount'], 
-                                params['years_to_retirement'], 
-                                params['years_retired'],
-                                params['annual_contribution'], 
-                                params['adjust_contribution_inflation'], 
-                                params['inflation'] / 100, 
-                                params['withdrawal'],
-                                params['capital_gains_tax_rate'],
-                                params['n_simulations'],
-                                params['use_real_withdrawal'],
-                                progress_bar, 
-                                status_text, 
-                                lang
-                            )
-                            simulation_method = "standard"
-                    else:
-                        # Standard simulation without correlation
-                        results = simulator.run_simulation(
-                            active_accumulation_assets,
-                            active_retirement_assets,
-                            params['initial_amount'], 
-                            params['years_to_retirement'], 
-                            params['years_retired'],
-                            params['annual_contribution'], 
-                            params['adjust_contribution_inflation'], 
-                            params['inflation'] / 100, 
-                            params['withdrawal'],
-                            params['capital_gains_tax_rate'],
-                            params['n_simulations'],
-                            params['use_real_withdrawal'],
-                            progress_bar, 
-                            status_text, 
-                            lang
-                        )
-                        simulation_method = "standard"
-                    
-                    # Display results
                     st.markdown("---")
                     
-                    # Show simulation method used
-                    if simulation_method == "correlation":
-                        scenario_names = {
-                            'normal_times': 'Mercati Normali' if lang == 'it' else 'Normal Markets',
-                            'crisis_times': 'Crisi Finanziaria' if lang == 'it' else 'Financial Crisis', 
-                            'independent': 'Asset Indipendenti' if lang == 'it' else 'Independent Assets',
-                            'defensive': 'Scenario Difensivo' if lang == 'it' else 'Defensive Scenario',
-                            'high_inflation': 'Alta Inflazione' if lang == 'it' else 'High Inflation'
-                        }
-                        scenario_name = scenario_names.get(st.session_state.correlation_scenario, st.session_state.correlation_scenario)
-                        st.success(f"✅ " + ("Simulazione completata con correlazione" if lang == 'it' else "Simulation completed with correlation") + f" ({scenario_name})")
-                    else:
-                        st.info("ℹ️ " + ("Simulazione completata senza correlazione (asset indipendenti)" if lang == 'it' else "Simulation completed without correlation (independent assets)"))
+                    # Show completion messages
+                    st.success(("Simulazione completata" if lang == 'it' else "Simulation completed"))
                     
-                    # Show withdrawal method used
                     if params['use_real_withdrawal']:
-                        st.success("💰 " + ("Utilizzato prelievo REALE (aggiustato per inflazione)" if lang == 'it' else "Used REAL withdrawal (inflation-adjusted)"))
+                        st.success(("Utilizzato prelievo REALE (aggiustato per inflazione)" if lang == 'it' else "Used REAL withdrawal (inflation-adjusted)"))
                     else:
-                        st.info("💰 " + ("Utilizzato prelievo NOMINALE (importo fisso)" if lang == 'it' else "Used NOMINAL withdrawal (fixed amount)"))
+                        st.info(("Utilizzato prelievo NOMINALE (importo fisso)" if lang == 'it' else "Used NOMINAL withdrawal (fixed amount)"))
                     
-                    # Show VaR/CVaR integration status
-                    st.success("⚡ " + ("Analisi VaR/CVaR integrata nei risultati" if lang == 'it' else "VaR/CVaR analysis integrated in results"))
+                    st.success(("Analisi VaR/CVaR integrata nei risultati" if lang == 'it' else "VaR/CVaR analysis integrated in results"))
                     
-                    # Display results (now includes integrated VaR/CVaR analysis)
+                    # Display results
                     ResultsDisplay.show_results(
                         results, 
                         simulator,
