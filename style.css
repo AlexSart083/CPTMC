@@ -1,0 +1,238 @@
+/* Color Palette */
+:root {
+    --primary-color: #0066cc;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --light-bg: #f8f9fa;
+    --dark-text: #212529;
+    --border-color: #dee2e6;
+}
+
+/* Main Container */
+.main {
+    background-color: white;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Headers */
+h1, h2, h3, h4 {
+    font-weight: 600;
+    color: var(--dark-text);
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+h1 {
+    border-bottom: 3px solid var(--primary-color);
+    padding-bottom: 0.5rem;
+}
+
+h2 {
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+/* Buttons */
+.stButton button {
+    border-radius: 4px;
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.stButton button[kind="primary"] {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.stButton button[kind="primary"]:hover {
+    background-color: #0052a3;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stButton button[kind="secondary"] {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+/* Cards and Containers */
+.element-container {
+    background-color: white;
+    border-radius: 4px;
+}
+
+/* Metrics */
+.stMetric {
+    background-color: var(--light-bg);
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.stMetric label {
+    font-weight: 600;
+    color: var(--secondary-color);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stMetric [data-testid="stMetricValue"] {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* Info/Warning/Error Boxes */
+.stAlert {
+    border-radius: 4px;
+    border-left: 4px solid;
+}
+
+.stAlert[data-baseweb="notification"][kind="info"] {
+    background-color: #d1ecf1;
+    border-left-color: var(--info-color);
+    color: #0c5460;
+}
+
+.stAlert[data-baseweb="notification"][kind="success"] {
+    background-color: #d4edda;
+    border-left-color: var(--success-color);
+    color: #155724;
+}
+
+.stAlert[data-baseweb="notification"][kind="warning"] {
+    background-color: #fff3cd;
+    border-left-color: var(--warning-color);
+    color: #856404;
+}
+
+.stAlert[data-baseweb="notification"][kind="error"] {
+    background-color: #f8d7da;
+    border-left-color: var(--danger-color);
+    color: #721c24;
+}
+
+/* Expanders */
+.streamlit-expanderHeader {
+    background-color: var(--light-bg);
+    border-radius: 4px;
+    font-weight: 600;
+    border: 1px solid var(--border-color);
+}
+
+.streamlit-expanderHeader:hover {
+    background-color: #e9ecef;
+}
+
+/* Data Tables */
+.stDataFrame {
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+/* Input Fields */
+.stNumberInput input,
+.stTextInput input,
+.stSelectbox select {
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.5rem;
+}
+
+.stNumberInput input:focus,
+.stTextInput input:focus,
+.stSelectbox select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+}
+
+/* Tabs */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 8px;
+    background-color: var(--light-bg);
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: var(--light-bg);
+    border-right: 1px solid var(--border-color);
+}
+
+section[data-testid="stSidebar"] .stButton button {
+    width: 100%;
+}
+
+/* Progress Bar */
+.stProgress > div > div {
+    background-color: var(--primary-color);
+}
+
+/* Checkbox */
+.stCheckbox {
+    padding: 0.5rem 0;
+}
+
+/* Remove emoji spacing issues */
+.element-container p {
+    line-height: 1.6;
+}
+
+/* Professional Section Headers */
+.section-header {
+    background-color: var(--light-bg);
+    padding: 1rem;
+    border-left: 4px solid var(--primary-color);
+    margin: 1.5rem 0 1rem 0;
+    font-weight: 600;
+}
+
+/* Risk Level Indicators */
+.risk-high {
+    background-color: #f8d7da;
+    border-left: 4px solid var(--danger-color);
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+.risk-moderate {
+    background-color: #fff3cd;
+    border-left: 4px solid var(--warning-color);
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+.risk-low {
+    background-color: #d4edda;
+    border-left: 4px solid var(--success-color);
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    color: var(--secondary-color);
+    font-size: 0.875rem;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
